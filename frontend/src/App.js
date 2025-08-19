@@ -1183,8 +1183,8 @@ const HostDashboard = () => {
   );
 };
 
-// Home Landing Page (Enhanced)
-const Home = () => {
+// Landing Home Component (Enhanced)
+const LandingHome = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
       {/* Hero Section */}
