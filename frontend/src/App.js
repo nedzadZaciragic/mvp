@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
@@ -13,7 +13,9 @@ import { Alert, AlertDescription } from "./components/ui/alert";
 import { 
   MessageCircle, Building2, MapPin, Phone, Mail, Plus, Send, Bot, User, 
   BarChart3, Settings, Palette, LogOut, Eye, TrendingUp, Users, 
-  Calendar, Clock, Star, Home, Shield, Coffee, MapIcon
+  Calendar, Clock, Star, Home, Shield, Coffee, MapIcon, CreditCard,
+  CheckCircle, Zap, Globe, PlayCircle, ArrowRight, DollarSign,
+  Activity, Download, Upload, Link as LinkIcon, PieChart
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -41,6 +43,7 @@ const AuthProvider = ({ children }) => {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
     } catch (error) {
+      console.error('Error fetching profile:', error);
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
     } finally {
@@ -93,12 +96,13 @@ const useAuth = () => {
   return context;
 };
 
-// Login Component
+// Login Component (Fixed routing)
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -107,6 +111,7 @@ const Login = () => {
     
     try {
       await login(formData.email, formData.password);
+      navigate('/dashboard'); // Fixed: Explicit navigation to dashboard
     } catch (error) {
       setError(error.response?.data?.detail || "Login failed");
     } finally {
@@ -155,7 +160,7 @@ const Login = () => {
           <div className="text-center text-sm text-gray-600">
             Don't have an account?{" "}
             <button 
-              onClick={() => window.location.href = '/register'}
+              onClick={() => navigate('/register')}
               className="text-indigo-600 hover:text-indigo-800 font-medium"
             >
               Sign up
@@ -167,12 +172,13 @@ const Login = () => {
   );
 };
 
-// Register Component
+// Register Component (Fixed routing)
 const Register = () => {
   const [formData, setFormData] = useState({ email: "", full_name: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -181,6 +187,7 @@ const Register = () => {
     
     try {
       await register(formData.email, formData.full_name, formData.password);
+      navigate('/dashboard'); // Fixed: Explicit navigation to dashboard
     } catch (error) {
       setError(error.response?.data?.detail || "Registration failed");
     } finally {
@@ -237,7 +244,7 @@ const Register = () => {
           <div className="text-center text-sm text-gray-600">
             Already have an account?{" "}
             <button 
-              onClick={() => window.location.href = '/login'}
+              onClick={() => navigate('/login')}
               className="text-emerald-600 hover:text-emerald-800 font-medium"
             >
               Sign in
@@ -248,6 +255,515 @@ const Register = () => {
     </div>
   );
 };
+
+// Demo Chat Component
+const DemoChat = () => {
+  const [messages, setMessages] = useState([
+    {
+      type: 'ai',
+      content: 'Welcome to your AI concierge demo! I can help you with apartment rules, local recommendations, and more. Try asking me something!',
+      timestamp: new Date().toISOString()
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const demoResponses = {
+    'rules': 'Here are the apartment rules: No smoking, Check-in after 2 PM, No parties after 10 PM. Please respect these guidelines for everyone\'s comfort.',
+    'restaurants': 'I recommend Trattoria Mario for authentic Italian cuisine - it\'s the best pasta in the area! Also try Café Central for great coffee and pastries.',
+    'transport': 'You can take Bus 64 to reach Vatican City, or use Metro Line A to get to Termini Station. Both stops are within 5 minutes walking distance.',
+    'check-in': 'Check-in is available after 2:00 PM. The key box is located next to the main entrance. I\'ll send you the access code via SMS before your arrival.',
+    'wifi': 'The WiFi network is "Sunny_Rome_Guest" and the password is "Welcome2023". The connection is high-speed and perfect for work or streaming.',
+    'default': 'I can help you with apartment rules, local restaurants, transport information, check-in details, WiFi access, and much more! What would you like to know?'
+  };
+
+  const sendMessage = () => {
+    if (!inputMessage.trim()) return;
+
+    const userMessage = { type: 'user', content: inputMessage, timestamp: new Date().toISOString() };
+    setMessages(prev => [...prev, userMessage]);
+    
+    const question = inputMessage.toLowerCase();
+    let response = demoResponses.default;
+    
+    if (question.includes('rule') || question.includes('smoking') || question.includes('party')) {
+      response = demoResponses.rules;
+    } else if (question.includes('restaurant') || question.includes('food') || question.includes('eat')) {
+      response = demoResponses.restaurants;
+    } else if (question.includes('transport') || question.includes('bus') || question.includes('metro')) {
+      response = demoResponses.transport;
+    } else if (question.includes('check') || question.includes('key') || question.includes('arrive')) {
+      response = demoResponses['check-in'];
+    } else if (question.includes('wifi') || question.includes('internet') || question.includes('password')) {
+      response = demoResponses.wifi;
+    }
+
+    setInputMessage("");
+    setLoading(true);
+
+    setTimeout(() => {
+      const aiMessage = { type: 'ai', content: response, timestamp: new Date().toISOString() };
+      setMessages(prev => [...prev, aiMessage]);
+      setLoading(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-lg border h-[500px] flex flex-col">
+      <div className="p-4 border-b bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-xl">
+        <div className="flex items-center space-x-3">
+          <div className="bg-white/20 p-2 rounded-lg">
+            <Bot className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-semibold">My Host IQ Demo</h3>
+            <p className="text-indigo-100 text-sm">Try asking about rules, restaurants, or check-in!</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {messages.map((message, index) => (
+          <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`flex items-start space-x-2 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+              <div className={`p-1.5 rounded-full ${message.type === 'user' ? 'bg-indigo-100' : 'bg-gray-100'}`}>
+                {message.type === 'user' ? (
+                  <User className="h-4 w-4 text-indigo-600" />
+                ) : (
+                  <Bot className="h-4 w-4 text-gray-600" />
+                )}
+              </div>
+              <div className={`p-3 rounded-xl text-sm ${
+                message.type === 'user' 
+                  ? 'bg-indigo-600 text-white rounded-br-sm' 
+                  : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+              }`}>
+                {message.content}
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {loading && (
+          <div className="flex justify-start">
+            <div className="flex items-start space-x-2">
+              <div className="p-1.5 rounded-full bg-gray-100">
+                <Bot className="h-4 w-4 text-gray-600" />
+              </div>
+              <div className="bg-gray-100 p-3 rounded-xl rounded-bl-sm">
+                <div className="flex space-x-1">
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="border-t p-4">
+        <div className="flex space-x-2">
+          <Input
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Ask about apartment rules, restaurants..."
+            className="flex-1"
+            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            disabled={loading}
+          />
+          <Button 
+            onClick={sendMessage} 
+            disabled={loading || !inputMessage.trim()}
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Payment Simulation Component
+const PaymentSimulation = ({ onClose, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
+  const [cardData, setCardData] = useState({
+    number: "4242 4242 4242 4242",
+    expiry: "12/25",
+    cvc: "123",
+    name: "John Smith"
+  });
+
+  const handlePayment = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setStep(2);
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 2000);
+    }, 3000);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <CreditCard className="h-5 w-5 mr-2" />
+            Payment Simulation
+          </CardTitle>
+          <CardDescription>Demo payment for €15/month subscription</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {step === 1 ? (
+            <>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium">Card Number</label>
+                  <Input value={cardData.number} onChange={(e) => setCardData(prev => ({...prev, number: e.target.value}))} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium">Expiry</label>
+                    <Input value={cardData.expiry} onChange={(e) => setCardData(prev => ({...prev, expiry: e.target.value}))} />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">CVC</label>
+                    <Input value={cardData.cvc} onChange={(e) => setCardData(prev => ({...prev, cvc: e.target.value}))} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Cardholder Name</label>
+                  <Input value={cardData.name} onChange={(e) => setCardData(prev => ({...prev, name: e.target.value}))} />
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span>Subscription</span>
+                  <span>€15.00</span>
+                </div>
+                <div className="flex justify-between items-center text-sm text-gray-600">
+                  <span>Per apartment/month</span>
+                  <span>First month free</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between items-center font-semibold">
+                  <span>Total</span>
+                  <span>€0.00</span>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3">
+                <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+                <Button onClick={handlePayment} disabled={loading} className="flex-1 bg-emerald-600 hover:bg-emerald-700">
+                  {loading ? "Processing..." : "Start Free Trial"}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <CheckCircle className="h-16 w-16 text-emerald-500 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Payment Successful!</h3>
+              <p className="text-gray-600">Your free trial has started. Redirecting to dashboard...</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Enhanced Landing Page
+const LandingHome = () => {
+  const [showDemo, setShowDemo] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const navigate = useNavigate();
+
+  const handleStartTrial = () => {
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    navigate('/register');
+  };
+
+  return (
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative max-w-7xl mx-auto px-6 py-20">
+          <div className="text-center mb-16">
+            <h1 className="text-6xl md:text-7xl font-bold mb-6">
+              My <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Host</span> IQ
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed">
+              Transform your Airbnb into a smart hospitality experience with AI-powered guest assistance. 
+              Reduce support requests by 80% while providing exceptional 24/7 service.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Button 
+                onClick={handleStartTrial}
+                size="lg" 
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 text-lg font-semibold"
+              >
+                <Zap className="h-5 w-5 mr-2" />
+                Start Free Trial
+              </Button>
+              <Button 
+                onClick={() => setShowDemo(true)}
+                variant="outline" 
+                size="lg" 
+                className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg"
+              >
+                <PlayCircle className="h-5 w-5 mr-2" />
+                Try Demo
+              </Button>
+            </div>
+
+            {/* Demo Modal */}
+            {showDemo && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-xl max-w-2xl w-full">
+                  <div className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-2xl font-bold text-gray-900">AI Concierge Demo</h2>
+                      <Button variant="outline" onClick={() => setShowDemo(false)}>Close</Button>
+                    </div>
+                    <DemoChat />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Modal */}
+            {showPayment && (
+              <PaymentSimulation 
+                onClose={() => setShowPayment(false)} 
+                onSuccess={handlePaymentSuccess}
+              />
+            )}
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+            <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+              <div className="text-3xl font-bold mb-2">80%</div>
+              <div className="text-gray-300">Less Support Requests</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+              <div className="text-3xl font-bold mb-2">24/7</div>
+              <div className="text-gray-300">AI Availability</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+              <div className="text-3xl font-bold mb-2">€15</div>
+              <div className="text-gray-300">Per Apartment/Month</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+              <div className="text-3xl font-bold mb-2">5min</div>
+              <div className="text-gray-300">Setup Time</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Complete AI Hospitality Solution</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Everything you need to provide world-class guest experience</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+              <CardHeader className="text-center pb-4">
+                <div className="bg-indigo-100 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-200 transition-colors">
+                  <Bot className="h-10 w-10 text-indigo-600" />
+                </div>
+                <CardTitle className="text-xl mb-2">AI-Powered Concierge</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <ul className="text-left space-y-3 text-gray-600">
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Instant answers 24/7</li>
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Apartment-specific knowledge</li>
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Local recommendations</li>
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Multi-language support</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+              <CardHeader className="text-center pb-4">
+                <div className="bg-emerald-100 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-emerald-200 transition-colors">
+                  <BarChart3 className="h-10 w-10 text-emerald-600" />
+                </div>
+                <CardTitle className="text-xl mb-2">Advanced Analytics</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <ul className="text-left space-y-3 text-gray-600">
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Guest interaction tracking</li>
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Popular questions insights</li>
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Performance metrics</li>
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Revenue optimization</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+              <CardHeader className="text-center pb-4">
+                <div className="bg-purple-100 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
+                  <Palette className="h-10 w-10 text-purple-600" />
+                </div>
+                <CardTitle className="text-xl mb-2">White-Label Branding</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <ul className="text-left space-y-3 text-gray-600">
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Custom brand colors</li>
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Your logo integration</li>
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Personalized messages</li>
+                  <li className="flex items-center"><CheckCircle className="h-4 w-4 text-green-500 mr-2" />Professional appearance</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Additional Features */}
+      <section className="py-20 bg-gradient-to-r from-gray-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Everything You Need</h2>
+            <p className="text-xl text-gray-600">Comprehensive features for modern hospitality</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+              <Calendar className="h-8 w-8 text-indigo-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">iCal Integration</h3>
+              <p className="text-sm text-gray-600">Sync with Airbnb, Booking.com</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+              <Globe className="h-8 w-8 text-emerald-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">Multi-Language</h3>
+              <p className="text-sm text-gray-600">Support for 40+ languages</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+              <Shield className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">Secure & Private</h3>
+              <p className="text-sm text-gray-600">GDPR compliant platform</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+              <Zap className="h-8 w-8 text-yellow-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">Lightning Fast</h3>
+              <p className="text-sm text-gray-600">Sub-second response times</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
+          <p className="text-xl text-gray-600 mb-12">No setup fees, no contracts. Cancel anytime.</p>
+          
+          <Card className="max-w-lg mx-auto shadow-2xl border-2 border-indigo-200 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center py-2 text-sm font-semibold">
+              MOST POPULAR
+            </div>
+            <CardHeader className="pt-12 pb-6">
+              <CardTitle className="text-3xl font-bold">Pro Plan</CardTitle>
+              <CardDescription className="text-lg">Perfect for property managers</CardDescription>
+              <div className="text-center my-6">
+                <span className="text-5xl font-bold text-indigo-600">€15</span>
+                <span className="text-gray-600 text-lg">/apartment/month</span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-3 text-left">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Unlimited AI conversations</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Advanced analytics dashboard</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>White-label branding</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>iCal calendar sync</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>24/7 AI support</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Multi-language support</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                  <span>Priority customer support</span>
+                </div>
+              </div>
+              
+              <div className="pt-6">
+                <Button 
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-lg py-3"
+                  onClick={handleStartTrial}
+                >
+                  Start 30-Day Free Trial
+                </Button>
+                <p className="text-sm text-gray-500 mt-2">No credit card required • Cancel anytime</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl font-bold mb-4">Ready to Transform Your Hospitality?</h2>
+          <p className="text-xl mb-8 text-indigo-100">Join thousands of hosts providing exceptional guest experiences</p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg"
+              onClick={handleStartTrial}
+              className="bg-white text-indigo-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
+            >
+              Start Free Trial
+              <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
+            <Button 
+              size="lg"
+              variant="outline"
+              onClick={() => navigate('/login')}
+              className="border-white text-white hover:bg-white hover:text-indigo-600 px-8 py-4 text-lg"
+            >
+              Sign In
+            </Button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+// Rest of components (GuestChat, AnalyticsDashboard, HostDashboard) remain the same but with enhanced apartment form...
 
 // Guest Chat Component (Enhanced with whitelabeling)
 const GuestChat = ({ apartmentId }) => {
@@ -622,7 +1138,7 @@ const AnalyticsDashboard = () => {
   );
 };
 
-// Host Dashboard Component (Enhanced)
+// Enhanced Host Dashboard Component (with iCal support)
 const HostDashboard = () => {
   const { user, logout } = useAuth();
   const [apartments, setApartments] = useState([]);
@@ -640,6 +1156,7 @@ const HostDashboard = () => {
     description: "",
     rules: [],
     contact: { phone: "", email: "" },
+    ical_url: "", // Added iCal support
     recommendations: {
       restaurants: [],
       hidden_gems: [],
@@ -681,6 +1198,7 @@ const HostDashboard = () => {
         description: "",
         rules: [],
         contact: { phone: "", email: "" },
+        ical_url: "",
         recommendations: {
           restaurants: [],
           hidden_gems: [],
@@ -1005,38 +1523,59 @@ const HostDashboard = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Add Apartment Form Modal */}
+        {/* Enhanced Add Apartment Form Modal with iCal */}
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Add New Apartment</h2>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Basic Info */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Basic Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Building2 className="h-5 w-5 mr-2" />
+                      Basic Information
+                    </h3>
                     
-                    <Input
-                      placeholder="Apartment Name"
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
-                      required
-                    />
-                    
-                    <Input
-                      placeholder="Address"
-                      value={formData.address}
-                      onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
-                      required
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        placeholder="Apartment Name"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                        required
+                      />
+                      
+                      <Input
+                        placeholder="Address"
+                        value={formData.address}
+                        onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
+                        required
+                      />
+                    </div>
                     
                     <Textarea
-                      placeholder="Description"
+                      placeholder="Apartment Description"
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
                       required
                     />
+
+                    {/* iCal Integration */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        iCal Calendar URL (optional)
+                      </label>
+                      <Input
+                        placeholder="https://airbnb.com/calendar/ical/..."
+                        value={formData.ical_url}
+                        onChange={(e) => setFormData(prev => ({...prev, ical_url: e.target.value}))}
+                      />
+                      <p className="text-sm text-gray-500 mt-1">
+                        Sync with Airbnb, Booking.com, or other platforms
+                      </p>
+                    </div>
                   </div>
 
                   {/* Contact */}
@@ -1094,7 +1633,7 @@ const HostDashboard = () => {
                       <Coffee className="h-5 w-5 mr-2" />
                       Restaurant Recommendations
                     </h3>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       <Input
                         placeholder="Restaurant name"
                         value={newRestaurant.name}
@@ -1114,9 +1653,9 @@ const HostDashboard = () => {
                         <Button type="button" onClick={addRestaurant}>Add</Button>
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
                       {formData.recommendations.restaurants.map((rest, index) => (
-                        <div key={index} className="bg-green-50 p-3 rounded-lg">
+                        <div key={index} className="bg-green-50 p-3 rounded-lg text-sm">
                           <strong>{rest.name}</strong> ({rest.type}) - {rest.tip}
                         </div>
                       ))}
@@ -1142,9 +1681,9 @@ const HostDashboard = () => {
                       />
                       <Button type="button" onClick={addGem}>Add</Button>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
                       {formData.recommendations.hidden_gems.map((gem, index) => (
-                        <div key={index} className="bg-blue-50 p-3 rounded-lg">
+                        <div key={index} className="bg-blue-50 p-3 rounded-lg text-sm">
                           <strong>{gem.name}</strong> - {gem.tip}
                         </div>
                       ))}
@@ -1153,7 +1692,10 @@ const HostDashboard = () => {
 
                   {/* Transport */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Transport Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Car className="h-5 w-5 mr-2" />
+                      Transport Information
+                    </h3>
                     <Textarea
                       placeholder="Transport details (e.g., Bus 64 to Vatican, Metro A to Termini)"
                       value={formData.recommendations.transport}
@@ -1178,126 +1720,6 @@ const HostDashboard = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-};
-
-// Landing Home Component (Enhanced)
-const LandingHome = () => {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-6 py-20">
-        <div className="text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            My <span className="text-indigo-600">Host</span> IQ
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Transform your apartment into a smart hospitality experience with AI-powered guest assistance. 
-            Provide personalized recommendations, instant answers, and exceptional service 24/7.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Button 
-              onClick={() => window.location.href = '/register'} 
-              size="lg" 
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 text-lg"
-            >
-              Start Free Trial
-            </Button>
-            <Button 
-              onClick={() => window.location.href = '/login'} 
-              variant="outline" 
-              size="lg" 
-              className="px-8 py-4 text-lg"
-            >
-              Sign In
-            </Button>
-          </div>
-        </div>
-
-        {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
-          <Card className="text-center p-8 border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bot className="h-8 w-8 text-indigo-600" />
-            </div>
-            <CardTitle className="mb-4">AI-Powered Concierge</CardTitle>
-            <CardDescription>
-              Your guests get instant answers about check-in, local recommendations, and apartment rules through an intelligent AI assistant.
-            </CardDescription>
-          </Card>
-
-          <Card className="text-center p-8 border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <BarChart3 className="h-8 w-8 text-emerald-600" />
-            </div>
-            <CardTitle className="mb-4">Advanced Analytics</CardTitle>
-            <CardDescription>
-              Track guest interactions, popular questions, and apartment performance with detailed analytics and insights.
-            </CardDescription>
-          </Card>
-
-          <Card className="text-center p-8 border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Palette className="h-8 w-8 text-purple-600" />
-            </div>
-            <CardTitle className="mb-4">White-label Branding</CardTitle>
-            <CardDescription>
-              Customize your AI assistant with your own branding, colors, and logo for a professional guest experience.
-            </CardDescription>
-          </Card>
-        </div>
-
-        {/* Pricing Section */}
-        <div className="mt-20 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Simple Pricing</h2>
-          <p className="text-gray-600 mb-12">€15 per apartment per month. No setup fees, no contracts.</p>
-          
-          <Card className="max-w-md mx-auto shadow-xl border-2 border-indigo-200">
-            <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-              <CardTitle className="text-2xl">Pro Plan</CardTitle>
-              <CardDescription className="text-indigo-100">Everything you need to get started</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8">
-              <div className="text-center mb-8">
-                <span className="text-4xl font-bold text-gray-900">€15</span>
-                <span className="text-gray-600">/apartment/month</span>
-              </div>
-              
-              <ul className="space-y-3 text-left">
-                <li className="flex items-center text-gray-700">
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full mr-3"></div>
-                  Unlimited AI conversations
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full mr-3"></div>
-                  Advanced analytics dashboard
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full mr-3"></div>
-                  White-label branding
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full mr-3"></div>
-                  24/7 AI support
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <div className="w-2 h-2 bg-indigo-600 rounded-full mr-3"></div>
-                  Custom recommendations
-                </li>
-              </ul>
-              
-              <Button 
-                className="w-full mt-8 bg-indigo-600 hover:bg-indigo-700"
-                onClick={() => window.location.href = '/register'}
-              >
-                Start Free Trial
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
