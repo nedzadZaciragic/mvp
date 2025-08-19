@@ -89,6 +89,7 @@ class Apartment(BaseModel):
     description: str
     rules: List[str] = []
     contact: Dict[str, str] = {}
+    ical_url: str = ""  # iCal calendar URL
     recommendations: Dict[str, Any] = {}
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     # Analytics data
@@ -102,6 +103,7 @@ class ApartmentCreate(BaseModel):
     description: str
     rules: List[str] = []
     contact: Dict[str, str] = {}
+    ical_url: str = ""  # iCal calendar URL
     recommendations: Dict[str, Any] = {}
 
 class AnalyticsData(BaseModel):
