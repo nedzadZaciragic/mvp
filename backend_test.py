@@ -246,7 +246,7 @@ class MyHostIQAPITester:
         return success
 
     def test_ai_chat(self):
-        """Test AI chat functionality - MOST IMPORTANT"""
+        """Test AI chat functionality - MOST IMPORTANT - includes whitelabeling"""
         if not self.created_apartment_id:
             print("❌ Skipping - No apartment ID available")
             return False
@@ -270,22 +270,33 @@ class MyHostIQAPITester:
                 200,
                 data={
                     "apartment_id": self.created_apartment_id,
-                    "message": message
+                    "message": message,
+                    "session_id": f"test_session_{int(time.time())}"
                 },
-                timeout=60  # AI responses can take longer
+                timeout=60,  # AI responses can take longer
+                use_auth=False  # Chat is public endpoint
             )
             
             if success:
                 ai_response = response.get('response', '')
                 apartment_name = response.get('apartment_name', '')
+                branding = response.get('branding', {})
+                
                 print(f"   AI Response: {ai_response[:100]}...")
                 print(f"   Apartment: {apartment_name}")
+                print(f"   Brand: {branding.get('brand_name', 'Unknown')}")
                 
                 # Check if response contains apartment-specific info
                 if any(keyword in ai_response.lower() for keyword in ['sunny rome', 'smoking', '2pm', 'mario', 'bus 64']):
                     print("   ✅ Response contains apartment-specific information")
                 else:
                     print("   ⚠️  Response may be too generic")
+                    
+                # Check if branding is applied
+                if branding.get('brand_name') == 'Luxury Stays':
+                    print("   ✅ Whitelabel branding applied correctly")
+                else:
+                    print("   ⚠️  Whitelabel branding may not be applied")
             else:
                 all_passed = False
             
