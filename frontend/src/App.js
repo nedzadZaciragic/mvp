@@ -202,9 +202,15 @@ const QRCodeGenerator = ({ apartmentId, apartmentName, brandName, onClose }) => 
           </div>
           
           <div className="text-center">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 mb-2">
               Print and place this QR code in your apartment for easy guest access
             </p>
+            <div className="mt-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <p className="text-xs text-amber-800 font-medium mb-1">📋 Don't forget:</p>
+              <p className="text-xs text-amber-700">
+                Add this link to your Airbnb/Booking.com automatic messages so guests know about the AI assistant before arrival!
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
