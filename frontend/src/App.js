@@ -672,7 +672,7 @@ const HowItWorksSteps = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Share QR Code</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Download the QR code PDF and place it in your apartment. Guests scan and start chatting instantly!
+                Download the QR code PDF, place it in your apartment, and add the link to your Airbnb/Booking.com messages so guests know about their AI assistant!
               </p>
             </div>
           </div>
