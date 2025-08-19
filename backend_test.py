@@ -305,8 +305,27 @@ class MyHostIQAPITester:
         
         return all_passed
 
+    def test_analytics_dashboard(self):
+        """Test analytics dashboard - CRITICAL for SaaS"""
+        success, response = self.run_test(
+            "Analytics Dashboard",
+            "GET",
+            "analytics/dashboard",
+            200
+        )
+        
+        if success:
+            overview = response.get('overview', {})
+            apartments = response.get('apartments', [])
+            print(f"   Total apartments: {overview.get('total_apartments', 0)}")
+            print(f"   Total chats: {overview.get('total_chats', 0)}")
+            print(f"   Active apartments: {overview.get('active_apartments', 0)}")
+            print(f"   Apartment analytics: {len(apartments)} entries")
+        
+        return success
+
     def test_chat_history(self):
-        """Test chat history retrieval"""
+        """Test chat history retrieval - requires authentication"""
         if not self.created_apartment_id:
             print("❌ Skipping - No apartment ID available")
             return False
