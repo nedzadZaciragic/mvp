@@ -11,6 +11,23 @@ class MyHostIQAPITester:
         self.tests_run = 0
         self.tests_passed = 0
         self.created_apartment_id = None
+        self.token = None
+        self.user_id = None
+        
+        # Test user data
+        self.test_user = {
+            "email": f"test_{int(time.time())}@hostiq.com",
+            "full_name": "Test Host User",
+            "password": "testpass123"
+        }
+        
+        # Test whitelabel data
+        self.test_whitelabel = {
+            "brand_name": "Luxury Stays",
+            "brand_logo_url": "https://example.com/logo.png",
+            "brand_primary_color": "#e11d48",
+            "brand_secondary_color": "#f59e0b"
+        }
 
     def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30):
         """Run a single API test"""
