@@ -345,20 +345,27 @@ class MyHostIQAPITester:
         return success
 
 def main():
-    print("🚀 Starting My Host IQ API Testing...")
+    print("🚀 Starting My Host IQ SaaS API Testing...")
+    print("🔐 Testing Authentication, Whitelabeling, and Analytics")
     print("=" * 60)
     
     # Initialize tester
     tester = MyHostIQAPITester()
     
-    # Run tests in order
+    # Run tests in order - AUTHENTICATION FIRST
     tests = [
         ("Health Check", tester.test_health_check),
-        ("Create Apartment", tester.test_create_apartment),
-        ("Get All Apartments", tester.test_get_apartments),
-        ("Get Specific Apartment", tester.test_get_specific_apartment),
-        ("AI Chat (CRITICAL)", tester.test_ai_chat),
-        ("Chat History", tester.test_chat_history),
+        ("🔐 User Registration", tester.test_user_registration),
+        ("🔐 User Login", tester.test_user_login),
+        ("🔐 Get Current User", tester.test_get_current_user),
+        ("🎨 Update Whitelabel Settings", tester.test_update_whitelabel_settings),
+        ("🏠 Create Apartment", tester.test_create_apartment),
+        ("🏠 Get User's Apartments", tester.test_get_apartments),
+        ("🏠 Get Specific Apartment", tester.test_get_specific_apartment),
+        ("🌐 Public Apartment Access", tester.test_public_apartment_access),
+        ("🤖 AI Chat (CRITICAL)", tester.test_ai_chat),
+        ("📊 Analytics Dashboard", tester.test_analytics_dashboard),
+        ("💬 Chat History", tester.test_chat_history),
     ]
     
     failed_tests = []
@@ -374,7 +381,7 @@ def main():
     
     # Print final results
     print(f"\n{'='*60}")
-    print(f"📊 FINAL RESULTS")
+    print(f"📊 FINAL RESULTS - My Host IQ SaaS Platform")
     print(f"{'='*60}")
     print(f"Tests passed: {tester.tests_passed}/{tester.tests_run}")
     print(f"Success rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
@@ -383,11 +390,26 @@ def main():
         print(f"\n❌ Failed tests:")
         for test in failed_tests:
             print(f"   - {test}")
+        print(f"\n🔧 Issues to fix:")
+        if "🔐 User Registration" in failed_tests:
+            print("   - Authentication system not working")
+        if "🎨 Update Whitelabel Settings" in failed_tests:
+            print("   - Whitelabeling feature broken")
+        if "🤖 AI Chat (CRITICAL)" in failed_tests:
+            print("   - AI chat functionality broken")
+        if "📊 Analytics Dashboard" in failed_tests:
+            print("   - Analytics system not working")
     else:
-        print(f"\n✅ All tests passed!")
+        print(f"\n✅ All SaaS features working correctly!")
+        print(f"   ✅ Authentication system working")
+        print(f"   ✅ Whitelabeling working")
+        print(f"   ✅ AI chat with branding working")
+        print(f"   ✅ Analytics dashboard working")
     
     if tester.created_apartment_id:
         print(f"\n🏠 Created apartment ID for frontend testing: {tester.created_apartment_id}")
+        print(f"👤 Test user email: {tester.test_user['email']}")
+        print(f"🔑 Test user password: {tester.test_user['password']}")
     
     return 0 if len(failed_tests) == 0 else 1
 
