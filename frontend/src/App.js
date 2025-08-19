@@ -1446,10 +1446,28 @@ const OnboardingGuide = () => {
             <Sparkles className="h-5 w-5 text-indigo-500 mt-0.5 mr-3" />
             <div>
               <h5 className="font-semibold text-gray-900 mb-1">Pro Tip</h5>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-gray-700 mb-3">
                 Add detailed local recommendations and frequently asked questions to train your AI assistant. 
                 The more information you provide, the better it can help your guests!
               </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 p-4 bg-amber-50 rounded-lg border-l-4 border-amber-400">
+          <div className="flex items-start">
+            <MessageCircle className="h-5 w-5 text-amber-600 mt-0.5 mr-3" />
+            <div>
+              <h5 className="font-semibold text-gray-900 mb-1">Important: Notify Your Guests</h5>
+              <p className="text-sm text-gray-700 mb-2">
+                <strong>Don't forget to inform your guests about the AI assistant!</strong>
+              </p>
+              <ul className="text-xs text-gray-600 space-y-1 ml-4 list-disc">
+                <li>Add QR code link to your Airbnb/Booking.com automatic messages</li>
+                <li>Include it in your welcome message: "Scan the QR code in the apartment for instant help"</li>
+                <li>Mention it in check-in instructions</li>
+                <li>Place the printed QR code visibly in your apartment</li>
+              </ul>
             </div>
           </div>
         </div>
