@@ -83,8 +83,82 @@ class MyHostIQAPITester:
             "Health Check",
             "GET",
             "",
+            200,
+            use_auth=False
+        )
+        return success
+
+    def test_user_registration(self):
+        """Test user registration - CRITICAL for SaaS"""
+        success, response = self.run_test(
+            "User Registration",
+            "POST",
+            "auth/register",
+            200,
+            data=self.test_user,
+            use_auth=False
+        )
+        
+        if success and response.get('access_token'):
+            self.token = response['access_token']
+            self.user_id = response['user']['id']
+            print(f"   Registered user ID: {self.user_id}")
+            print(f"   Token received: {self.token[:20]}...")
+        
+        return success
+
+    def test_user_login(self):
+        """Test user login"""
+        login_data = {
+            "email": self.test_user["email"],
+            "password": self.test_user["password"]
+        }
+        
+        success, response = self.run_test(
+            "User Login",
+            "POST",
+            "auth/login",
+            200,
+            data=login_data,
+            use_auth=False
+        )
+        
+        if success and response.get('access_token'):
+            # Update token (should be same as registration)
+            self.token = response['access_token']
+            print(f"   Login successful, token: {self.token[:20]}...")
+        
+        return success
+
+    def test_get_current_user(self):
+        """Test getting current user info"""
+        success, response = self.run_test(
+            "Get Current User",
+            "GET",
+            "auth/me",
             200
         )
+        
+        if success:
+            print(f"   User email: {response.get('email', 'Unknown')}")
+            print(f"   Brand name: {response.get('brand_name', 'Unknown')}")
+        
+        return success
+
+    def test_update_whitelabel_settings(self):
+        """Test updating whitelabel settings - CRITICAL for SaaS"""
+        success, response = self.run_test(
+            "Update Whitelabel Settings",
+            "PUT",
+            "auth/whitelabel",
+            200,
+            data=self.test_whitelabel
+        )
+        
+        if success:
+            print(f"   Updated brand: {self.test_whitelabel['brand_name']}")
+            print(f"   Primary color: {self.test_whitelabel['brand_primary_color']}")
+        
         return success
 
     def test_create_apartment(self):
