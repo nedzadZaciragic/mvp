@@ -29,14 +29,20 @@ class MyHostIQAPITester:
             "brand_secondary_color": "#f59e0b"
         }
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30):
+    def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30, use_auth=True):
         """Run a single API test"""
         url = f"{self.api_url}/{endpoint}" if endpoint else f"{self.api_url}/"
         headers = {'Content-Type': 'application/json'}
+        
+        # Add authentication header if token is available and use_auth is True
+        if use_auth and self.token:
+            headers['Authorization'] = f'Bearer {self.token}'
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
         print(f"   URL: {url}")
+        if use_auth and self.token:
+            print(f"   Using auth: Bearer {self.token[:20]}...")
         
         try:
             if method == 'GET':
