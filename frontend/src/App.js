@@ -15,7 +15,7 @@ import {
   BarChart3, Settings, Palette, LogOut, Eye, TrendingUp, Users, 
   Calendar, Clock, Star, Home, Shield, Coffee, MapIcon, CreditCard,
   CheckCircle, Zap, Globe, PlayCircle, ArrowRight, DollarSign,
-  Activity, Download, Upload, Link as LinkIcon, PieChart
+  Activity, Download, Upload, Link as LinkIcon, PieChart, Car
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
