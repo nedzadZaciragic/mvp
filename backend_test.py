@@ -162,7 +162,7 @@ class MyHostIQAPITester:
         return success
 
     def test_create_apartment(self):
-        """Test apartment creation with sample data"""
+        """Test apartment creation with sample data - requires authentication"""
         test_data = {
             "name": "Sunny Rome Apartment",
             "address": "Via Roma 12, Rome, Italy", 
@@ -191,21 +191,21 @@ class MyHostIQAPITester:
         return success
 
     def test_get_apartments(self):
-        """Test fetching all apartments"""
+        """Test fetching user's apartments - requires authentication"""
         success, response = self.run_test(
-            "Get All Apartments",
+            "Get User's Apartments",
             "GET",
             "apartments",
             200
         )
         
         if success and isinstance(response, list):
-            print(f"   Found {len(response)} apartments")
+            print(f"   Found {len(response)} apartments for user")
         
         return success
 
     def test_get_specific_apartment(self):
-        """Test getting specific apartment by ID"""
+        """Test getting specific apartment by ID - requires authentication"""
         if not self.created_apartment_id:
             print("❌ Skipping - No apartment ID available")
             return False
@@ -219,6 +219,29 @@ class MyHostIQAPITester:
         
         if success:
             print(f"   Retrieved apartment: {response.get('name', 'Unknown')}")
+        
+        return success
+
+    def test_public_apartment_access(self):
+        """Test public apartment access (no auth required) - CRITICAL for guests"""
+        if not self.created_apartment_id:
+            print("❌ Skipping - No apartment ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Public Apartment Access",
+            "GET",
+            f"public/apartments/{self.created_apartment_id}",
+            200,
+            use_auth=False
+        )
+        
+        if success:
+            apartment = response.get('apartment', {})
+            branding = response.get('branding', {})
+            print(f"   Apartment: {apartment.get('name', 'Unknown')}")
+            print(f"   Brand: {branding.get('brand_name', 'Unknown')}")
+            print(f"   Primary color: {branding.get('brand_primary_color', 'Unknown')}")
         
         return success
 
