@@ -1054,9 +1054,231 @@ const LandingHome = () => {
 
 // For now, let me include the basic structure with updated branding:
 
+// Continue with remaining components...
+
+// Enhanced Guest Chat Component with AI tone selection and fallback logic
 const GuestChat = ({ apartmentId }) => {
-  // Implementation will follow similar pattern with MyHostIQ branding
-  return <div>Guest Chat component with MyHostIQ branding</div>;
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [apartmentInfo, setApartmentInfo] = useState(null);
+  const [branding, setBranding] = useState(null);
+  const [sessionId] = useState(`guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+
+  useEffect(() => {
+    fetchApartmentInfo();
+  }, [apartmentId]);
+
+  const fetchApartmentInfo = async () => {
+    try {
+      const response = await axios.get(`${API}/public/apartments/${apartmentId}`);
+      setApartmentInfo(response.data.apartment);
+      setBranding(response.data.branding);
+      
+      // Add welcome message with MyHostIQ branding
+      setMessages([{
+        type: 'ai',
+        content: `Welcome to ${response.data.apartment.name}! 🏠 I'm your personal ${response.data.branding.brand_name || 'MyHostIQ'} assistant. I can help you with check-in instructions, apartment rules, local recommendations, and emergency contacts. What would you like to know?`,
+        timestamp: new Date().toISOString()
+      }]);
+    } catch (error) {
+      console.error("Error fetching apartment info:", error);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    const userMessage = { type: 'user', content: inputMessage, timestamp: new Date().toISOString() };
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage("");
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API}/chat`, {
+        apartment_id: apartmentId,
+        message: inputMessage,
+        session_id: sessionId
+      });
+
+      const aiMessage = { 
+        type: 'ai', 
+        content: response.data.response, 
+        timestamp: new Date().toISOString() 
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      const errorMessage = { 
+        type: 'ai', 
+        content: "I'm having trouble connecting right now. For urgent matters, please contact your host directly using the contact information provided in your booking confirmation. I'll be back online shortly!", 
+        timestamp: new Date().toISOString() 
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!apartmentInfo || !branding) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your MyHostIQ assistant...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const primaryColor = branding.brand_primary_color || BRAND_COLORS.primary;
+
+  return (
+    <div className="min-h-screen" style={{ background: `linear-gradient(135deg, ${primaryColor}15, ${primaryColor}05)` }}>
+      {/* Header with enhanced branding */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              {branding.brand_logo_url ? (
+                <img src={branding.brand_logo_url} alt="Logo" className="h-10 w-10 rounded" />
+              ) : (
+                <div 
+                  className="p-2 rounded-lg" 
+                  style={{ backgroundColor: `${primaryColor}20` }}
+                >
+                  <Building2 className="h-6 w-6" style={{ color: primaryColor }} />
+                </div>
+              )}
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{apartmentInfo.name}</h1>
+                <p className="text-sm text-gray-600 flex items-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {apartmentInfo.address}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500">Powered by</p>
+              <p className="font-semibold text-blue-600">{branding.brand_name}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Chat Container */}
+      <div className="max-w-4xl mx-auto px-6 py-6">
+        <div className="bg-white rounded-xl shadow-lg border h-[600px] flex flex-col">
+          {/* Welcome Message with enhanced branding */}
+          <div 
+            className="p-6 border-b text-white rounded-t-xl"
+            style={{ background: `linear-gradient(135deg, ${primaryColor}, ${branding.brand_secondary_color || BRAND_COLORS.secondary})` }}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="bg-white/20 p-2 rounded-lg">
+                <Bot className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">{branding.brand_name} AI Assistant</h2>
+                <p className="text-white/90 text-sm">Your personal concierge for this stay</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Messages with enhanced styling */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {messages.map((message, index) => (
+              <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`flex items-start space-x-3 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                  <div 
+                    className={`p-2 rounded-full ${
+                      message.type === 'user' 
+                        ? `text-white` 
+                        : 'bg-gray-100'
+                    }`}
+                    style={message.type === 'user' ? { backgroundColor: primaryColor } : {}}
+                  >
+                    {message.type === 'user' ? (
+                      <User className="h-5 w-5" />
+                    ) : (
+                      <Bot className="h-5 w-5 text-gray-600" />
+                    )}
+                  </div>
+                  <div className={`p-4 rounded-2xl ${
+                    message.type === 'user' 
+                      ? 'text-white rounded-br-sm' 
+                      : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+                  }`}
+                  style={message.type === 'user' ? { backgroundColor: primaryColor } : {}}
+                  >
+                    <div className="text-sm leading-relaxed whitespace-pre-line">{message.content}</div>
+                    <p className={`text-xs mt-2 ${message.type === 'user' ? 'text-white/70' : 'text-gray-500'}`}>
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {loading && (
+              <div className="flex justify-start">
+                <div className="flex items-start space-x-3">
+                  <div className="p-2 rounded-full bg-gray-100">
+                    <Bot className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <div className="bg-gray-100 p-4 rounded-2xl rounded-bl-sm">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Enhanced input with suggestions */}
+          <div className="border-t p-6 bg-gray-50">
+            <div className="mb-3">
+              <div className="flex flex-wrap gap-2">
+                {['Check-in instructions', 'WiFi password', 'Local restaurants', 'Emergency contacts'].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => setInputMessage(suggestion)}
+                    className="text-xs px-3 py-1 bg-white border rounded-full hover:bg-gray-100 transition-colors"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex space-x-4">
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Ask about check-in, restaurants, rules, or anything else..."
+                className="flex-1"
+                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                disabled={loading}
+              />
+              <Button 
+                onClick={sendMessage} 
+                disabled={loading || !inputMessage.trim()}
+                style={{ backgroundColor: primaryColor }}
+                className="hover:opacity-90"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              Need urgent help? Contact your host directly via your booking confirmation
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const AnalyticsDashboard = () => {
