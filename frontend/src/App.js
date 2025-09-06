@@ -1594,9 +1594,1161 @@ const AnalyticsDashboard = () => {
   );
 };
 
+// Enhanced Host Dashboard with edit capabilities and AI tone selection
 const HostDashboard = () => {
-  // Enhanced dashboard with edit capabilities
-  return <div>Enhanced Host Dashboard</div>;
+  const { user, logout } = useAuth();
+  const [apartments, setApartments] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingApartment, setEditingApartment] = useState(null);
+  const [showQRCode, setShowQRCode] = useState(null);
+  const [activeTab, setActiveTab] = useState("apartments");
+  const [whitelabelData, setWhitelabelData] = useState({
+    brand_name: user?.brand_name || "MyHostIQ",
+    brand_logo_url: user?.brand_logo_url || "",
+    brand_primary_color: user?.brand_primary_color || BRAND_COLORS.primary,
+    brand_secondary_color: user?.brand_secondary_color || BRAND_COLORS.secondary,
+    ai_tone: user?.ai_tone || "professional", // New: AI tone setting
+    custom_domain: user?.custom_domain || "",
+    chat_background: user?.chat_background || "default",
+    chat_font: user?.chat_font || "Inter"
+  });
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    description: "",
+    rules: [],
+    contact: { phone: "", email: "", whatsapp: "" },
+    ical_url: "",
+    ai_tone: "professional",
+    recommendations: {
+      restaurants: [],
+      hidden_gems: [],
+      transport: ""
+    }
+  });
+  const [newRule, setNewRule] = useState("");
+  const [newRestaurant, setNewRestaurant] = useState({ name: "", type: "", tip: "" });
+  const [newGem, setNewGem] = useState({ name: "", tip: "" });
+
+  useEffect(() => {
+    fetchApartments();
+    if (user) {
+      setWhitelabelData({
+        brand_name: user.brand_name || "MyHostIQ",
+        brand_logo_url: user.brand_logo_url || "",
+        brand_primary_color: user.brand_primary_color || BRAND_COLORS.primary,
+        brand_secondary_color: user.brand_secondary_color || BRAND_COLORS.secondary,
+        ai_tone: user.ai_tone || "professional",
+        custom_domain: user.custom_domain || "",
+        chat_background: user.chat_background || "default",
+        chat_font: user.chat_font || "Inter"
+      });
+    }
+  }, [user]);
+
+  const fetchApartments = async () => {
+    try {
+      const response = await axios.get(`${API}/apartments`);
+      setApartments(response.data);
+    } catch (error) {
+      console.error("Error fetching apartments:", error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingApartment) {
+        // Update existing apartment
+        await axios.put(`${API}/apartments/${editingApartment.id}`, formData);
+      } else {
+        // Create new apartment
+        await axios.post(`${API}/apartments`, formData);
+      }
+      
+      setFormData({
+        name: "",
+        address: "",
+        description: "",
+        rules: [],
+        contact: { phone: "", email: "", whatsapp: "" },
+        ical_url: "",
+        ai_tone: "professional",
+        recommendations: {
+          restaurants: [],
+          hidden_gems: [],
+          transport: ""
+        }
+      });
+      setShowForm(false);
+      setEditingApartment(null);
+      fetchApartments();
+    } catch (error) {
+      console.error("Error saving apartment:", error);
+    }
+  };
+
+  const handleEditApartment = (apartment) => {
+    setEditingApartment(apartment);
+    setFormData({
+      name: apartment.name,
+      address: apartment.address,
+      description: apartment.description,
+      rules: apartment.rules || [],
+      contact: apartment.contact || { phone: "", email: "", whatsapp: "" },
+      ical_url: apartment.ical_url || "",
+      ai_tone: apartment.ai_tone || "professional",
+      recommendations: apartment.recommendations || {
+        restaurants: [],
+        hidden_gems: [],
+        transport: ""
+      }
+    });
+    setShowForm(true);
+  };
+
+  const updateWhitelabelSettings = async () => {
+    try {
+      await axios.put(`${API}/auth/whitelabel`, whitelabelData);
+      alert("Branding settings updated successfully!");
+    } catch (error) {
+      console.error("Error updating whitelabel settings:", error);
+      alert("Error updating settings");
+    }
+  };
+
+  const addRule = () => {
+    if (newRule.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        rules: [...prev.rules, newRule.trim()]
+      }));
+      setNewRule("");
+    }
+  };
+
+  const removeRule = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      rules: prev.rules.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addRestaurant = () => {
+    if (newRestaurant.name.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        recommendations: {
+          ...prev.recommendations,
+          restaurants: [...prev.recommendations.restaurants, newRestaurant]
+        }
+      }));
+      setNewRestaurant({ name: "", type: "", tip: "" });
+    }
+  };
+
+  const removeRestaurant = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      recommendations: {
+        ...prev.recommendations,
+        restaurants: prev.recommendations.restaurants.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const addGem = () => {
+    if (newGem.name.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        recommendations: {
+          ...prev.recommendations,
+          hidden_gems: [...prev.recommendations.hidden_gems, newGem]
+        }
+      }));
+      setNewGem({ name: "", tip: "" });
+    }
+  };
+
+  const removeGem = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      recommendations: {
+        ...prev.recommendations,
+        hidden_gems: prev.recommendations.hidden_gems.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const generateGuestLink = (apartmentId) => {
+    return `${window.location.origin}/guest/${apartmentId}`;
+  };
+
+  const testIcalSync = async (apartmentId) => {
+    try {
+      await axios.post(`${API}/ical/test-sync/${apartmentId}`);
+      alert("iCal sync test completed! Check your email/WhatsApp for test message.");
+    } catch (error) {
+      console.error("Error testing iCal sync:", error);
+      alert("Error testing iCal sync");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Enhanced Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <Building2 className="h-8 w-8 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {whitelabelData.brand_name}
+                </h1>
+                <p className="text-gray-600 mt-1">Welcome back, {user?.full_name}</p>
+                {whitelabelData.custom_domain && (
+                  <p className="text-sm text-blue-600">Custom domain: {whitelabelData.custom_domain}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Property
+              </Button>
+              <Button onClick={logout} variant="outline">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Enhanced Onboarding Guide */}
+        <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-blue-900">
+              <Target className="h-6 w-6 mr-2" />
+              MyHostIQ Setup Guide
+            </CardTitle>
+            <CardDescription className="text-blue-700">
+              Complete these steps to maximize your guest satisfaction
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center mb-3">
+                  <div className="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                    <span className="text-sm font-bold text-blue-600">1</span>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Add Properties</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Create your properties with detailed information, rules, and local recommendations.
+                </p>
+                <div className="flex items-center text-xs text-blue-600">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  Properties Tab
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center mb-3">
+                  <div className="bg-purple-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                    <span className="text-sm font-bold text-purple-600">2</span>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Customize Brand</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Set your colors, logo, AI tone, and chat appearance to match your brand.
+                </p>
+                <div className="flex items-center text-xs text-purple-600">
+                  <Palette className="h-3 w-3 mr-1" />
+                  Branding Tab
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center mb-3">
+                  <div className="bg-emerald-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                    <span className="text-sm font-bold text-emerald-600">3</span>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Setup iCal & Notifications</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Connect your booking calendars for automatic guest notifications via email & WhatsApp.
+                </p>
+                <div className="flex items-center text-xs text-emerald-600">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  iCal Integration
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center mb-3">
+                  <div className="bg-orange-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                    <span className="text-sm font-bold text-orange-600">4</span>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Deploy & Monitor</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Generate QR codes, share guest links, and track performance in analytics.
+                </p>
+                <div className="flex items-center text-xs text-orange-600">
+                  <BarChart3 className="h-3 w-3 mr-1" />
+                  Analytics Tab
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-white rounded-lg border-l-4 border-blue-400">
+              <div className="flex items-start">
+                <Sparkles className="h-5 w-5 text-blue-500 mt-0.5 mr-3" />
+                <div>
+                  <h5 className="font-semibold text-gray-900 mb-1">Pro Tip</h5>
+                  <p className="text-sm text-gray-700 mb-3">
+                    The more detailed information you provide about your property and local area, 
+                    the better your AI assistant can help your guests. Include WiFi passwords, 
+                    check-in procedures, and your favorite local spots!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 p-4 bg-amber-50 rounded-lg border-l-4 border-amber-400">
+              <div className="flex items-start">
+                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3" />
+                <div>
+                  <h5 className="font-semibold text-gray-900 mb-1">Important: Guest Notification Strategy</h5>
+                  <p className="text-sm text-gray-700 mb-2">
+                    <strong>Maximize your AI assistant usage with these steps:</strong>
+                  </p>
+                  <ul className="text-xs text-gray-600 space-y-1 ml-4 list-disc">
+                    <li><strong>Airbnb/Booking.com:</strong> Add your guest link to automatic booking confirmation messages</li>
+                    <li><strong>iCal Integration:</strong> Enable automatic WhatsApp & email notifications for new bookings</li>
+                    <li><strong>QR Codes:</strong> Print and place prominently in your property</li>
+                    <li><strong>Check-in Messages:</strong> Mention the AI assistant in your welcome instructions</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="apartments" className="flex items-center space-x-2">
+              <Building2 className="h-4 w-4" />
+              <span>Properties</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center space-x-2">
+              <BarChart3 className="h-4 w-4" />
+              <span>Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="whitelabel" className="flex items-center space-x-2">
+              <Palette className="h-4 w-4" />
+              <span>Branding</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Enhanced Apartments Tab */}
+          <TabsContent value="apartments">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {apartments.map((apartment) => (
+                <Card key={apartment.id} className="hover:shadow-lg transition-all border-0 shadow-md group">
+                  <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg">{apartment.name}</CardTitle>
+                        <CardDescription className="text-blue-100 flex items-center mt-1">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {apartment.address}
+                        </CardDescription>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-white/20 border-white/30 text-white hover:bg-white hover:text-blue-600"
+                        onClick={() => handleEditApartment(apartment)}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{apartment.description}</p>
+                    
+                    {/* Enhanced status indicators */}
+                    <div className="space-y-3 mb-4">
+                      {apartment.ical_url && (
+                        <div className="flex items-center justify-between p-2 bg-emerald-50 rounded-lg">
+                          <div className="flex items-center text-emerald-700">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            <span className="text-xs font-medium">iCal Connected</span>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="text-xs h-6 px-2"
+                            onClick={() => testIcalSync(apartment.id)}
+                          >
+                            Test
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {apartment.ai_tone && (
+                        <div className="flex items-center text-blue-700 p-2 bg-blue-50 rounded-lg">
+                          <Bot className="h-4 w-4 mr-2" />
+                          <span className="text-xs font-medium capitalize">
+                            AI Tone: {apartment.ai_tone}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {apartment.rules?.length > 0 && (
+                        <div className="flex items-center text-orange-700 p-2 bg-orange-50 rounded-lg">
+                          <Shield className="h-4 w-4 mr-2" />
+                          <span className="text-xs font-medium">
+                            {apartment.rules.length} Rules Set
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Performance Stats */}
+                    <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-blue-600">{apartment.total_chats || 0}</p>
+                        <p className="text-xs text-gray-600">AI Conversations</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-lg font-bold text-emerald-600">{apartment.total_sessions || 0}</p>
+                        <p className="text-xs text-gray-600">Unique Guests</p>
+                      </div>
+                    </div>
+
+                    <Separator className="my-4" />
+                    
+                    {/* Action Buttons */}
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => navigator.clipboard.writeText(generateGuestLink(apartment.id))}
+                          className="text-xs"
+                        >
+                          <LinkIcon className="h-3 w-3 mr-1" />
+                          Copy Link
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => window.open(generateGuestLink(apartment.id), '_blank')}
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          Preview
+                        </Button>
+                      </div>
+                      
+                      <Button 
+                        size="sm" 
+                        onClick={() => setShowQRCode({
+                          id: apartment.id, 
+                          name: apartment.name,
+                          brandName: whitelabelData.brand_name
+                        })}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                      >
+                        <QrCode className="h-3 w-3 mr-1" />
+                        Generate QR & PDF
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <AnalyticsDashboard />
+          </TabsContent>
+
+          {/* Enhanced Whitelabel Tab */}
+          <TabsContent value="whitelabel">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Brand Identity</CardTitle>
+                  <CardDescription>
+                    Customize your brand appearance across all guest touchpoints
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Brand Name
+                    </label>
+                    <Input
+                      value={whitelabelData.brand_name}
+                      onChange={(e) => setWhitelabelData(prev => ({...prev, brand_name: e.target.value}))}
+                      placeholder="MyHostIQ"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Logo URL (optional)
+                    </label>
+                    <Input
+                      value={whitelabelData.brand_logo_url}
+                      onChange={(e) => setWhitelabelData(prev => ({...prev, brand_logo_url: e.target.value}))}
+                      placeholder="https://example.com/logo.png"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Primary Color
+                      </label>
+                      <div className="flex space-x-2">
+                        <Input
+                          type="color"
+                          value={whitelabelData.brand_primary_color}
+                          onChange={(e) => setWhitelabelData(prev => ({...prev, brand_primary_color: e.target.value}))}
+                          className="w-12"
+                        />
+                        <Input
+                          value={whitelabelData.brand_primary_color}
+                          onChange={(e) => setWhitelabelData(prev => ({...prev, brand_primary_color: e.target.value}))}
+                          placeholder="#2563eb"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Secondary Color
+                      </label>
+                      <div className="flex space-x-2">
+                        <Input
+                          type="color"
+                          value={whitelabelData.brand_secondary_color}
+                          onChange={(e) => setWhitelabelData(prev => ({...prev, brand_secondary_color: e.target.value}))}
+                          className="w-12"
+                        />
+                        <Input
+                          value={whitelabelData.brand_secondary_color}
+                          onChange={(e) => setWhitelabelData(prev => ({...prev, brand_secondary_color: e.target.value}))}
+                          placeholder="#1d4ed8"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Custom Domain (optional)
+                    </label>
+                    <Input
+                      value={whitelabelData.custom_domain}
+                      onChange={(e) => setWhitelabelData(prev => ({...prev, custom_domain: e.target.value}))}
+                      placeholder="ai.yourdomain.com"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Contact support to configure your custom domain
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Chat Experience</CardTitle>
+                  <CardDescription>
+                    Customize how guests interact with your AI assistant
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chat Background Style
+                    </label>
+                    <Select 
+                      value={whitelabelData.chat_background} 
+                      onValueChange={(value) => setWhitelabelData(prev => ({...prev, chat_background: value}))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="default">Clean White</SelectItem>
+                        <SelectItem value="gradient">Subtle Gradient</SelectItem>
+                        <SelectItem value="branded">Brand Colors</SelectItem>
+                        <SelectItem value="minimal">Minimal Gray</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chat Font Family
+                    </label>
+                    <Select 
+                      value={whitelabelData.chat_font} 
+                      onValueChange={(value) => setWhitelabelData(prev => ({...prev, chat_font: value}))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Inter">Inter (Modern)</SelectItem>
+                        <SelectItem value="Roboto">Roboto (Clean)</SelectItem>
+                        <SelectItem value="Open Sans">Open Sans (Friendly)</SelectItem>
+                        <SelectItem value="Poppins">Poppins (Rounded)</SelectItem>
+                        <SelectItem value="Lato">Lato (Professional)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Default AI Tone
+                    </label>
+                    <Select 
+                      value={whitelabelData.ai_tone} 
+                      onValueChange={(value) => setWhitelabelData(prev => ({...prev, ai_tone: value}))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="professional">
+                          <div className="flex items-center">
+                            <Briefcase className="h-4 w-4 mr-2" />
+                            Professional - Formal and informative
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="friendly">
+                          <div className="flex items-center">
+                            <User className="h-4 w-4 mr-2" />
+                            Friendly - Warm and welcoming
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="casual">
+                          <div className="flex items-center">
+                            <Coffee className="h-4 w-4 mr-2" />
+                            Casual - Relaxed and conversational
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      This can be overridden per property in the property settings
+                    </p>
+                  </div>
+
+                  <Button onClick={updateWhitelabelSettings} className="w-full">
+                    Update Brand Settings
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Preview Section */}
+            <Card className="mt-8">
+              <CardHeader>
+                <CardTitle>Live Preview</CardTitle>
+                <CardDescription>See how your branding will look to guests</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg p-4 space-y-4 bg-gray-50">
+                  {/* Chat Header Preview */}
+                  <div 
+                    className="p-4 rounded-lg text-white"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${whitelabelData.brand_primary_color}, ${whitelabelData.brand_secondary_color})`,
+                      fontFamily: whitelabelData.chat_font 
+                    }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {whitelabelData.brand_logo_url ? (
+                        <img src={whitelabelData.brand_logo_url} alt="Logo" className="h-8 w-8 rounded" />
+                      ) : (
+                        <div className="bg-white/20 p-2 rounded-lg">
+                          <Bot className="h-6 w-6" />
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="font-semibold">{whitelabelData.brand_name} AI Assistant</h4>
+                        <p className="text-white/90 text-sm">Your personal concierge</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sample Messages */}
+                  <div className="space-y-3" style={{ fontFamily: whitelabelData.chat_font }}>
+                    <div className="flex justify-start">
+                      <div className="bg-white p-3 rounded-lg rounded-bl-sm max-w-xs">
+                        <p className="text-sm">Welcome! I'm your {whitelabelData.ai_tone} AI assistant. How can I help you today?</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <div 
+                        className="p-3 rounded-lg rounded-br-sm max-w-xs text-white"
+                        style={{ backgroundColor: whitelabelData.brand_primary_color }}
+                      >
+                        <p className="text-sm">What's the WiFi password?</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Enhanced Settings Tab */}
+          <TabsContent value="settings">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Information</CardTitle>
+                  <CardDescription>Manage your account details</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <Input value={user?.email} disabled />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {user?.email_verified ? "✅ Verified" : "❌ Not verified - Check your email"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <Input value={user?.full_name} disabled />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                    <Input value={user?.phone || "Not provided"} disabled />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {user?.phone_verified ? "✅ Verified" : "❌ Not verified"}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notification Settings</CardTitle>
+                  <CardDescription>Configure how you receive updates</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Guest Message Alerts</p>
+                        <p className="text-sm text-gray-500">Get notified when guests use your AI assistant</p>
+                      </div>
+                      <input type="checkbox" className="rounded" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">New Booking Notifications</p>
+                        <p className="text-sm text-gray-500">Automatic alerts from iCal integration</p>
+                      </div>
+                      <input type="checkbox" className="rounded" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Weekly Analytics Summary</p>
+                        <p className="text-sm text-gray-500">Performance reports via email</p>
+                      </div>
+                      <input type="checkbox" className="rounded" defaultChecked />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="mt-8">
+              <CardHeader>
+                <CardTitle className="text-red-600">Danger Zone</CardTitle>
+                <CardDescription>Irreversible account actions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center p-4 border border-red-200 rounded-lg">
+                  <div>
+                    <p className="font-medium">Delete Account</p>
+                    <p className="text-sm text-gray-500">Permanently delete your account and all data</p>
+                  </div>
+                  <Button variant="destructive" size="sm">
+                    Delete Account
+                  </Button>
+                </div>
+                <div className="pt-4">
+                  <Button variant="outline" onClick={logout} className="w-full">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* QR Code Modal */}
+        {showQRCode && (
+          <QRCodeGenerator
+            apartmentId={showQRCode.id}
+            apartmentName={showQRCode.name}
+            brandName={showQRCode.brandName}
+            onClose={() => setShowQRCode(null)}
+          />
+        )}
+
+        {/* Enhanced Add/Edit Apartment Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  {editingApartment ? `Edit ${editingApartment.name}` : "Add New Property"}
+                </h2>
+                
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Building2 className="h-5 w-5 mr-2" />
+                      Property Information
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        placeholder="Property Name"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                        required
+                      />
+                      
+                      <Input
+                        placeholder="Full Address"
+                        value={formData.address}
+                        onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
+                        required
+                      />
+                    </div>
+                    
+                    <Textarea
+                      placeholder="Property Description (Be detailed - this helps your AI assistant provide better responses)"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+                      required
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* AI Configuration */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Bot className="h-5 w-5 mr-2" />
+                      AI Assistant Configuration
+                    </h3>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        AI Personality & Tone
+                      </label>
+                      <Select 
+                        value={formData.ai_tone} 
+                        onValueChange={(value) => setFormData(prev => ({...prev, ai_tone: value}))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="professional">
+                            <div className="flex items-center">
+                              <Briefcase className="h-4 w-4 mr-2" />
+                              Professional - Formal, informative, business-like
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="friendly">
+                            <div className="flex items-center">
+                              <User className="h-4 w-4 mr-2" />
+                              Friendly - Warm, welcoming, personal
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="casual">
+                            <div className="flex items-center">
+                              <Coffee className="h-4 w-4 mr-2" />
+                              Casual - Relaxed, conversational, laid-back
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        This affects how your AI assistant communicates with guests
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Contact & Notifications */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Phone className="h-5 w-5 mr-2" />
+                      Contact & Emergency Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <Input
+                          placeholder="host@example.com"
+                          type="email"
+                          value={formData.contact.email}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev, 
+                            contact: {...prev.contact, email: e.target.value}
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <Input
+                          placeholder="+1 555 123 4567"
+                          value={formData.contact.phone}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev, 
+                            contact: {...prev.contact, phone: e.target.value}
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp (for notifications)</label>
+                        <Input
+                          placeholder="+1 555 123 4567"
+                          value={formData.contact.whatsapp}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev, 
+                            contact: {...prev.contact, whatsapp: e.target.value}
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* iCal Integration */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Calendar className="h-5 w-5 mr-2" />
+                      Booking Calendar Integration
+                    </h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        iCal URL (from Airbnb, Booking.com, etc.)
+                      </label>
+                      <Input
+                        placeholder="https://airbnb.com/calendar/ical/..."
+                        value={formData.ical_url}
+                        onChange={(e) => setFormData(prev => ({...prev, ical_url: e.target.value}))}
+                      />
+                      <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-800 mb-2">
+                          <strong>🚀 Automatic Guest Notifications</strong>
+                        </p>
+                        <p className="text-xs text-blue-700">
+                          When you add an iCal URL, MyHostIQ will automatically:
+                        </p>
+                        <ul className="text-xs text-blue-600 mt-1 ml-4 list-disc">
+                          <li>Monitor your calendar for new bookings</li>
+                          <li>Extract guest email & phone from booking details</li>
+                          <li>Send welcome messages with AI assistant link via email & WhatsApp</li>
+                          <li>Notify guests about their personal concierge before arrival</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rules */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Shield className="h-5 w-5 mr-2" />
+                      Property Rules & Guidelines
+                    </h3>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Add a rule (e.g., No smoking, Check-in after 2 PM)"
+                        value={newRule}
+                        onChange={(e) => setNewRule(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRule())}
+                      />
+                      <Button type="button" onClick={addRule}>Add</Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.rules.map((rule, index) => (
+                        <Badge key={index} className="bg-red-100 text-red-800 cursor-pointer hover:bg-red-200"
+                               onClick={() => removeRule(index)}>
+                          {rule} ✕
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Restaurant Recommendations */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Coffee className="h-5 w-5 mr-2" />
+                      Restaurant & Dining Recommendations
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <Input
+                        placeholder="Restaurant name"
+                        value={newRestaurant.name}
+                        onChange={(e) => setNewRestaurant(prev => ({...prev, name: e.target.value}))}
+                      />
+                      <Input
+                        placeholder="Cuisine type"
+                        value={newRestaurant.type}
+                        onChange={(e) => setNewRestaurant(prev => ({...prev, type: e.target.value}))}
+                      />
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="Your tip or note"
+                          value={newRestaurant.tip}
+                          onChange={(e) => setNewRestaurant(prev => ({...prev, tip: e.target.value}))}
+                        />
+                        <Button type="button" onClick={addRestaurant}>Add</Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {formData.recommendations.restaurants.map((rest, index) => (
+                        <div key={index} className="bg-green-50 p-3 rounded-lg text-sm flex justify-between items-start">
+                          <div>
+                            <strong>{rest.name}</strong> ({rest.type}) - {rest.tip}
+                          </div>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => removeRestaurant(index)}
+                            className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
+                          >
+                            ✕
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Hidden Gems */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <MapIcon className="h-5 w-5 mr-2" />
+                      Hidden Gems & Local Attractions
+                    </h3>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Place or attraction name"
+                        value={newGem.name}
+                        onChange={(e) => setNewGem(prev => ({...prev, name: e.target.value}))}
+                      />
+                      <Input
+                        placeholder="Why is it special? Your personal tip"
+                        value={newGem.tip}
+                        onChange={(e) => setNewGem(prev => ({...prev, tip: e.target.value}))}
+                      />
+                      <Button type="button" onClick={addGem}>Add</Button>
+                    </div>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {formData.recommendations.hidden_gems.map((gem, index) => (
+                        <div key={index} className="bg-blue-50 p-3 rounded-lg text-sm flex justify-between items-start">
+                          <div>
+                            <strong>{gem.name}</strong> - {gem.tip}
+                          </div>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => removeGem(index)}
+                            className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
+                          >
+                            ✕
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Transport */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Car className="h-5 w-5 mr-2" />
+                      Transportation & Getting Around
+                    </h3>
+                    <Textarea
+                      placeholder="Transport details: Bus routes, metro stations, taxi apps, parking information, walking distances to attractions..."
+                      value={formData.recommendations.transport}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev, 
+                        recommendations: {...prev.recommendations, transport: e.target.value}
+                      }))}
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex space-x-4 pt-6 border-t">
+                    <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                      {editingApartment ? "Update Property" : "Create Property"}
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowForm(false);
+                        setEditingApartment(null);
+                        setFormData({
+                          name: "",
+                          address: "",
+                          description: "",
+                          rules: [],
+                          contact: { phone: "", email: "", whatsapp: "" },
+                          ical_url: "",
+                          ai_tone: "professional",
+                          recommendations: {
+                            restaurants: [],
+                            hidden_gems: [],
+                            transport: ""
+                          }
+                        });
+                      }} 
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 const ProtectedRoute = ({ children }) => {
