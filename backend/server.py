@@ -618,7 +618,11 @@ async def update_whitelabel_settings(
                 "brand_name": settings.brand_name,
                 "brand_logo_url": settings.brand_logo_url,
                 "brand_primary_color": settings.brand_primary_color,
-                "brand_secondary_color": settings.brand_secondary_color
+                "brand_secondary_color": settings.brand_secondary_color,
+                "ai_tone": settings.ai_tone,
+                "custom_domain": settings.custom_domain,
+                "chat_background": settings.chat_background,
+                "chat_font": settings.chat_font
             }}
         )
         return {"message": "Whitelabel settings updated successfully"}
