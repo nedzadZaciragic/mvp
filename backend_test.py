@@ -469,6 +469,7 @@ class MyHostIQAPITester:
             "description": "Cozy 2-bedroom near Colosseum",
             "rules": ["No smoking", "Check-in after 2PM"],
             "contact": {"phone": "+39 123456789", "email": "host@test.com"},
+            "ical_url": "https://calendar.google.com/calendar/ical/test%40example.com/public/basic.ics",
             "recommendations": {
                 "restaurants": [{"name": "Trattoria Mario", "type": "Italian", "tip": "Best pasta in area"}],
                 "hidden_gems": [{"name": "Secret Garden", "tip": "Peaceful spot"}],
@@ -487,6 +488,7 @@ class MyHostIQAPITester:
         if success and response.get('id'):
             self.created_apartment_id = response['id']
             print(f"   Created apartment ID: {self.created_apartment_id}")
+            print(f"   iCal URL configured: {response.get('ical_url', 'None')}")
         
         return success
 
@@ -542,6 +544,51 @@ class MyHostIQAPITester:
             print(f"   Apartment: {apartment.get('name', 'Unknown')}")
             print(f"   Brand: {branding.get('brand_name', 'Unknown')}")
             print(f"   Primary color: {branding.get('brand_primary_color', 'Unknown')}")
+        
+        return success
+
+    # ICAL INTEGRATION TESTS - HIGH PRIORITY
+    def test_ical_sync(self):
+        """Test iCal sync functionality - HIGH PRIORITY"""
+        if not self.created_apartment_id:
+            print("❌ Skipping - No apartment ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Test iCal Sync",
+            "POST",
+            f"ical/test-sync/{self.created_apartment_id}",
+            200
+        )
+        
+        if success:
+            message = response.get('message', '')
+            print(f"   Sync result: {message}")
+            if 'successfully' in message.lower():
+                print("   ✅ iCal sync functionality working")
+            else:
+                print("   ⚠️  iCal sync may have issues")
+        
+        return success
+
+    def test_get_notifications(self):
+        """Test getting booking notifications - HIGH PRIORITY"""
+        if not self.created_apartment_id:
+            print("❌ Skipping - No apartment ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Get Booking Notifications",
+            "GET",
+            f"notifications/{self.created_apartment_id}",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"   Found {len(response)} booking notifications")
+            for notification in response[:3]:  # Show first 3
+                print(f"   - Guest: {notification.get('guest_name', 'Unknown')}")
+                print(f"     Email sent: {notification.get('notification_sent', False)}")
         
         return success
 
@@ -645,27 +692,48 @@ class MyHostIQAPITester:
         return success
 
 def main():
-    print("🚀 Starting My Host IQ SaaS API Testing...")
-    print("🔐 Testing Authentication, Whitelabeling, and Analytics")
-    print("=" * 60)
+    print("🚀 Starting MyHostIQ Email & Payment Testing...")
+    print("📧 Testing Email Credentials, SMTP, and Payment Simulation")
+    print("=" * 70)
     
     # Initialize tester
     tester = MyHostIQAPITester()
     
-    # Run tests in order - AUTHENTICATION FIRST
+    # Run tests in order - AUTHENTICATION FIRST, then EMAIL FEATURES
     tests = [
         ("Health Check", tester.test_health_check),
         ("🔐 User Registration", tester.test_user_registration),
         ("🔐 User Login", tester.test_user_login),
         ("🔐 Get Current User", tester.test_get_current_user),
         ("🎨 Update Whitelabel Settings", tester.test_update_whitelabel_settings),
+        
+        # EMAIL FUNCTIONALITY TESTS - HIGH PRIORITY
+        ("📧 Create Email Credentials", tester.test_create_email_credentials),
+        ("📧 Get Email Credentials", tester.test_get_email_credentials),
+        ("📧 Update Email Credentials", tester.test_update_email_credentials),
+        ("📧 Test Email Functionality", tester.test_email_credentials_test),
+        
+        # PAYMENT SIMULATION TESTS - MEDIUM PRIORITY
+        ("💳 Get Payment Plans", tester.test_get_payment_plans),
+        ("💳 Simulate Payment", tester.test_simulate_payment),
+        
+        # APARTMENT AND ICAL TESTS
         ("🏠 Create Apartment", tester.test_create_apartment),
         ("🏠 Get User's Apartments", tester.test_get_apartments),
         ("🏠 Get Specific Apartment", tester.test_get_specific_apartment),
         ("🌐 Public Apartment Access", tester.test_public_apartment_access),
+        
+        # ICAL INTEGRATION TESTS - HIGH PRIORITY
+        ("📅 Test iCal Sync", tester.test_ical_sync),
+        ("📬 Get Booking Notifications", tester.test_get_notifications),
+        
+        # CORE FUNCTIONALITY
         ("🤖 AI Chat (CRITICAL)", tester.test_ai_chat),
         ("📊 Analytics Dashboard", tester.test_analytics_dashboard),
         ("💬 Chat History", tester.test_chat_history),
+        
+        # CLEANUP
+        ("📧 Delete Email Credentials", tester.test_delete_email_credentials),
     ]
     
     failed_tests = []
@@ -680,9 +748,9 @@ def main():
             failed_tests.append(test_name)
     
     # Print final results
-    print(f"\n{'='*60}")
-    print(f"📊 FINAL RESULTS - My Host IQ SaaS Platform")
-    print(f"{'='*60}")
+    print(f"\n{'='*70}")
+    print(f"📊 FINAL RESULTS - MyHostIQ Email & Payment Testing")
+    print(f"{'='*70}")
     print(f"Tests passed: {tester.tests_passed}/{tester.tests_run}")
     print(f"Success rate: {(tester.tests_passed/tester.tests_run)*100:.1f}%")
     
@@ -690,21 +758,43 @@ def main():
         print(f"\n❌ Failed tests:")
         for test in failed_tests:
             print(f"   - {test}")
-        print(f"\n🔧 Issues to fix:")
+        print(f"\n🔧 Critical Issues to fix:")
+        
+        # Email functionality issues
+        email_tests = [t for t in failed_tests if "📧" in t]
+        if email_tests:
+            print("   📧 EMAIL FUNCTIONALITY ISSUES:")
+            for test in email_tests:
+                print(f"      - {test}")
+        
+        # Payment functionality issues  
+        payment_tests = [t for t in failed_tests if "💳" in t]
+        if payment_tests:
+            print("   💳 PAYMENT FUNCTIONALITY ISSUES:")
+            for test in payment_tests:
+                print(f"      - {test}")
+                
+        # iCal functionality issues
+        ical_tests = [t for t in failed_tests if "📅" in t or "📬" in t]
+        if ical_tests:
+            print("   📅 ICAL INTEGRATION ISSUES:")
+            for test in ical_tests:
+                print(f"      - {test}")
+                
+        # Core functionality issues
         if "🔐 User Registration" in failed_tests:
-            print("   - Authentication system not working")
-        if "🎨 Update Whitelabel Settings" in failed_tests:
-            print("   - Whitelabeling feature broken")
+            print("   🚨 CRITICAL: Authentication system not working")
         if "🤖 AI Chat (CRITICAL)" in failed_tests:
-            print("   - AI chat functionality broken")
-        if "📊 Analytics Dashboard" in failed_tests:
-            print("   - Analytics system not working")
+            print("   🚨 CRITICAL: AI chat functionality broken")
     else:
-        print(f"\n✅ All SaaS features working correctly!")
+        print(f"\n✅ All MyHostIQ features working correctly!")
+        print(f"   ✅ Email credentials management working")
+        print(f"   ✅ SMTP auto-detection working")
+        print(f"   ✅ Email encryption/decryption working")
+        print(f"   ✅ Payment simulation working")
+        print(f"   ✅ iCal integration working")
         print(f"   ✅ Authentication system working")
-        print(f"   ✅ Whitelabeling working")
         print(f"   ✅ AI chat with branding working")
-        print(f"   ✅ Analytics dashboard working")
     
     if tester.created_apartment_id:
         print(f"\n🏠 Created apartment ID for frontend testing: {tester.created_apartment_id}")
