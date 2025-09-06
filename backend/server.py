@@ -592,10 +592,17 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "id": current_user.id,
         "email": current_user.email,
         "full_name": current_user.full_name,
+        "phone": current_user.phone,
         "brand_name": current_user.brand_name,
         "brand_logo_url": current_user.brand_logo_url,
         "brand_primary_color": current_user.brand_primary_color,
-        "brand_secondary_color": current_user.brand_secondary_color
+        "brand_secondary_color": current_user.brand_secondary_color,
+        "ai_tone": current_user.ai_tone,
+        "custom_domain": current_user.custom_domain,
+        "chat_background": current_user.chat_background,
+        "chat_font": current_user.chat_font,
+        "email_verified": current_user.email_verified,
+        "phone_verified": current_user.phone_verified
     }
 
 @api_router.put("/auth/whitelabel")
