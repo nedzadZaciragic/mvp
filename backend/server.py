@@ -497,13 +497,14 @@ async def sync_apartment_calendar(apartment_id: str):
             # Send notifications
             notification_sent = False
             
-            # Send email if available
-            if booking.get('guest_email'):
+            # Send email if available and host has configured email
+            if booking.get('guest_email') and host_email_creds:
                 email_sent = await send_email_notification(
                     booking['guest_email'], 
                     email_subject, 
                     email_content, 
-                    apartment['name']
+                    apartment['name'],
+                    host_email_creds
                 )
                 if email_sent:
                     notification_sent = True
