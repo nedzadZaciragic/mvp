@@ -419,6 +419,102 @@ Save this link for instant help during your stay!
     """
     
     return email_subject, email_content, whatsapp_message
+
+async def sync_apartment_calendar(apartment_id: str):
+    """Sync apartment calendar and send notifications for new bookings"""
+    try:
+        # Get apartment data
+        apartment = await db.apartments.find_one({"id": apartment_id})
+        if not apartment or not apartment.get('ical_url'):
+            return
+        
+        # Parse iCal calendar
+        bookings = await parse_ical_calendar(apartment['ical_url'])
+        
+        # Get user branding
+        user = await db.users.find_one({"id": apartment['user_id']})
+        branding = {
+            "brand_name": user.get('brand_name', 'MyHostIQ'),
+            "brand_logo_url": user.get('brand_logo_url', ''),
+            "brand_primary_color": user.get('brand_primary_color', '#2563eb'),
+            "brand_secondary_color": user.get('brand_secondary_color', '#1d4ed8')
+        }
+        
+        # Process each booking
+        for booking in bookings:
+            if not booking.get('checkin_date'):
+                continue
+                
+            # Check if we already sent notification for this booking
+            existing_notification = await db.booking_notifications.find_one({
+                "apartment_id": apartment_id,
+                "checkin_date": booking['checkin_date'].isoformat(),
+                "guest_email": booking.get('guest_email', ''),
+                "notification_sent": True
+            })
+            
+            if existing_notification:
+                continue
+                
+            # Create guest URL
+            guest_url = f"https://app.myhostiq.com/chat/{apartment_id}"
+            if user.get('custom_domain'):
+                guest_url = f"https://{user['custom_domain']}/chat/{apartment_id}"
+            
+            # Create notification message
+            guest_name = booking.get('guest_name', 'Guest')
+            email_subject, email_content, whatsapp_message = await create_guest_notification_message(
+                apartment, branding, guest_name, booking['checkin_date'], guest_url
+            )
+            
+            # Send notifications
+            notification_sent = False
+            
+            # Send email if available
+            if booking.get('guest_email'):
+                email_sent = await send_email_notification(
+                    booking['guest_email'], 
+                    email_subject, 
+                    email_content, 
+                    apartment['name']
+                )
+                if email_sent:
+                    notification_sent = True
+            
+            # Send WhatsApp if available
+            if booking.get('guest_phone'):
+                whatsapp_sent = await send_whatsapp_message(
+                    booking['guest_phone'], 
+                    whatsapp_message, 
+                    apartment['name']
+                )
+                if whatsapp_sent:
+                    notification_sent = True
+            
+            # Save notification record
+            notification = BookingNotification(
+                apartment_id=apartment_id,
+                guest_email=booking.get('guest_email', ''),
+                guest_phone=booking.get('guest_phone', ''),
+                guest_name=guest_name,
+                checkin_date=booking['checkin_date'],
+                checkout_date=booking.get('checkout_date'),
+                booking_source=booking.get('booking_source', ''),
+                notification_sent=notification_sent
+            )
+            
+            notification_dict = prepare_for_mongo(notification.dict())
+            await db.booking_notifications.insert_one(notification_dict)
+        
+        # Update last sync time
+        await db.apartments.update_one(
+            {"id": apartment_id},
+            {"$set": {"last_ical_sync": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error syncing calendar for apartment {apartment_id}: {str(e)}")
+
 def prepare_for_mongo(data):
     """Prepare data for MongoDB storage"""
     if isinstance(data, dict):
