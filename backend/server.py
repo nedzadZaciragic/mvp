@@ -452,7 +452,7 @@ async def sync_apartment_calendar(apartment_id: str):
         # Parse iCal calendar
         bookings = await parse_ical_calendar(apartment['ical_url'])
         
-        # Get user branding
+        # Get user branding and email credentials
         user = await db.users.find_one({"id": apartment['user_id']})
         branding = {
             "brand_name": user.get('brand_name', 'MyHostIQ'),
@@ -460,6 +460,12 @@ async def sync_apartment_calendar(apartment_id: str):
             "brand_primary_color": user.get('brand_primary_color', '#2563eb'),
             "brand_secondary_color": user.get('brand_secondary_color', '#1d4ed8')
         }
+        
+        # Get host's email credentials
+        host_email_creds = await db.email_credentials.find_one({
+            "user_id": apartment['user_id'],
+            "is_verified": True
+        })
         
         # Process each booking
         for booking in bookings:
