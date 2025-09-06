@@ -1594,6 +1594,282 @@ const AnalyticsDashboard = () => {
   );
 };
 
+// Email Credentials Manager Component
+const EmailCredentialsManager = () => {
+  const [emailCreds, setEmailCreds] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    smtp_server: '',
+    smtp_port: 587
+  });
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  useEffect(() => {
+    fetchEmailCredentials();
+  }, []);
+
+  const fetchEmailCredentials = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/email-credentials`);
+      setEmailCreds(response.data);
+    } catch (error) {
+      console.error('Error fetching email credentials:', error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+    
+    try {
+      const endpoint = emailCreds ? 'PUT' : 'POST';
+      const response = await axios({
+        method: endpoint,
+        url: `${API}/auth/email-credentials`,
+        data: formData
+      });
+      
+      setEmailCreds(response.data);
+      setShowForm(false);
+      setFormData({ email: '', password: '', smtp_server: '', smtp_port: 587 });
+      setMessage({ type: 'success', text: 'Email credentials saved successfully!' });
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.detail || 'Failed to save email credentials' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTest = async () => {
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+    
+    try {
+      await axios.post(`${API}/auth/test-email`);
+      setMessage({ type: 'success', text: 'Test email sent successfully! Check your inbox.' });
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.detail || 'Failed to send test email' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete your email credentials?')) return;
+    
+    setLoading(true);
+    try {
+      await axios.delete(`${API}/auth/email-credentials`);
+      setEmailCreds(null);
+      setMessage({ type: 'success', text: 'Email credentials deleted successfully' });
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.detail || 'Failed to delete email credentials' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const detectSMTPSettings = (email) => {
+    const domain = email.split('@')[1]?.toLowerCase();
+    if (domain?.includes('gmail.com')) {
+      setFormData(prev => ({ ...prev, smtp_server: 'smtp.gmail.com', smtp_port: 587 }));
+    } else if (domain?.includes('outlook.com') || domain?.includes('hotmail.com')) {
+      setFormData(prev => ({ ...prev, smtp_server: 'smtp-mail.outlook.com', smtp_port: 587 }));
+    } else if (domain?.includes('yahoo.com')) {
+      setFormData(prev => ({ ...prev, smtp_server: 'smtp.mail.yahoo.com', smtp_port: 587 }));
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {message.text && (
+        <Alert className={message.type === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}>
+          <AlertDescription className={message.type === 'error' ? 'text-red-700' : 'text-green-700'}>
+            {message.text}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {emailCreds ? (
+        <div className="space-y-4">
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="bg-green-100 p-2 rounded-full">
+                  <Mail className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-green-900">Email Configured</p>
+                  <p className="text-sm text-green-700">{emailCreds.email}</p>
+                  <p className="text-xs text-green-600">
+                    {emailCreds.smtp_server}:{emailCreds.smtp_port} • 
+                    {emailCreds.is_verified ? ' ✅ Verified' : ' ❌ Not verified'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Button size="sm" variant="outline" onClick={handleTest} disabled={loading}>
+                  <Send className="h-4 w-4 mr-1" />
+                  Test
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleDelete} disabled={loading}>
+                  <AlertTriangle className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="bg-blue-100 p-2 rounded-full mt-1">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium text-blue-900 mb-2">Email Notifications Active</h4>
+                <p className="text-sm text-blue-700 mb-3">
+                  When guests book your property through iCal integration, they'll receive beautiful welcome emails 
+                  directly from your email address with their personalized AI assistant link.
+                </p>
+                <div className="text-xs text-blue-600 space-y-1">
+                  <p>• Emails sent from: <strong>{emailCreds.email}</strong></p>
+                  <p>• Automatic trigger on new bookings</p>
+                  <p>• Branded email templates with your logo and colors</p>
+                  <p>• Includes check-in instructions and local recommendations</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+          <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Email Configuration</h3>
+          <p className="text-gray-600 mb-4">
+            Configure your email to automatically send welcome messages to guests from your own email address.
+          </p>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Email Credentials
+          </Button>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>
+                {emailCreds ? 'Update' : 'Add'} Email Credentials
+              </CardTitle>
+              <CardDescription>
+                Configure your email to send guest notifications from your own email address
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address *
+                  </label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, email: e.target.value }));
+                      detectSMTPSettings(e.target.value);
+                    }}
+                    placeholder="your-email@gmail.com"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Use your Gmail, Outlook, or business email
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Password / App Password *
+                  </label>
+                  <Input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder="Your email password"
+                    required
+                  />
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">
+                    <p className="text-xs text-amber-800 font-medium mb-1">🔒 Security Tip:</p>
+                    <p className="text-xs text-amber-700">
+                      For Gmail/Outlook, use an <strong>App Password</strong> instead of your main password. 
+                      This is more secure and required for 2FA accounts.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      SMTP Server
+                    </label>
+                    <Input
+                      value={formData.smtp_server}
+                      onChange={(e) => setFormData(prev => ({ ...prev, smtp_server: e.target.value }))}
+                      placeholder="smtp.gmail.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Port
+                    </label>
+                    <Input
+                      type="number"
+                      value={formData.smtp_port}
+                      onChange={(e) => setFormData(prev => ({ ...prev, smtp_port: parseInt(e.target.value) }))}
+                      placeholder="587"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowForm(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={loading} className="flex-1">
+                    {loading ? 'Verifying...' : (emailCreds ? 'Update' : 'Save & Verify')}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Enhanced Host Dashboard with edit capabilities and AI tone selection
 const HostDashboard = () => {
   const { user, logout } = useAuth();
