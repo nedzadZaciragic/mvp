@@ -574,7 +574,8 @@ async def login(user_data: UserLogin):
                 "id": user['id'],
                 "email": user['email'],
                 "full_name": user['full_name'],
-                "brand_name": user.get('brand_name', 'My Host IQ')
+                "brand_name": user.get('brand_name', 'MyHostIQ'),
+                "phone": user.get('phone', '')
             }
         )
         
