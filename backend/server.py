@@ -968,6 +968,54 @@ async def get_chat_history(apartment_id: str, current_user: User = Depends(get_c
 async def root():
     return {"message": "My Host IQ API - AI-powered apartment concierge with authentication"}
 
+# iCal and Notification Routes
+@api_router.post("/ical/test-sync/{apartment_id}")
+async def test_ical_sync(apartment_id: str, current_user: User = Depends(get_current_user)):
+    """Test iCal sync for an apartment"""
+    try:
+        # Verify apartment belongs to user
+        apartment = await db.apartments.find_one({
+            "id": apartment_id, 
+            "user_id": current_user.id
+        })
+        if not apartment:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+            
+        if not apartment.get('ical_url'):
+            raise HTTPException(status_code=400, detail="No iCal URL configured for this apartment")
+        
+        # Test sync
+        await sync_apartment_calendar(apartment_id)
+        
+        return {"message": "iCal sync test completed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/notifications/{apartment_id}")
+async def get_apartment_notifications(apartment_id: str, current_user: User = Depends(get_current_user)):
+    """Get notification history for an apartment"""
+    try:
+        # Verify apartment belongs to user
+        apartment = await db.apartments.find_one({
+            "id": apartment_id, 
+            "user_id": current_user.id
+        })
+        if not apartment:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        
+        notifications = await db.booking_notifications.find(
+            {"apartment_id": apartment_id}
+        ).sort("created_at", -1).limit(50).to_list(50)
+        
+        return [BookingNotification(**notif) for notif in notifications]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Root route
+@api_router.get("/")
+async def root():
+    return {"message": "MyHostIQ API - AI-powered apartment concierge with advanced features", "version": "2.0"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
@@ -989,3 +1037,10 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# Background tasks for calendar monitoring
+@app.on_event("startup")
+async def startup_event():
+    """Start background calendar monitoring"""
+    logger.info("MyHostIQ API server started successfully")
+    # You can add periodic calendar sync tasks here if needed
