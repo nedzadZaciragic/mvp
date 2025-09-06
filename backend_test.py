@@ -170,6 +170,297 @@ class MyHostIQAPITester:
         
         return success
 
+    # EMAIL CREDENTIALS TESTS - HIGH PRIORITY
+    def test_create_email_credentials(self):
+        """Test creating email credentials - HIGH PRIORITY"""
+        success, response = self.run_test(
+            "Create Email Credentials",
+            "POST",
+            "auth/email-credentials",
+            200,
+            data=self.test_email_creds
+        )
+        
+        if success and response.get('id'):
+            self.email_credentials_id = response['id']
+            print(f"   Created email credentials ID: {self.email_credentials_id}")
+            print(f"   Email: {response.get('email', 'Unknown')}")
+            print(f"   SMTP Server: {response.get('smtp_server', 'Unknown')}")
+            print(f"   SMTP Port: {response.get('smtp_port', 'Unknown')}")
+            print(f"   Verified: {response.get('is_verified', False)}")
+            
+            # Check SMTP auto-detection
+            if response.get('smtp_server') == 'smtp.gmail.com':
+                print("   ✅ SMTP auto-detection working for Gmail")
+            else:
+                print("   ⚠️  SMTP auto-detection may not be working")
+        
+        return success
+
+    def test_get_email_credentials(self):
+        """Test retrieving email credentials (without password) - HIGH PRIORITY"""
+        success, response = self.run_test(
+            "Get Email Credentials",
+            "GET",
+            "auth/email-credentials",
+            200
+        )
+        
+        if success and response:
+            print(f"   Retrieved email: {response.get('email', 'Unknown')}")
+            print(f"   SMTP Server: {response.get('smtp_server', 'Unknown')}")
+            print(f"   Verified: {response.get('is_verified', False)}")
+            
+            # Ensure password is not returned
+            if 'password' not in response and 'encrypted_password' not in response:
+                print("   ✅ Password properly excluded from response")
+            else:
+                print("   ❌ Security issue: Password data exposed in response")
+        
+        return success
+
+    def test_update_email_credentials(self):
+        """Test updating email credentials - HIGH PRIORITY"""
+        updated_creds = {
+            "email": "updated.test@gmail.com",
+            "password": "updated_password_123",
+            "smtp_server": "",
+            "smtp_port": 587
+        }
+        
+        success, response = self.run_test(
+            "Update Email Credentials",
+            "PUT",
+            "auth/email-credentials",
+            200,
+            data=updated_creds
+        )
+        
+        if success:
+            print(f"   Updated email: {response.get('email', 'Unknown')}")
+            print(f"   SMTP Server: {response.get('smtp_server', 'Unknown')}")
+            print(f"   Verified: {response.get('is_verified', False)}")
+        
+        return success
+
+    def test_email_credentials_test(self):
+        """Test email credentials test functionality - HIGH PRIORITY"""
+        success, response = self.run_test(
+            "Test Email Credentials",
+            "POST",
+            "auth/test-email",
+            200
+        )
+        
+        if success:
+            message = response.get('message', '')
+            print(f"   Test result: {message}")
+            if 'successfully' in message.lower():
+                print("   ✅ Email test functionality working")
+            else:
+                print("   ⚠️  Email test may have issues")
+        
+        return success
+
+    def test_delete_email_credentials(self):
+        """Test deleting email credentials - HIGH PRIORITY"""
+        success, response = self.run_test(
+            "Delete Email Credentials",
+            "DELETE",
+            "auth/email-credentials",
+            200
+        )
+        
+        if success:
+            message = response.get('message', '')
+            print(f"   Delete result: {message}")
+        
+        return success
+
+    # PAYMENT SIMULATION TESTS - MEDIUM PRIORITY
+    def test_get_payment_plans(self):
+        """Test getting payment plans - MEDIUM PRIORITY"""
+        success, response = self.run_test(
+            "Get Payment Plans",
+            "GET",
+            "payments/plans",
+            200,
+            use_auth=False  # Plans should be publicly accessible
+        )
+        
+        if success and response.get('plans'):
+            plans = response['plans']
+            print(f"   Found {len(plans)} payment plans")
+            for plan in plans:
+                print(f"   - {plan.get('name', 'Unknown')}: ${plan.get('price', 0)}/{plan.get('interval', 'month')}")
+                print(f"     Apartments: {plan.get('apartment_limit', 'Unknown')}")
+        
+        return success
+
+    def test_simulate_payment(self):
+        """Test payment simulation - MEDIUM PRIORITY"""
+        payment_data = {
+            "amount": 29.0,
+            "currency": "USD",
+            "plan_name": "Starter",
+            "apartment_count": 2
+        }
+        
+        success, response = self.run_test(
+            "Simulate Payment",
+            "POST",
+            "payments/simulate",
+            200,
+            data=payment_data
+        )
+        
+        if success:
+            print(f"   Payment success: {response.get('success', False)}")
+            print(f"   Transaction ID: {response.get('transaction_id', 'None')}")
+            print(f"   Message: {response.get('message', 'None')}")
+            print(f"   Plan: {response.get('plan_name', 'None')}")
+            print(f"   Amount: ${response.get('amount', 0)}")
+            
+            # Check realistic response
+            if response.get('transaction_id', '').startswith('sim_'):
+                print("   ✅ Realistic transaction ID generated")
+            else:
+                print("   ⚠️  Transaction ID format may be incorrect")
+        
+        return success
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30, use_auth=True):
+        """Run a single API test"""
+        url = f"{self.api_url}/{endpoint}" if endpoint else f"{self.api_url}/"
+        headers = {'Content-Type': 'application/json'}
+        
+        # Add authentication header if token is available and use_auth is True
+        if use_auth and self.token:
+            headers['Authorization'] = f'Bearer {self.token}'
+
+        self.tests_run += 1
+        print(f"\n🔍 Testing {name}...")
+        print(f"   URL: {url}")
+        if use_auth and self.token:
+            print(f"   Using auth: Bearer {self.token[:20]}...")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=timeout)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=timeout)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=timeout)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=timeout)
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    response_data = response.json()
+                    print(f"   Response: {json.dumps(response_data, indent=2)[:200]}...")
+                    return True, response_data
+                except:
+                    return True, {}
+            else:
+                print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
+                try:
+                    error_data = response.json()
+                    print(f"   Error: {error_data}")
+                except:
+                    print(f"   Error: {response.text}")
+                return False, {}
+
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
+    def test_health_check(self):
+        """Test API health check"""
+        success, response = self.run_test(
+            "Health Check",
+            "GET",
+            "",
+            200,
+            use_auth=False
+        )
+        return success
+
+    def test_user_registration(self):
+        """Test user registration - CRITICAL for SaaS"""
+        success, response = self.run_test(
+            "User Registration",
+            "POST",
+            "auth/register",
+            200,
+            data=self.test_user,
+            use_auth=False
+        )
+        
+        if success and response.get('access_token'):
+            self.token = response['access_token']
+            self.user_id = response['user']['id']
+            print(f"   Registered user ID: {self.user_id}")
+            print(f"   Token received: {self.token[:20]}...")
+        
+        return success
+
+    def test_user_login(self):
+        """Test user login"""
+        login_data = {
+            "email": self.test_user["email"],
+            "password": self.test_user["password"]
+        }
+        
+        success, response = self.run_test(
+            "User Login",
+            "POST",
+            "auth/login",
+            200,
+            data=login_data,
+            use_auth=False
+        )
+        
+        if success and response.get('access_token'):
+            # Update token (should be same as registration)
+            self.token = response['access_token']
+            print(f"   Login successful, token: {self.token[:20]}...")
+        
+        return success
+
+    def test_get_current_user(self):
+        """Test getting current user info"""
+        success, response = self.run_test(
+            "Get Current User",
+            "GET",
+            "auth/me",
+            200
+        )
+        
+        if success:
+            print(f"   User email: {response.get('email', 'Unknown')}")
+            print(f"   Brand name: {response.get('brand_name', 'Unknown')}")
+        
+        return success
+
+    def test_update_whitelabel_settings(self):
+        """Test updating whitelabel settings - CRITICAL for SaaS"""
+        success, response = self.run_test(
+            "Update Whitelabel Settings",
+            "PUT",
+            "auth/whitelabel",
+            200,
+            data=self.test_whitelabel
+        )
+        
+        if success:
+            print(f"   Updated brand: {self.test_whitelabel['brand_name']}")
+            print(f"   Primary color: {self.test_whitelabel['brand_primary_color']}")
+        
+        return success
+
     def test_create_apartment(self):
         """Test apartment creation with sample data - requires authentication"""
         test_data = {
