@@ -1037,6 +1037,112 @@ async def test_email_credentials(current_user: User = Depends(get_current_user))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Payment Simulation Routes
+class PaymentRequest(BaseModel):
+    amount: float
+    currency: str = "USD"
+    plan_name: str
+    apartment_count: int
+
+class PaymentResponse(BaseModel):
+    success: bool
+    transaction_id: str
+    message: str
+    plan_name: str
+    amount: float
+
+@api_router.post("/payments/simulate", response_model=PaymentResponse)
+async def simulate_payment(
+    payment: PaymentRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Simulate payment processing for subscription plans"""
+    try:
+        # Simulate payment processing delay
+        await asyncio.sleep(1)
+        
+        # Generate mock transaction ID
+        transaction_id = f"sim_{uuid.uuid4().hex[:12]}"
+        
+        # Simulate payment success (95% success rate)
+        import random
+        success = random.random() > 0.05
+        
+        if success:
+            return PaymentResponse(
+                success=True,
+                transaction_id=transaction_id,
+                message=f"Payment successful! Welcome to {payment.plan_name} plan.",
+                plan_name=payment.plan_name,
+                amount=payment.amount
+            )
+        else:
+            return PaymentResponse(
+                success=False,
+                transaction_id="",
+                message="Payment failed. Please try again or use a different payment method.",
+                plan_name=payment.plan_name,
+                amount=payment.amount
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/payments/plans")
+async def get_payment_plans():
+    """Get available subscription plans"""
+    return {
+        "plans": [
+            {
+                "id": "starter",
+                "name": "Starter",
+                "price": 29,
+                "currency": "USD",
+                "interval": "month",
+                "apartment_limit": 3,
+                "features": [
+                    "Up to 3 apartments",
+                    "Basic AI assistant",
+                    "Email notifications",
+                    "Basic analytics"
+                ]
+            },
+            {
+                "id": "professional", 
+                "name": "Professional",
+                "price": 79,
+                "currency": "USD",
+                "interval": "month",
+                "apartment_limit": 10,
+                "features": [
+                    "Up to 10 apartments",
+                    "Advanced AI assistant",
+                    "Email + WhatsApp notifications",
+                    "Advanced analytics",
+                    "Custom branding",
+                    "iCal integration"
+                ]
+            },
+            {
+                "id": "enterprise",
+                "name": "Enterprise",
+                "price": 199,
+                "currency": "USD", 
+                "interval": "month",
+                "apartment_limit": -1,
+                "features": [
+                    "Unlimited apartments",
+                    "Premium AI assistant",
+                    "All notification methods",
+                    "Full analytics suite",
+                    "White-label solution",
+                    "Custom domain",
+                    "Priority support"
+                ]
+            }
+        ]
+    }
+
 # Enhanced Apartment Routes
 @api_router.post("/apartments", response_model=Apartment)
 async def create_apartment(apartment_data: ApartmentCreate, current_user: User = Depends(get_current_user)):
