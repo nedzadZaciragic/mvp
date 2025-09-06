@@ -547,7 +547,8 @@ async def register(user_data: UserCreate):
                 "id": user.id,
                 "email": user.email,
                 "full_name": user.full_name,
-                "brand_name": user.brand_name
+                "brand_name": user.brand_name,
+                "phone": user.phone
             }
         )
         
