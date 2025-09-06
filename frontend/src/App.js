@@ -2353,36 +2353,46 @@ const HostDashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Notification Settings</CardTitle>
-                  <CardDescription>Configure how you receive updates</CardDescription>
+                  <CardTitle>Email Configuration</CardTitle>
+                  <CardDescription>Configure your email for sending guest notifications</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Guest Message Alerts</p>
-                        <p className="text-sm text-gray-500">Get notified when guests use your AI assistant</p>
-                      </div>
-                      <input type="checkbox" className="rounded" defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">New Booking Notifications</p>
-                        <p className="text-sm text-gray-500">Automatic alerts from iCal integration</p>
-                      </div>
-                      <input type="checkbox" className="rounded" defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Weekly Analytics Summary</p>
-                        <p className="text-sm text-gray-500">Performance reports via email</p>
-                      </div>
-                      <input type="checkbox" className="rounded" defaultChecked />
-                    </div>
-                  </div>
+                <CardContent>
+                  <EmailCredentialsManager />
                 </CardContent>
               </Card>
             </div>
+
+            <Card className="mt-8">
+              <CardHeader>
+                <CardTitle>Notification Settings</CardTitle>
+                <CardDescription>Configure how you receive updates</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Guest Message Alerts</p>
+                      <p className="text-sm text-gray-500">Get notified when guests use your AI assistant</p>
+                    </div>
+                    <input type="checkbox" className="rounded" defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">New Booking Notifications</p>
+                      <p className="text-sm text-gray-500">Automatic alerts from iCal integration</p>
+                    </div>
+                    <input type="checkbox" className="rounded" defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Weekly Analytics Summary</p>
+                      <p className="text-sm text-gray-500">Performance reports via email</p>
+                    </div>
+                    <input type="checkbox" className="rounded" defaultChecked />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card className="mt-8">
               <CardHeader>
