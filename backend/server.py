@@ -189,7 +189,236 @@ class AnalyticsData(BaseModel):
     popular_questions: List[dict]
     daily_chats: List[dict]
 
-# Helper functions
+# iCal and notification helper functions
+async def parse_ical_calendar(ical_url: str):
+    """Parse iCal calendar and extract booking information"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(ical_url)
+            ical_content = response.text
+            
+        bookings = []
+        current_booking = {}
+        
+        for line in ical_content.split('\n'):
+            line = line.strip()
+            
+            if line.startswith('BEGIN:VEVENT'):
+                current_booking = {}
+            elif line.startswith('END:VEVENT'):
+                if current_booking:
+                    bookings.append(current_booking)
+            elif line.startswith('DTSTART'):
+                try:
+                    date_str = line.split(':')[1].strip()
+                    if 'T' in date_str:
+                        current_booking['checkin_date'] = datetime.strptime(date_str[:15], '%Y%m%dT%H%M%S')
+                    else:
+                        current_booking['checkin_date'] = datetime.strptime(date_str, '%Y%m%d')
+                except:
+                    pass
+            elif line.startswith('DTEND'):
+                try:
+                    date_str = line.split(':')[1].strip()
+                    if 'T' in date_str:
+                        current_booking['checkout_date'] = datetime.strptime(date_str[:15], '%Y%m%dT%H%M%S')
+                    else:
+                        current_booking['checkout_date'] = datetime.strptime(date_str, '%Y%m%d')
+                except:
+                    pass
+            elif line.startswith('SUMMARY'):
+                summary = line.split(':', 1)[1].strip()
+                current_booking['summary'] = summary
+                
+                # Extract guest name and booking source
+                if 'airbnb' in summary.lower():
+                    current_booking['booking_source'] = 'airbnb'
+                elif 'booking.com' in summary.lower():
+                    current_booking['booking_source'] = 'booking.com'
+                    
+                # Try to extract guest name from various patterns
+                name_patterns = [
+                    r'Reserved for (.+?) \(',
+                    r'Reserved for (.+?)$',
+                    r'(.+?) \(',
+                    r'Guest: (.+?) \(',
+                ]
+                
+                for pattern in name_patterns:
+                    match = re.search(pattern, summary)
+                    if match:
+                        current_booking['guest_name'] = match.group(1).strip()
+                        break
+                        
+            elif line.startswith('DESCRIPTION'):
+                description = line.split(':', 1)[1].strip()
+                current_booking['description'] = description
+                
+                # Extract email and phone from description
+                email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', description)
+                if email_match:
+                    current_booking['guest_email'] = email_match.group()
+                    
+                phone_patterns = [
+                    r'\+\d{1,3}\s?\d{3}\s?\d{3}\s?\d{4}',
+                    r'\d{3}[-.\s]?\d{3}[-.\s]?\d{4}',
+                    r'\(\d{3}\)\s?\d{3}[-.\s]?\d{4}'
+                ]
+                
+                for pattern in phone_patterns:
+                    phone_match = re.search(pattern, description)
+                    if phone_match:
+                        current_booking['guest_phone'] = phone_match.group()
+                        break
+                        
+        return bookings
+    except Exception as e:
+        logger.error(f"Error parsing iCal: {str(e)}")
+        return []
+
+async def send_whatsapp_message(phone: str, message: str, apartment_name: str):
+    """Send WhatsApp message via WhatsApp Business API or third-party service"""
+    try:
+        # For demo purposes, we'll use a webhook/API call
+        # In production, integrate with WhatsApp Business API or services like Twilio
+        logger.info(f"WhatsApp message sent to {phone} for {apartment_name}")
+        
+        # Placeholder for actual WhatsApp API integration
+        # async with httpx.AsyncClient() as client:
+        #     response = await client.post(
+        #         "https://api.whatsapp.com/send",
+        #         json={
+        #             "phone": phone,
+        #             "message": message
+        #         }
+        #     )
+        
+        return True
+    except Exception as e:
+        logger.error(f"Error sending WhatsApp: {str(e)}")
+        return False
+
+async def send_email_notification(email: str, subject: str, content: str, apartment_name: str):
+    """Send email notification to guest"""
+    try:
+        # Configure your email settings here
+        smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+        smtp_port = int(os.environ.get('SMTP_PORT', '587'))
+        smtp_username = os.environ.get('SMTP_USERNAME', '')
+        smtp_password = os.environ.get('SMTP_PASSWORD', '')
+        
+        if not smtp_username or not smtp_password:
+            logger.warning("Email credentials not configured")
+            return False
+            
+        msg = MimeMultipart()
+        msg['From'] = smtp_username
+        msg['To'] = email
+        msg['Subject'] = subject
+        
+        msg.attach(MimeText(content, 'html'))
+        
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.send_message(msg)
+        server.quit()
+        
+        logger.info(f"Email sent to {email} for {apartment_name}")
+        return True
+    except Exception as e:
+        logger.error(f"Error sending email: {str(e)}")
+        return False
+
+async def create_guest_notification_message(apartment: dict, branding: dict, guest_name: str, checkin_date: datetime, guest_url: str):
+    """Create personalized notification message for guests"""
+    brand_name = branding.get('brand_name', 'MyHostIQ')
+    
+    # Email content
+    email_subject = f"Welcome to {apartment['name']} - Your AI Assistant is Ready!"
+    
+    email_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; background-color: #f8fafc; }}
+            .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
+            .header {{ background: linear-gradient(135deg, {branding.get('brand_primary_color', '#2563eb')}, {branding.get('brand_secondary_color', '#1d4ed8')}); color: white; padding: 30px 20px; text-align: center; }}
+            .content {{ padding: 30px 20px; }}
+            .button {{ background: {branding.get('brand_primary_color', '#2563eb')}; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; }}
+            .footer {{ background: #f1f5f9; padding: 20px; text-align: center; color: #64748b; font-size: 14px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>{brand_name}</h1>
+                <p>Your Personal AI Assistant for {apartment['name']}</p>
+            </div>
+            <div class="content">
+                <h2>Hello {guest_name}! 👋</h2>
+                <p>Welcome to <strong>{apartment['name']}</strong>! We're excited to have you stay with us.</p>
+                
+                <p>🤖 <strong>Your Personal AI Assistant is Ready!</strong></p>
+                <p>We've set up a personal AI concierge just for you. It can instantly help with:</p>
+                <ul>
+                    <li>📍 Check-in instructions & apartment access</li>
+                    <li>🏠 WiFi passwords & apartment amenities</li>
+                    <li>🍽️ Local restaurant recommendations</li>
+                    <li>🚇 Transportation & navigation help</li>
+                    <li>🚨 Emergency contacts & important information</li>
+                    <li>💎 Hidden local gems & attractions</li>
+                </ul>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{guest_url}" class="button">Chat with Your AI Assistant</a>
+                </div>
+                
+                <p><strong>📅 Your Stay Details:</strong></p>
+                <p>📍 <strong>Property:</strong> {apartment['name']}<br>
+                📅 <strong>Check-in:</strong> {checkin_date.strftime('%B %d, %Y')}<br>
+                🏠 <strong>Address:</strong> {apartment.get('address', 'Address in booking confirmation')}</p>
+                
+                <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>💡 Pro Tip:</strong> Save the AI assistant link on your phone's home screen for instant access during your stay!</p>
+                </div>
+            </div>
+            <div class="footer">
+                <p>Generated by {brand_name} - Making your stay exceptional</p>
+                <p>Questions? Your AI assistant is available 24/7 at the link above!</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # WhatsApp message
+    whatsapp_message = f"""
+🏠 Welcome to {apartment['name']}!
+
+Hello {guest_name}! 👋
+
+Your personal AI assistant is ready to help you with your stay:
+
+• Check-in instructions
+• WiFi & amenities  
+• Restaurant recommendations
+• Transport info
+• Emergency contacts
+• Local hidden gems
+
+🤖 Chat with your AI assistant here:
+{guest_url}
+
+📅 Check-in: {checkin_date.strftime('%B %d, %Y')}
+
+Save this link for instant help during your stay!
+
+— {brand_name} Team
+    """
+    
+    return email_subject, email_content, whatsapp_message
 def prepare_for_mongo(data):
     """Prepare data for MongoDB storage"""
     if isinstance(data, dict):
