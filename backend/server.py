@@ -747,6 +747,40 @@ async def create_apartment(apartment_data: ApartmentCreate, current_user: User =
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.put("/apartments/{apartment_id}", response_model=Apartment)
+async def update_apartment(
+    apartment_id: str, 
+    apartment_data: ApartmentUpdate, 
+    current_user: User = Depends(get_current_user)
+):
+    """Update apartment information"""
+    try:
+        # Verify apartment belongs to user
+        existing_apartment = await db.apartments.find_one({
+            "id": apartment_id, 
+            "user_id": current_user.id
+        })
+        if not existing_apartment:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        
+        # Update apartment
+        update_data = prepare_for_mongo(apartment_data.dict())
+        await db.apartments.update_one(
+            {"id": apartment_id},
+            {"$set": update_data}
+        )
+        
+        # If iCal URL changed, start monitoring
+        if apartment_data.ical_url and apartment_data.ical_url != existing_apartment.get('ical_url'):
+            asyncio.create_task(sync_apartment_calendar(apartment_id))
+        
+        # Return updated apartment
+        updated_apartment = await db.apartments.find_one({"id": apartment_id})
+        return Apartment(**updated_apartment)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/apartments", response_model=List[Apartment])
 async def get_apartments(current_user: User = Depends(get_current_user)):
     """Get user's apartments"""
