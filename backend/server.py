@@ -136,6 +136,11 @@ class BookingNotification(BaseModel):
     notification_sent: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: dict
+
 class ChatMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     apartment_id: str
