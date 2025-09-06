@@ -13,12 +13,21 @@ class MyHostIQAPITester:
         self.created_apartment_id = None
         self.token = None
         self.user_id = None
+        self.email_credentials_id = None
         
-        # Test user data
+        # Test user data - using specified credentials from review request
         self.test_user = {
-            "email": f"test_{int(time.time())}@hostiq.com",
-            "full_name": "Test Host User",
+            "email": "test@example.com",
+            "full_name": "Test User",
             "password": "testpass123"
+        }
+        
+        # Test email credentials for testing
+        self.test_email_creds = {
+            "email": "test.sender@gmail.com",
+            "password": "test_app_password_123",
+            "smtp_server": "",  # Will auto-detect
+            "smtp_port": 587
         }
         
         # Test whitelabel data
