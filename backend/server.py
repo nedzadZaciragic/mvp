@@ -45,19 +45,27 @@ class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: str
     full_name: str
+    phone: str = ""
     hashed_password: str
     is_active: bool = True
+    email_verified: bool = False
+    phone_verified: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    # Whitelabeling settings
-    brand_name: str = "My Host IQ"
+    # Enhanced Whitelabeling settings
+    brand_name: str = "MyHostIQ"
     brand_logo_url: str = ""
-    brand_primary_color: str = "#6366f1"
-    brand_secondary_color: str = "#10b981"
+    brand_primary_color: str = "#2563eb"
+    brand_secondary_color: str = "#1d4ed8"
+    ai_tone: str = "professional"  # professional, friendly, casual
+    custom_domain: str = ""
+    chat_background: str = "default"
+    chat_font: str = "Inter"
 
 class UserCreate(BaseModel):
     email: EmailStr
     full_name: str
     password: str
+    phone: str = ""
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -71,8 +79,62 @@ class Token(BaseModel):
 class WhitelabelSettings(BaseModel):
     brand_name: str
     brand_logo_url: str = ""
-    brand_primary_color: str = "#6366f1"
-    brand_secondary_color: str = "#10b981"
+    brand_primary_color: str = "#2563eb"
+    brand_secondary_color: str = "#1d4ed8"
+    ai_tone: str = "professional"
+    custom_domain: str = ""
+    chat_background: str = "default"
+    chat_font: str = "Inter"
+
+class Apartment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    name: str
+    address: str
+    description: str
+    rules: List[str] = []
+    contact: Dict[str, str] = {}
+    ical_url: str = ""  
+    ai_tone: str = "professional"
+    recommendations: Dict[str, Any] = {}
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # Analytics data
+    total_chats: int = 0
+    total_sessions: int = 0
+    last_chat: Optional[datetime] = None
+    last_ical_sync: Optional[datetime] = None
+
+class ApartmentCreate(BaseModel):
+    name: str
+    address: str
+    description: str
+    rules: List[str] = []
+    contact: Dict[str, str] = {}
+    ical_url: str = ""
+    ai_tone: str = "professional"
+    recommendations: Dict[str, Any] = {}
+
+class ApartmentUpdate(BaseModel):
+    name: str
+    address: str
+    description: str
+    rules: List[str] = []
+    contact: Dict[str, str] = {}
+    ical_url: str = ""
+    ai_tone: str = "professional"
+    recommendations: Dict[str, Any] = {}
+
+class BookingNotification(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    apartment_id: str
+    guest_email: str = ""
+    guest_phone: str = ""
+    guest_name: str = ""
+    checkin_date: Optional[datetime] = None
+    checkout_date: Optional[datetime] = None
+    booking_source: str = ""  # airbnb, booking.com, etc
+    notification_sent: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ChatMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
