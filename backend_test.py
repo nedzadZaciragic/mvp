@@ -766,6 +766,7 @@ def main():
         ("📧 Get Email Credentials", tester.test_get_email_credentials),
         ("📧 Update Email Credentials", tester.test_update_email_credentials),
         ("📧 Test Email Functionality", tester.test_email_credentials_test),
+        ("📧 SMTP Auto-Detection", tester.test_email_smtp_auto_detection),
         
         # PAYMENT SIMULATION TESTS - MEDIUM PRIORITY
         ("💳 Get Payment Plans", tester.test_get_payment_plans),
