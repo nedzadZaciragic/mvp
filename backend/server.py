@@ -830,6 +830,213 @@ async def update_whitelabel_settings(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Email Credentials Routes
+@api_router.post("/auth/email-credentials", response_model=EmailCredentialsResponse)
+async def add_email_credentials(
+    credentials: EmailCredentialsCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Add and verify host's email credentials"""
+    try:
+        # Check if user already has email credentials
+        existing = await db.email_credentials.find_one({"user_id": current_user.id})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email credentials already configured. Use update endpoint.")
+        
+        # Auto-detect SMTP settings if not provided
+        smtp_server, smtp_port = get_smtp_settings(
+            credentials.email, 
+            credentials.smtp_server, 
+            credentials.smtp_port
+        )
+        
+        # Verify credentials
+        is_verified = await verify_email_credentials(
+            credentials.email, 
+            credentials.password, 
+            smtp_server, 
+            smtp_port
+        )
+        
+        if not is_verified:
+            raise HTTPException(status_code=400, detail="Invalid email credentials or SMTP settings")
+        
+        # Encrypt and store credentials
+        email_creds = EmailCredentials(
+            user_id=current_user.id,
+            email=credentials.email,
+            encrypted_password=encrypt_password(credentials.password),
+            smtp_server=smtp_server,
+            smtp_port=smtp_port,
+            is_verified=is_verified
+        )
+        
+        creds_dict = prepare_for_mongo(email_creds.dict())
+        await db.email_credentials.insert_one(creds_dict)
+        
+        return EmailCredentialsResponse(
+            id=email_creds.id,
+            email=email_creds.email,
+            smtp_server=email_creds.smtp_server,
+            smtp_port=email_creds.smtp_port,
+            is_verified=email_creds.is_verified
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/auth/email-credentials", response_model=EmailCredentialsResponse)
+async def update_email_credentials(
+    credentials: EmailCredentialsCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update host's email credentials"""
+    try:
+        # Find existing credentials
+        existing = await db.email_credentials.find_one({"user_id": current_user.id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="No email credentials found. Use create endpoint.")
+        
+        # Auto-detect SMTP settings if not provided
+        smtp_server, smtp_port = get_smtp_settings(
+            credentials.email, 
+            credentials.smtp_server, 
+            credentials.smtp_port
+        )
+        
+        # Verify new credentials
+        is_verified = await verify_email_credentials(
+            credentials.email, 
+            credentials.password, 
+            smtp_server, 
+            smtp_port
+        )
+        
+        if not is_verified:
+            raise HTTPException(status_code=400, detail="Invalid email credentials or SMTP settings")
+        
+        # Update credentials
+        await db.email_credentials.update_one(
+            {"user_id": current_user.id},
+            {"$set": {
+                "email": credentials.email,
+                "encrypted_password": encrypt_password(credentials.password),
+                "smtp_server": smtp_server,
+                "smtp_port": smtp_port,
+                "is_verified": is_verified
+            }}
+        )
+        
+        return EmailCredentialsResponse(
+            id=existing['id'],
+            email=credentials.email,
+            smtp_server=smtp_server,
+            smtp_port=smtp_port,
+            is_verified=is_verified
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/auth/email-credentials", response_model=Optional[EmailCredentialsResponse])
+async def get_email_credentials(current_user: User = Depends(get_current_user)):
+    """Get host's email credentials (without password)"""
+    try:
+        creds = await db.email_credentials.find_one({"user_id": current_user.id})
+        if not creds:
+            return None
+        
+        return EmailCredentialsResponse(
+            id=creds['id'],
+            email=creds['email'],
+            smtp_server=creds['smtp_server'],
+            smtp_port=creds['smtp_port'],
+            is_verified=creds['is_verified']
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/auth/email-credentials")
+async def delete_email_credentials(current_user: User = Depends(get_current_user)):
+    """Delete host's email credentials"""
+    try:
+        result = await db.email_credentials.delete_one({"user_id": current_user.id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="No email credentials found")
+        
+        return {"message": "Email credentials deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/auth/test-email")
+async def test_email_credentials(current_user: User = Depends(get_current_user)):
+    """Test host's email credentials by sending a test email"""
+    try:
+        # Get credentials
+        creds = await db.email_credentials.find_one({"user_id": current_user.id})
+        if not creds:
+            raise HTTPException(status_code=404, detail="No email credentials configured")
+        
+        if not creds['is_verified']:
+            raise HTTPException(status_code=400, detail="Email credentials not verified")
+        
+        # Send test email to the host
+        test_subject = "MyHostIQ - Email Configuration Test"
+        test_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f8fafc; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
+                .header {{ text-align: center; margin-bottom: 30px; }}
+                .success {{ color: #16a34a; font-weight: bold; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 Email Configuration Test</h1>
+                </div>
+                <p class="success">Congratulations! Your email configuration is working perfectly.</p>
+                <p>This test email confirms that:</p>
+                <ul>
+                    <li>✅ Your email credentials are valid</li>
+                    <li>✅ SMTP connection is successful</li>
+                    <li>✅ MyHostIQ can send emails from your account</li>
+                </ul>
+                <p>Your guests will now receive beautiful welcome emails directly from your email address when they have upcoming bookings.</p>
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+                <p style="font-size: 14px; color: #6b7280;">
+                    This is an automated test email from MyHostIQ.<br>
+                    Email: {creds['email']}<br>
+                    SMTP Server: {creds['smtp_server']}:{creds['smtp_port']}
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        success = await send_smtp_email(creds['email'], test_subject, test_content, creds)
+        
+        if success:
+            return {"message": "Test email sent successfully! Check your inbox."}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send test email")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Enhanced Apartment Routes
 @api_router.post("/apartments", response_model=Apartment)
 async def create_apartment(apartment_data: ApartmentCreate, current_user: User = Depends(get_current_user)):
