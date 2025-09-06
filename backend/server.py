@@ -332,13 +332,21 @@ async def send_whatsapp_message(phone: str, message: str, apartment_name: str):
         logger.error(f"Error sending WhatsApp: {str(e)}")
         return False
 
-async def send_email_notification(email: str, subject: str, content: str, apartment_name: str):
-    """Send email notification to guest"""
+async def send_email_notification(email: str, subject: str, content: str, apartment_name: str, host_credentials: dict = None):
+    """Send email notification to guest using host's email credentials"""
     try:
-        # Email functionality temporarily disabled due to import issues
-        logger.info(f"Email notification would be sent to {email} for {apartment_name}")
-        logger.info(f"Subject: {subject}")
-        return True
+        if host_credentials:
+            # Use host's SMTP credentials
+            success = await send_smtp_email(email, subject, content, host_credentials)
+            if success:
+                logger.info(f"Email sent successfully to {email} for {apartment_name} using host's email")
+                return True
+            else:
+                logger.error(f"Failed to send email via SMTP to {email}")
+                return False
+        else:
+            logger.warning(f"No host email credentials configured for {apartment_name}")
+            return False
     except Exception as e:
         logger.error(f"Error sending email: {str(e)}")
         return False
