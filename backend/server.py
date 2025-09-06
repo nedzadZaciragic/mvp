@@ -530,6 +530,7 @@ async def register(user_data: UserCreate):
         user = User(
             email=user_data.email,
             full_name=user_data.full_name,
+            phone=user_data.phone,
             hashed_password=hash_password(user_data.password)
         )
         
