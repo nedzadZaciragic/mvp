@@ -725,7 +725,7 @@ async def update_whitelabel_settings(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Apartment Routes
+# Enhanced Apartment Routes
 @api_router.post("/apartments", response_model=Apartment)
 async def create_apartment(apartment_data: ApartmentCreate, current_user: User = Depends(get_current_user)):
     """Create a new apartment with host data"""
@@ -737,6 +737,12 @@ async def create_apartment(apartment_data: ApartmentCreate, current_user: User =
         apartment_dict = prepare_for_mongo(apartment.dict())
         
         await db.apartments.insert_one(apartment_dict)
+        
+        # If iCal URL is provided, start monitoring for bookings
+        if apartment_data.ical_url:
+            # Background task to sync calendar
+            asyncio.create_task(sync_apartment_calendar(apartment.id))
+            
         return apartment
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
