@@ -528,6 +528,83 @@ async def sync_apartment_calendar(apartment_id: str):
     except Exception as e:
         logger.error(f"Error syncing calendar for apartment {apartment_id}: {str(e)}")
 
+def encrypt_password(password: str) -> str:
+    """Encrypt password for secure storage"""
+    return cipher_suite.encrypt(password.encode()).decode()
+
+def decrypt_password(encrypted_password: str) -> str:
+    """Decrypt password for use"""
+    return cipher_suite.decrypt(encrypted_password.encode()).decode()
+
+def get_smtp_settings(email: str, smtp_server: str = "", smtp_port: int = 587):
+    """Get SMTP settings based on email provider"""
+    if not smtp_server:
+        domain = email.split('@')[1].lower()
+        if 'gmail.com' in domain:
+            return 'smtp.gmail.com', 587
+        elif 'outlook.com' in domain or 'hotmail.com' in domain:
+            return 'smtp-mail.outlook.com', 587
+        elif 'yahoo.com' in domain:
+            return 'smtp.mail.yahoo.com', 587
+        else:
+            return smtp_server, smtp_port
+    return smtp_server, smtp_port
+
+async def send_smtp_email(
+    recipient_email: str, 
+    subject: str, 
+    html_content: str, 
+    sender_credentials: dict
+) -> bool:
+    """Send email using SMTP with host's credentials"""
+    try:
+        sender_email = sender_credentials['email']
+        sender_password = decrypt_password(sender_credentials['encrypted_password'])
+        smtp_server, smtp_port = get_smtp_settings(
+            sender_email, 
+            sender_credentials.get('smtp_server', ''),
+            sender_credentials.get('smtp_port', 587)
+        )
+        
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = sender_email
+        msg['To'] = recipient_email
+        
+        # Add HTML content
+        html_part = MIMEText(html_content, 'html')
+        msg.attach(html_part)
+        
+        # Send email
+        context = ssl.create_default_context()
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls(context=context)
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        
+        logger.info(f"Email sent successfully from {sender_email} to {recipient_email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"SMTP email error: {str(e)}")
+        return False
+
+async def verify_email_credentials(email: str, password: str, smtp_server: str = "", smtp_port: int = 587) -> bool:
+    """Verify email credentials by attempting to connect"""
+    try:
+        smtp_server, smtp_port = get_smtp_settings(email, smtp_server, smtp_port)
+        
+        context = ssl.create_default_context()
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls(context=context)
+            server.login(email, password)
+        
+        return True
+    except Exception as e:
+        logger.error(f"Email verification failed: {str(e)}")
+        return False
+
 def prepare_for_mongo(data):
     """Prepare data for MongoDB storage"""
     if isinstance(data, dict):
