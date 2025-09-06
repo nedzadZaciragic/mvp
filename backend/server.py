@@ -79,6 +79,29 @@ class Token(BaseModel):
     token_type: str
     user: dict
 
+class EmailCredentials(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    email: str
+    encrypted_password: str
+    smtp_server: str = ""
+    smtp_port: int = 587
+    is_verified: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class EmailCredentialsCreate(BaseModel):
+    email: EmailStr
+    password: str
+    smtp_server: str = ""
+    smtp_port: int = 587
+
+class EmailCredentialsResponse(BaseModel):
+    id: str
+    email: str
+    smtp_server: str
+    smtp_port: int
+    is_verified: bool
+
 class WhitelabelSettings(BaseModel):
     brand_name: str
     brand_logo_url: str = ""
