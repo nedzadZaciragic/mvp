@@ -38,10 +38,18 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-# Security
+# Security and Encryption
 security = HTTPBearer()
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-here')
 JWT_ALGORITHM = 'HS256'
+
+# Encryption for email passwords
+ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', 'your-32-byte-encryption-key-here')
+if ENCRYPTION_KEY == 'your-32-byte-encryption-key-here':
+    # Generate a key for development
+    ENCRYPTION_KEY = base64.urlsafe_b64encode(b'dev-key-not-secure-change-me!!').decode()
+    
+cipher_suite = Fernet(ENCRYPTION_KEY.encode() if len(ENCRYPTION_KEY) == 44 else base64.urlsafe_b64encode(ENCRYPTION_KEY[:32].encode()))
 
 # Models
 class User(BaseModel):
