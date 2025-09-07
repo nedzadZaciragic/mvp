@@ -1612,6 +1612,54 @@ async def import_property_from_url(
         logger.error(f"Property import error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to import property: {str(e)}")
 
+# Admin Routes for Database Management
+@api_router.get("/admin/users", response_model=List[dict])
+async def get_all_users(current_user: User = Depends(get_current_user)):
+    """Get all users - Admin only"""
+    # Add admin check if needed
+    try:
+        users = await db.users.find({}, {"hashed_password": 0}).to_list(length=None)
+        return users
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/apartments", response_model=List[dict])
+async def get_all_apartments(current_user: User = Depends(get_current_user)):
+    """Get all apartments - Admin only"""
+    try:
+        apartments = await db.apartments.find().to_list(length=None)
+        return apartments
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/chat-messages", response_model=List[dict])
+async def get_all_chat_messages(current_user: User = Depends(get_current_user)):
+    """Get all chat messages - Admin only"""
+    try:
+        messages = await db.chat_messages.find().to_list(length=None)
+        return messages
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/export-data")
+async def export_all_data(current_user: User = Depends(get_current_user)):
+    """Export all data as JSON - Admin only"""
+    try:
+        users = await db.users.find({}, {"hashed_password": 0}).to_list(length=None)
+        apartments = await db.apartments.find().to_list(length=None)
+        messages = await db.chat_messages.find().to_list(length=None)
+        
+        export_data = {
+            "users": users,
+            "apartments": apartments,
+            "chat_messages": messages,
+            "exported_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return export_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Enhanced Apartment Routes
 @api_router.post("/apartments", response_model=Apartment)
 async def create_apartment(apartment_data: ApartmentCreate, current_user: User = Depends(get_current_user)):
