@@ -893,13 +893,16 @@ async def forgot_password(request: PasswordResetRequest):
         </html>
         """
         
-        # Try to send email using SendGrid as fallback
+        # Send reset email using SendGrid
         try:
             from sendgrid import SendGridAPIClient
             from sendgrid.helpers.mail import Mail
             
+            # Use a professional from address
+            from_email = 'noreply@myhostiq.com'  # You can change this to your domain later
+            
             message = Mail(
-                from_email='noreply@myhostiq.com',
+                from_email=from_email,
                 to_emails=request.email,
                 subject=email_subject,
                 html_content=email_content
@@ -907,11 +910,16 @@ async def forgot_password(request: PasswordResetRequest):
             
             sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
             response = sg.send(message)
-            logger.info(f"Password reset email sent to {request.email}")
+            
+            if response.status_code == 202:
+                logger.info(f"Password reset email successfully sent to {request.email}")
+            else:
+                logger.error(f"SendGrid returned status code: {response.status_code}")
             
         except Exception as e:
             logger.error(f"Failed to send password reset email: {str(e)}")
-            # Continue anyway for security (don't reveal email sending failure)
+            # For security, we still return success message even if email fails
+            # This prevents email enumeration attacks
         
         return {"message": "If the email exists, a password reset link has been sent"}
         
