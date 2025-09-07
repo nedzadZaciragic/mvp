@@ -1875,17 +1875,33 @@ async def get_analytics_dashboard(current_user: User = Depends(get_current_user)
             # Get chat messages for this apartment
             messages = await db.chat_messages.find({"apartment_id": apt_id}).to_list(1000)
             
-            # Calculate popular questions
-            question_count = {}
+            # Calculate REAL popular questions based on actual messages
+            question_frequency = {}
             for msg in messages:
-                question = msg.get('message', '').lower()
-                if question:
-                    question_count[question] = question_count.get(question, 0) + 1
+                question = msg.get('message', '').strip()
+                if question and len(question) > 10:  # Only meaningful questions
+                    # Normalize question for better grouping
+                    normalized = question.lower().strip('?.,!').strip()
+                    question_frequency[normalized] = question_frequency.get(normalized, 0) + 1
             
-            popular_questions = [
-                {"question": q, "count": c} 
-                for q, c in sorted(question_count.items(), key=lambda x: x[1], reverse=True)[:5]
-            ]
+            # Get top 5 most frequent questions
+            popular_questions = []
+            if question_frequency:
+                sorted_questions = sorted(question_frequency.items(), key=lambda x: x[1], reverse=True)
+                for question, count in sorted_questions[:5]:
+                    popular_questions.append({
+                        "question": question.capitalize(),
+                        "count": count,
+                        "percentage": round((count / len(messages)) * 100, 1) if messages else 0
+                    })
+            
+            # If no questions yet, show helpful placeholder
+            if not popular_questions:
+                popular_questions = [{
+                    "question": "No questions asked yet",
+                    "count": 0,
+                    "percentage": 0
+                }]
             
             # Daily chat statistics (last 7 days)
             daily_chats = []
