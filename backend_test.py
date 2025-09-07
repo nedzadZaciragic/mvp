@@ -1420,6 +1420,8 @@ def main():
         
         # PROPERTY IMPORT TESTS - HIGH PRIORITY
         ("🏠 Property Import - Real Airbnb", tester.test_property_import_real_airbnb),
+        ("🏠 Property Import - Multiple URLs (No Cache)", tester.test_property_import_multiple_urls_no_cache),
+        ("🏠 Property Import - Scraping Verification", tester.test_property_import_scraping_verification),
         ("🏠 Property Import - Invalid URLs", tester.test_property_import_invalid_url),
         ("🏠 Property Import - Malformed Requests", tester.test_property_import_malformed_requests),
         ("🏠 Property Import - Authentication", tester.test_property_import_authentication),
