@@ -3000,6 +3000,8 @@ const HostDashboard = () => {
                   {editingApartment ? `Edit ${editingApartment.name}` : "Add New Property"}
                 </h2>
                 
+                <PropertyLinkImporter onDataImported={handleImportedData} />
+                
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Basic Info */}
                   <div className="space-y-4">
