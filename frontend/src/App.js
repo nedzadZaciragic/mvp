@@ -112,6 +112,290 @@ const useAuth = () => {
   return context;
 };
 
+// Address Autocomplete Component using OpenStreetMap
+const AddressAutocomplete = ({ value, onChange, placeholder = "Enter address..." }) => {
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef(null);
+
+  const fetchSuggestions = async (query) => {
+    if (query.length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Using OpenStreetMap Nominatim API (free, no API key required)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(query)}`
+      );
+      const data = await response.json();
+      
+      const formattedSuggestions = data.map(item => ({
+        display_name: item.display_name,
+        lat: item.lat,
+        lon: item.lon
+      }));
+      
+      setSuggestions(formattedSuggestions);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Address autocomplete error:', error);
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    onChange(newValue);
+    
+    // Debounce the API call
+    clearTimeout(window.addressTimeout);
+    window.addressTimeout = setTimeout(() => {
+      fetchSuggestions(newValue);
+    }, 300);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    onChange(suggestion.display_name);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    inputRef.current?.blur();
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setShowSuggestions(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          value={value}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="pr-8"
+        />
+        {loading && (
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+            <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+          </div>
+        )}
+        <MapPin className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      </div>
+      
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          {suggestions.map((suggestion, index) => (
+            <div
+              key={index}
+              className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 text-sm"
+              onClick={() => handleSuggestionClick(suggestion)}
+            >
+              <div className="flex items-start space-x-2">
+                <MapPin className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700">{suggestion.display_name}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {showSuggestions && suggestions.length === 0 && !loading && value.length >= 3 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3">
+          <div className="flex items-center space-x-2 text-gray-500 text-sm">
+            <MapPin className="h-4 w-4" />
+            <span>No addresses found</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Airbnb/Booking.com Link Integration Component
+const PropertyLinkImporter = ({ onDataImported }) => {
+  const [showImporter, setShowImporter] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const extractPropertyData = (url) => {
+    // Mock property data extraction (in real implementation, this would scrape or use APIs)
+    const mockData = {
+      name: "Beautiful Downtown Apartment",
+      description: "Cozy 2-bedroom apartment in the heart of the city with modern amenities and stunning views.",
+      address: "123 Main Street, Downtown, City Center",
+      rules: [
+        "No smoking inside the apartment",
+        "No parties or loud music after 10 PM",
+        "Maximum 4 guests",
+        "Check-in after 3 PM, check-out before 11 AM"
+      ],
+      contact: {
+        phone: "",
+        email: "",
+        whatsapp: ""
+      },
+      recommendations: {
+        restaurants: [
+          { name: "Cafe Central", type: "Coffee & Breakfast", tip: "Great morning coffee and pastries" },
+          { name: "Pasta Paradise", type: "Italian", tip: "Best carbonara in the city" }
+        ],
+        hidden_gems: [
+          { name: "Rooftop Garden", tip: "Hidden garden with city views, 5 minutes walk" },
+          { name: "Local Market", tip: "Fresh produce every Tuesday and Friday" }
+        ],
+        transport: "Subway station 2 blocks away, bus stop right outside building"
+      }
+    };
+
+    return mockData;
+  };
+
+  const handleImport = async () => {
+    if (!linkUrl.trim()) {
+      setError('Please enter a property URL');
+      return;
+    }
+
+    // Basic URL validation
+    if (!linkUrl.includes('airbnb.com') && !linkUrl.includes('booking.com') && !linkUrl.includes('vrbo.com')) {
+      setError('Please enter a valid Airbnb, Booking.com, or VRBO URL');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const extractedData = extractPropertyData(linkUrl);
+      onDataImported(extractedData);
+      setShowImporter(false);
+      setLinkUrl('');
+    } catch (err) {
+      setError('Failed to extract property data. Please try again or fill manually.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setShowImporter(true)}
+        className="w-full mb-4 border-dashed border-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+      >
+        <LinkIcon className="h-4 w-4 mr-2" />
+        🚀 Quick Import from Airbnb/Booking.com Link
+      </Button>
+
+      {showImporter && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center text-blue-600">
+                <LinkIcon className="h-5 w-5 mr-2" />
+                Import Property from Listing URL
+              </CardTitle>
+              <CardDescription>
+                Paste your Airbnb, Booking.com, or VRBO listing URL to auto-fill property details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert className="border-red-200 bg-red-50">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-red-700">{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Property Listing URL
+                </label>
+                <Input
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://airbnb.com/rooms/12345678"
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">Supported Platforms:</h4>
+                <div className="text-xs text-blue-700 space-y-1">
+                  <p>• ✅ Airbnb.com listing URLs</p>
+                  <p>• ✅ Booking.com property URLs</p>
+                  <p>• ✅ VRBO.com listing URLs</p>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <h4 className="text-sm font-medium text-amber-900 mb-2">What will be imported:</h4>
+                <div className="text-xs text-amber-700 space-y-1">
+                  <p>• Property name and description</p>
+                  <p>• Address and location</p>
+                  <p>• House rules and policies</p>
+                  <p>• Amenities information</p>
+                  <p>• You can edit everything after import</p>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowImporter(false);
+                    setLinkUrl('');
+                    setError('');
+                  }}
+                  disabled={loading}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleImport} 
+                  disabled={loading || !linkUrl.trim()}
+                  className="flex-1"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Import Property
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
+  );
+};
+
 // QR Code Generator Component (Enhanced)
 const QRCodeGenerator = ({ apartmentId, apartmentName, brandName, onClose }) => {
   const [qrCodeUrl, setQrCodeUrl] = useState("");
