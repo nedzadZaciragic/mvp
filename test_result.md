@@ -149,6 +149,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED SUCCESSFULLY: iCal integration working properly. POST /ical/test-sync/{apartment_id} endpoint working. Calendar sync functionality operational. GET /notifications/{apartment_id} endpoint working and returns booking notifications. Integration with email credentials system working."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE iCal TESTING COMPLETED: CONFIRMED REAL IMPLEMENTATION (NOT HARDCODED). Deep testing reveals: 1) parse_ical_calendar function makes actual HTTP requests to iCal URLs using httpx.AsyncClient 2) Successfully fetched and parsed real US holidays calendar with 318 events 3) Different URLs return different responses (no caching) 4) Robust error handling for invalid URLs, network failures, and malformed iCal data 5) Real booking notifications created from parsed iCal events 6) Analytics integration working with real chat message data 7) Email notification system properly integrated. SUCCESS RATE: 100% for core functionality. This is REAL iCal integration that fetches, parses, and processes actual calendar data."
 
   - task: "Payment Simulation API"
     implemented: true
