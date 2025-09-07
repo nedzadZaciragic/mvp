@@ -2035,7 +2035,10 @@ const AnalyticsDashboard = () => {
                           <div className="mb-2">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-sm font-medium text-blue-600">Question:</span>
-                              <Badge variant="outline">{qa.count} times</Badge>
+                              <div className="flex items-center space-x-2">
+                                <Badge variant="outline">{qa.count} times</Badge>
+                                {qa.percentage && <Badge variant="secondary">{qa.percentage}%</Badge>}
+                              </div>
                             </div>
                             <p className="text-sm text-gray-800">{qa.question}</p>
                           </div>
