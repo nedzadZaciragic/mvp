@@ -816,6 +816,167 @@ async def login(user_data: UserLogin):
             raise e
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/auth/forgot-password")
+async def forgot_password(request: PasswordResetRequest):
+    """Send password reset email"""
+    try:
+        # Find user
+        user = await db.users.find_one({"email": request.email})
+        if not user:
+            # Don't reveal if email exists for security
+            return {"message": "If the email exists, a password reset link has been sent"}
+        
+        # Generate reset token (JWT with short expiration)
+        reset_token = create_access_token({"sub": user['id'], "type": "password_reset"})
+        
+        # Store reset token in database with expiration
+        await db.password_resets.insert_one({
+            "user_id": user['id'],
+            "token": reset_token,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "used": False
+        })
+        
+        # Create reset email
+        reset_url = f"http://localhost:3000/reset-password?token={reset_token}"
+        email_subject = "MyHostIQ - Password Reset Request"
+        email_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; background-color: #f8fafc; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }}
+                .header {{ background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 30px 20px; text-align: center; }}
+                .content {{ padding: 30px 20px; }}
+                .button {{ background: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; }}
+                .footer {{ background: #f1f5f9; padding: 20px; text-align: center; color: #64748b; font-size: 14px; }}
+                .warning {{ background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 15px; border-radius: 8px; margin: 20px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>MyHostIQ</h1>
+                    <p>Password Reset Request</p>
+                </div>
+                <div class="content">
+                    <h2>Hello {user.get('full_name', 'there')}! 👋</h2>
+                    <p>We received a request to reset your password for your MyHostIQ account.</p>
+                    
+                    <p>If you requested this, click the button below to reset your password:</p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{reset_url}" class="button">Reset My Password</a>
+                    </div>
+                    
+                    <div class="warning">
+                        <p><strong>⚠️ Important Security Information:</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>This link will expire in 1 hour</li>
+                            <li>If you didn't request this, please ignore this email</li>
+                            <li>Never share this link with anyone</li>
+                            <li>We will never ask for your password via email</li>
+                        </ul>
+                    </div>
+                    
+                    <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                    <p style="word-break: break-all; color: #6b7280; font-size: 12px;">{reset_url}</p>
+                </div>
+                <div class="footer">
+                    <p>MyHostIQ - Smart Guest Assistant Platform</p>
+                    <p>This email was sent because a password reset was requested for your account.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Try to send email using SendGrid as fallback
+        try:
+            from sendgrid import SendGridAPIClient
+            from sendgrid.helpers.mail import Mail
+            
+            message = Mail(
+                from_email='noreply@myhostiq.com',
+                to_emails=request.email,
+                subject=email_subject,
+                html_content=email_content
+            )
+            
+            sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+            response = sg.send(message)
+            logger.info(f"Password reset email sent to {request.email}")
+            
+        except Exception as e:
+            logger.error(f"Failed to send password reset email: {str(e)}")
+            # Continue anyway for security (don't reveal email sending failure)
+        
+        return {"message": "If the email exists, a password reset link has been sent"}
+        
+    except Exception as e:
+        logger.error(f"Forgot password error: {str(e)}")
+        return {"message": "If the email exists, a password reset link has been sent"}
+
+@api_router.post("/auth/reset-password")
+async def reset_password(request: PasswordReset):
+    """Reset password using token"""
+    try:
+        # Verify token
+        try:
+            payload = jwt.decode(request.token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            user_id = payload.get("sub")
+            token_type = payload.get("type")
+            
+            if token_type != "password_reset":
+                raise HTTPException(status_code=400, detail="Invalid reset token")
+                
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=400, detail="Reset token has expired")
+        except jwt.JWTError:
+            raise HTTPException(status_code=400, detail="Invalid reset token")
+        
+        # Check if token exists and is not used
+        reset_record = await db.password_resets.find_one({
+            "token": request.token,
+            "used": False
+        })
+        
+        if not reset_record:
+            raise HTTPException(status_code=400, detail="Invalid or already used reset token")
+        
+        # Check if token is expired
+        expires_at = datetime.fromisoformat(reset_record['expires_at'])
+        if datetime.now(timezone.utc) > expires_at:
+            raise HTTPException(status_code=400, detail="Reset token has expired")
+        
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=400, detail="User not found")
+        
+        # Update password
+        hashed_password = hash_password(request.new_password)
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"hashed_password": hashed_password}}
+        )
+        
+        # Mark token as used
+        await db.password_resets.update_one(
+            {"token": request.token},
+            {"$set": {"used": True, "used_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        return {"message": "Password reset successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Reset password error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to reset password")
+
 # User Routes
 @api_router.get("/auth/me")
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
