@@ -254,20 +254,35 @@ async def scrape_airbnb_listing(url: str) -> dict:
         
         logger.info(f"Scraping URL: {url}")
         
-        # Make fresh request to the specific URL
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()
-        
-        soup = BeautifulSoup(response.content, 'html.parser')
-        page_content = response.text
-        
-        # Initialize result data
+        # Try multiple approaches due to Airbnb's anti-bot measures
         scraped_data = {
             'name': '',
             'address': '',
             'description': '',
             'rules': []
         }
+        
+        # Method 1: Try with different session and headers
+        session = requests.Session()
+        session.headers.update(headers)
+        
+        try:
+            response = session.get(url, timeout=15)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            page_content = response.text
+            
+            # Debug: Log page indicators
+            logger.info(f"Page content length: {len(page_content)}")
+            if 'Access denied' in page_content or 'blocked' in page_content.lower():
+                logger.warning("Page access appears blocked")
+            if 'robots' in page_content.lower():
+                logger.warning("Robot detection may be active")
+                
+        except Exception as e:
+            logger.error(f"Initial request failed: {e}")
+            # Continue with fallback
         
         # Method 1: Try to extract from JavaScript data (most reliable for Airbnb)
         try:
