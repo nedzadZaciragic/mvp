@@ -259,6 +259,7 @@ async def scrape_airbnb_listing(url: str) -> dict:
         response.raise_for_status()
         
         soup = BeautifulSoup(response.content, 'html.parser')
+        page_content = response.text
         
         # Initialize result data
         scraped_data = {
@@ -267,6 +268,73 @@ async def scrape_airbnb_listing(url: str) -> dict:
             'description': '',
             'rules': []
         }
+        
+        # Method 1: Try to extract from JavaScript data (most reliable for Airbnb)
+        try:
+            # Look for window.__INITIAL_STATE__ or similar data structures
+            import re
+            
+            # Pattern to find JSON data in script tags
+            json_patterns = [
+                r'window\.__INITIAL_STATE__\s*=\s*({.*?});',
+                r'"listing":\s*({.*?"name":"[^"]*".*?})',
+                r'"pdpConfiguration":\s*({.*?})',
+                r'"__APOLLO_STATE__":\s*({.*?})'
+            ]
+            
+            for pattern in json_patterns:
+                matches = re.findall(pattern, page_content, re.DOTALL)
+                for match in matches:
+                    try:
+                        # Clean the JSON string
+                        json_str = match.strip()
+                        if json_str.endswith(','):
+                            json_str = json_str[:-1]
+                            
+                        data = json.loads(json_str)
+                        
+                        if isinstance(data, dict):
+                            # Look for listing data in various paths
+                            if 'listing' in data:
+                                listing = data['listing']
+                                if isinstance(listing, dict):
+                                    if 'name' in listing:
+                                        scraped_data['name'] = listing['name']
+                                    if 'publicAddress' in listing:
+                                        scraped_data['address'] = listing['publicAddress']
+                                    if 'description' in listing:
+                                        scraped_data['description'] = listing['description']
+                            
+                            # Look for ROOT_QUERY patterns in Apollo state
+                            for key, value in data.items():
+                                if isinstance(value, dict) and 'name' in value:
+                                    if value['name'] and len(value['name']) > 5:
+                                        scraped_data['name'] = value['name']
+                                        break
+                    except:
+                        continue
+                        
+            if scraped_data['name']:
+                logger.info(f"Found name from JSON: {scraped_data['name']}")
+        except Exception as e:
+            logger.debug(f"JSON extraction failed: {e}")
+        
+        # Method 2: Try meta tags
+        if not scraped_data['name']:
+            meta_tags = [
+                'meta[property="og:title"]',
+                'meta[name="title"]',
+                'meta[property="twitter:title"]'
+            ]
+            
+            for selector in meta_tags:
+                meta = soup.select_one(selector)
+                if meta and meta.get('content'):
+                    content = meta.get('content')
+                    if content and 'airbnb' not in content.lower() and len(content.strip()) > 5:
+                        scraped_data['name'] = content.strip()
+                        logger.info(f"Found name from meta: {scraped_data['name']}")
+                        break
         
         # Extract title/name - more comprehensive selectors
         title_selectors = [
