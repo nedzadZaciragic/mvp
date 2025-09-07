@@ -594,6 +594,176 @@ class MyHostIQAPITester:
         
         return success
 
+    # PROPERTY IMPORT TESTS - HIGH PRIORITY
+    def test_property_import_real_airbnb(self):
+        """Test property import with real Airbnb URL - HIGH PRIORITY"""
+        # Real Airbnb URL from review request
+        airbnb_url = "https://www.airbnb.com/rooms/44732428?source_impression_id=p3_1757282755_P3bt6BHZxtTG3Sz_"
+        
+        import_data = {
+            "url": airbnb_url
+        }
+        
+        success, response = self.run_test(
+            "Property Import - Real Airbnb URL",
+            "POST",
+            "apartments/import-from-url",
+            200,
+            data=import_data,
+            timeout=60  # Scraping can take longer
+        )
+        
+        if success:
+            data = response.get('data', {})
+            print(f"   Success: {response.get('success', False)}")
+            print(f"   Message: {response.get('message', 'None')}")
+            print(f"   Property name: {data.get('name', 'None')}")
+            print(f"   Address: {data.get('address', 'None')}")
+            print(f"   Description length: {len(data.get('description', ''))}")
+            print(f"   Rules count: {len(data.get('rules', []))}")
+            
+            # Validate expected data from review request
+            property_name = data.get('name', '').lower()
+            if 'modern' in property_name and 'bright' in property_name and 'apartment' in property_name:
+                print("   ✅ Property name matches expected: 'Modern and Bright Apartment - Main Street'")
+            else:
+                print(f"   ⚠️  Property name may not match expected: {data.get('name', 'None')}")
+            
+            # Check for Sarajevo in description
+            description = data.get('description', '').lower()
+            if 'sarajevo' in description:
+                print("   ✅ Description contains Sarajevo information")
+            else:
+                print("   ⚠️  Description may not contain Sarajevo information")
+            
+            # Check rules extraction
+            rules = data.get('rules', [])
+            if len(rules) > 0:
+                print(f"   ✅ Rules extracted: {len(rules)} rules")
+                for i, rule in enumerate(rules[:3]):  # Show first 3 rules
+                    print(f"      - {rule}")
+            else:
+                print("   ⚠️  No rules extracted")
+            
+            # Check response structure
+            expected_fields = ['name', 'address', 'description', 'rules', 'contact', 'recommendations']
+            missing_fields = [field for field in expected_fields if field not in data]
+            if not missing_fields:
+                print("   ✅ Response contains all expected fields")
+            else:
+                print(f"   ⚠️  Missing fields: {missing_fields}")
+        
+        return success
+
+    def test_property_import_invalid_url(self):
+        """Test property import with invalid URL - HIGH PRIORITY"""
+        test_cases = [
+            {
+                "name": "Invalid URL Format",
+                "url": "not-a-valid-url",
+                "expected_status": 400
+            },
+            {
+                "name": "Non-Airbnb URL",
+                "url": "https://www.google.com",
+                "expected_status": 400
+            },
+            {
+                "name": "Non-existent Airbnb URL",
+                "url": "https://www.airbnb.com/rooms/999999999999",
+                "expected_status": 400
+            }
+        ]
+        
+        all_passed = True
+        
+        for test_case in test_cases:
+            print(f"\n   Testing {test_case['name']}...")
+            
+            import_data = {"url": test_case["url"]}
+            
+            success, response = self.run_test(
+                f"Property Import - {test_case['name']}",
+                "POST",
+                "apartments/import-from-url",
+                test_case["expected_status"],
+                data=import_data,
+                timeout=30
+            )
+            
+            if success:
+                error_detail = response.get('detail', '')
+                print(f"   ✅ Properly rejected: {error_detail}")
+            else:
+                all_passed = False
+                print(f"   ❌ Unexpected response for {test_case['name']}")
+        
+        return all_passed
+
+    def test_property_import_malformed_requests(self):
+        """Test property import with malformed requests - HIGH PRIORITY"""
+        test_cases = [
+            {
+                "name": "Missing URL field",
+                "data": {},
+                "expected_status": 422
+            },
+            {
+                "name": "Empty URL",
+                "data": {"url": ""},
+                "expected_status": 400
+            },
+            {
+                "name": "Null URL",
+                "data": {"url": None},
+                "expected_status": 422
+            }
+        ]
+        
+        all_passed = True
+        
+        for test_case in test_cases:
+            print(f"\n   Testing {test_case['name']}...")
+            
+            success, response = self.run_test(
+                f"Property Import - {test_case['name']}",
+                "POST",
+                "apartments/import-from-url",
+                test_case["expected_status"],
+                data=test_case["data"],
+                timeout=10
+            )
+            
+            if success:
+                print(f"   ✅ Properly handled malformed request")
+            else:
+                all_passed = False
+                print(f"   ❌ Unexpected response for {test_case['name']}")
+        
+        return all_passed
+
+    def test_property_import_authentication(self):
+        """Test property import requires authentication - HIGH PRIORITY"""
+        airbnb_url = "https://www.airbnb.com/rooms/44732428"
+        import_data = {"url": airbnb_url}
+        
+        success, response = self.run_test(
+            "Property Import - No Authentication",
+            "POST",
+            "apartments/import-from-url",
+            401,  # Expect 401 Unauthorized
+            data=import_data,
+            use_auth=False,  # Don't use authentication
+            timeout=10
+        )
+        
+        if success:
+            print("   ✅ Property import properly requires authentication")
+        else:
+            print("   ❌ Property import should require authentication")
+        
+        return success
+
     def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30, use_auth=True):
         """Run a single API test"""
         url = f"{self.api_url}/{endpoint}" if endpoint else f"{self.api_url}/"
