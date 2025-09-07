@@ -268,23 +268,41 @@ async def scrape_airbnb_listing(url: str) -> dict:
             'rules': []
         }
         
-        # Extract title/name - try multiple selectors
+        # Extract title/name - more comprehensive selectors
         title_selectors = [
             'h1[data-testid="listing-title"]',
             'h1._14i3z6h',
             'h1[class*="title"]',
             '.hpud4pj h1',
-            'h1',
             '[data-testid="overview-title"] h1',
-            'section h1'
+            'section h1',
+            'h1',
+            'title',  # fallback to page title
+            # Look in any container that might have the property name
+            'div[data-section-id="OVERVIEW_DEFAULT"] h1',
+            'div[data-plugin-in-point-id="OVERVIEW_DEFAULT"] h1'
         ]
         
         for selector in title_selectors:
-            title_element = soup.select_one(selector)
-            if title_element and title_element.get_text(strip=True):
-                scraped_data['name'] = title_element.get_text(strip=True)
-                logger.info(f"Found title: {scraped_data['name']}")
-                break
+            if selector == 'title':
+                # Special handling for page title
+                title_elem = soup.find('title')
+                if title_elem:
+                    title_text = title_elem.get_text()
+                    # Clean up title (remove " - Airbnb" etc.)
+                    if ' - ' in title_text:
+                        title_text = title_text.split(' - ')[0]
+                    if title_text and title_text not in ['Airbnb', 'Oops!']:
+                        scraped_data['name'] = title_text.strip()
+                        break
+            else:
+                title_element = soup.select_one(selector)
+                if title_element and title_element.get_text(strip=True):
+                    title_text = title_element.get_text(strip=True)
+                    if title_text not in ['Oops!', 'Airbnb']:
+                        scraped_data['name'] = title_text
+                        logger.info(f"Found title: {scraped_data['name']}")
+                        break
         
         # Extract location/address - try multiple selectors
         location_selectors = [
