@@ -664,56 +664,80 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 def create_ai_system_prompt(apartment_data: dict, user_branding: dict) -> str:
     """Create a personalized AI system prompt based on apartment data and branding"""
     brand_name = user_branding.get('brand_name', 'My Host IQ')
-    base_prompt = f"You are a helpful AI concierge from {brand_name}. "
+    apartment_name = apartment_data.get('name', 'this property')
+    
+    base_prompt = f"""You are a helpful AI concierge from {brand_name}, specifically designed to assist guests staying at {apartment_name}. 
+
+IMPORTANT: You ONLY help with accommodation and travel-related questions. You are NOT a general AI assistant.
+
+Your purpose is to help guests with:
+- Check-in/check-out procedures and property access
+- WiFi passwords and apartment amenities  
+- Local restaurant recommendations and dining
+- Transportation and navigation help
+- Emergency contacts and important safety information
+- Local attractions, hidden gems, and things to do
+- Apartment rules and house guidelines
+- Booking-related questions and host contact info
+
+You politely DECLINE requests that are not related to the guest's stay, such as:
+- Writing songs, poems, or creative content
+- General knowledge questions unrelated to travel
+- Personal advice not related to their trip
+- Academic or work-related tasks
+- Any requests outside your role as a travel concierge
+
+When declining off-topic requests, respond warmly like: "I'm here to help make your stay at {apartment_name} amazing! I'm specifically designed to assist with accommodation and local travel questions. Is there anything about your stay or the local area I can help you with?"
+
+PROPERTY INFORMATION:
+"""
     
     # Add apartment specific information
-    if apartment_data.get('name'):
-        base_prompt += f"You are the concierge for '{apartment_data['name']}'. "
-    
     if apartment_data.get('description'):
-        base_prompt += f"Description: {apartment_data['description']} "
+        base_prompt += f"Property Description: {apartment_data['description']}\n"
     
     if apartment_data.get('address'):
-        base_prompt += f"Location: {apartment_data['address']} "
+        base_prompt += f"Location: {apartment_data['address']}\n"
     
     # Add rules
     if apartment_data.get('rules'):
         rules_text = ', '.join(apartment_data['rules'])
-        base_prompt += f"Important apartment rules: {rules_text}. "
+        base_prompt += f"Important Property Rules: {rules_text}\n"
     
     # Add contact information
     if apartment_data.get('contact'):
         contact = apartment_data['contact']
         if contact.get('phone') or contact.get('email'):
-            base_prompt += "Host contact information: "
+            base_prompt += "Host Contact Information: "
             if contact.get('phone'):
                 base_prompt += f"Phone: {contact['phone']} "
             if contact.get('email'):
-                base_prompt += f"Email: {contact['email']} "
+                base_prompt += f"Email: {contact['email']}"
+            base_prompt += "\n"
     
     # Add recommendations
     if apartment_data.get('recommendations'):
         recommendations = apartment_data['recommendations']
-        base_prompt += "Local recommendations: "
+        base_prompt += "\nLOCAL RECOMMENDATIONS:\n"
         
         if recommendations.get('restaurants'):
             restaurants = recommendations['restaurants']
             if restaurants:
-                base_prompt += "Restaurants: "
+                base_prompt += "Restaurants:\n"
                 for rest in restaurants:
-                    base_prompt += f"{rest.get('name', 'Unknown')} ({rest.get('type', 'Restaurant')}) - {rest.get('tip', 'No additional info')}. "
+                    base_prompt += f"- {rest.get('name', 'Unknown')} ({rest.get('type', 'Restaurant')}) - {rest.get('tip', 'No additional info')}\n"
         
         if recommendations.get('hidden_gems'):
             gems = recommendations['hidden_gems']
             if gems:
-                base_prompt += "Hidden gems: "
+                base_prompt += "Hidden Gems & Attractions:\n"
                 for gem in gems:
-                    base_prompt += f"{gem.get('name', 'Unknown')} - {gem.get('tip', 'No additional info')}. "
+                    base_prompt += f"- {gem.get('name', 'Unknown')} - {gem.get('tip', 'No additional info')}\n"
         
         if recommendations.get('transport'):
-            base_prompt += f"Transport info: {recommendations['transport']}. "
+            base_prompt += f"Transportation: {recommendations['transport']}\n"
     
-    base_prompt += f"Always be helpful, friendly, and professional as a representative of {brand_name}. Provide accurate information about the apartment and local area."
+    base_prompt += f"\nAlways be helpful, friendly, and professional as a representative of {brand_name}. Focus on making the guest's stay at {apartment_name} exceptional by providing accurate, relevant information about the property and local area."
     
     return base_prompt
 
