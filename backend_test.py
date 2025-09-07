@@ -979,6 +979,12 @@ def main():
         ("📧 Test Email Functionality", tester.test_email_credentials_test),
         ("📧 SMTP Auto-Detection", tester.test_email_smtp_auto_detection),
         
+        # FORGOT PASSWORD EMAIL TESTS - HIGH PRIORITY
+        ("🔐 Forgot Password Functionality", tester.test_forgot_password_functionality),
+        ("📧 SendGrid Configuration", tester.test_sendgrid_configuration),
+        ("🔐 Password Reset Token Validation", tester.test_password_reset_token_validation),
+        ("📧 Email Content and Formatting", tester.test_email_content_and_formatting),
+        
         # PAYMENT SIMULATION TESTS - MEDIUM PRIORITY
         ("💳 Get Payment Plans", tester.test_get_payment_plans),
         ("💳 Simulate Payment", tester.test_simulate_payment),
