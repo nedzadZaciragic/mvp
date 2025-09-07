@@ -805,6 +805,7 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -824,55 +825,72 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-6">
-      <Card className="w-full max-w-md shadow-xl border-0">
-        <CardHeader className="text-center pb-2">
-          <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Building2 className="h-8 w-8 text-blue-600" />
-          </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">Welcome back</CardTitle>
-          <CardDescription>Sign in to your MyHostIQ account</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {error && (
-            <Alert className="border-red-200 bg-red-50">
-              <AlertDescription className="text-red-800">{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              type="email"
-              placeholder="Email address"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e) => setFormData(prev => ({...prev, password: e.target.value}))}
-              required
-            />
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-6">
+        <Card className="w-full max-w-md shadow-xl border-0">
+          <CardHeader className="text-center pb-2">
+            <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Building2 className="h-8 w-8 text-blue-600" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">Welcome back</CardTitle>
+            <CardDescription>Sign in to your MyHostIQ account</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertDescription className="text-red-800">{error}</AlertDescription>
+              </Alert>
+            )}
             
-            <Button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700">
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-          
-          <div className="text-center text-sm text-gray-600">
-            Don't have an account?{" "}
-            <button 
-              onClick={() => navigate('/register')}
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
-              Sign up
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                type="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                required
+              />
+              <Input
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={(e) => setFormData(prev => ({...prev, password: e.target.value}))}
+                required
+              />
+              
+              <div className="flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Forgot password?
+                </button>
+              </div>
+              
+              <Button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700">
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+            
+            <div className="text-center text-sm text-gray-600">
+              Don't have an account?{" "}
+              <button 
+                onClick={() => navigate('/register')}
+                className="text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Sign up
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <ForgotPassword 
+        isOpen={showForgotPassword} 
+        onClose={() => setShowForgotPassword(false)} 
+      />
+    </>
   );
 };
 
