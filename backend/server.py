@@ -414,8 +414,14 @@ async def scrape_airbnb_listing(url: str) -> dict:
         
         # Validate that we got meaningful data
         if not scraped_data['name'] and not scraped_data['description']:
-            logger.warning(f"Very little data scraped from {url}")
-            # Still return what we have rather than failing
+            logger.warning(f"Very little data scraped from {url} - might be blocked or page structure changed")
+            # Try a basic fallback - extract any meaningful text
+            all_text = soup.get_text()
+            if 'airbnb' in all_text.lower() and len(all_text) > 100:
+                # This confirms we reached Airbnb but couldn't parse properly
+                scraped_data['name'] = f"Property from {url.split('/')[-1]}"
+                scraped_data['description'] = "Unable to extract description - please enter manually"
+                scraped_data['address'] = "Unable to extract address - please enter manually"
         
         return scraped_data
         
