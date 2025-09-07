@@ -3016,11 +3016,10 @@ const HostDashboard = () => {
                         required
                       />
                       
-                      <Input
+                      <AddressAutocomplete
                         placeholder="Full Address"
                         value={formData.address}
-                        onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
-                        required
+                        onChange={(value) => setFormData(prev => ({...prev, address: value}))}
                       />
                     </div>
                     
