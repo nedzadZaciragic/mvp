@@ -23,6 +23,9 @@ from email.mime.multipart import MIMEMultipart
 from cryptography.fernet import Fernet
 import ssl
 import base64
+import requests
+from bs4 import BeautifulSoup
+import json
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
