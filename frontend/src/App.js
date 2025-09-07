@@ -2189,21 +2189,7 @@ const HostDashboard = () => {
   const [newRule, setNewRule] = useState("");
   const [newRestaurant, setNewRestaurant] = useState({ name: "", type: "", tip: "" });
   const [newGem, setNewGem] = useState({ name: "", tip: "" });
-  const handleImportedData = (importedData) => {
-    setFormData(prev => ({
-      ...prev,
-      name: importedData.name || prev.name,
-      description: importedData.description || prev.description,
-      address: importedData.address || prev.address,
-      rules: importedData.rules || prev.rules,
-      contact: { ...prev.contact, ...importedData.contact },
-      recommendations: {
-        restaurants: importedData.recommendations?.restaurants || prev.recommendations.restaurants,
-        hidden_gems: importedData.recommendations?.hidden_gems || prev.recommendations.hidden_gems,
-        transport: importedData.recommendations?.transport || prev.recommendations.transport
-      }
-    }));
-  };
+  const [showiCalHelper, setShowiCalHelper] = useState(false);
 
   useEffect(() => {
     fetchApartments();
