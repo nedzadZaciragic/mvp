@@ -838,8 +838,9 @@ async def forgot_password(request: PasswordResetRequest):
             "used": False
         })
         
-        # Create reset email
-        reset_url = f"http://localhost:3000/reset-password?token={reset_token}"
+        # Create reset email with proper URL
+        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+        reset_url = f"{frontend_url}/reset-password?token={reset_token}"
         email_subject = "MyHostIQ - Password Reset Request"
         email_content = f"""
         <!DOCTYPE html>
