@@ -1519,6 +1519,51 @@ async def get_payment_plans():
         ]
     }
 
+# Property Import Routes
+@api_router.post("/apartments/import-from-url")
+async def import_property_from_url(
+    request: PropertyImportRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Import property data from Airbnb, Booking.com, or VRBO URL"""
+    try:
+        url = request.url.strip()
+        
+        # Validate URL
+        if not url.startswith(('http://', 'https://')):
+            raise HTTPException(status_code=400, detail="Invalid URL format")
+        
+        # Check if it's a supported platform
+        supported_platforms = ['airbnb.com', 'booking.com', 'vrbo.com', 'homeaway.com']
+        if not any(platform in url.lower() for platform in supported_platforms):
+            raise HTTPException(
+                status_code=400, 
+                detail="URL must be from Airbnb, Booking.com, or VRBO"
+            )
+        
+        # Scrape the listing data
+        if 'airbnb.com' in url.lower():
+            scraped_data = await scrape_airbnb_listing(url)
+        else:
+            # For now, only Airbnb is implemented
+            # You can extend this for other platforms
+            raise HTTPException(
+                status_code=400, 
+                detail="Currently only Airbnb links are supported. Booking.com and VRBO coming soon!"
+            )
+        
+        return {
+            "success": True,
+            "data": scraped_data,
+            "message": "Property data imported successfully!"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Property import error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to import property: {str(e)}")
+
 # Enhanced Apartment Routes
 @api_router.post("/apartments", response_model=Apartment)
 async def create_apartment(apartment_data: ApartmentCreate, current_user: User = Depends(get_current_user)):
