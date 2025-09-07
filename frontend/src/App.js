@@ -112,6 +112,255 @@ const useAuth = () => {
   return context;
 };
 
+// Forgot Password Component
+const ForgotPassword = ({ isOpen, onClose }) => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    try {
+      await axios.post(`${API}/auth/forgot-password`, { email });
+      setMessage('If your email is registered, you will receive a password reset link shortly.');
+      setEmail('');
+    } catch (error) {
+      setMessage('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center text-blue-600">
+            <Mail className="h-5 w-5 mr-2" />
+            Reset Password
+          </CardTitle>
+          <CardDescription>
+            Enter your email address and we'll send you a password reset link
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {message ? (
+            <div className="text-center space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                <p className="text-green-700 text-sm">{message}</p>
+              </div>
+              <Button onClick={onClose} className="w-full">
+                Close
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  required
+                />
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-700">
+                  We'll send you a secure link to reset your password. The link will expire in 1 hour.
+                </p>
+              </div>
+
+              <div className="flex space-x-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onClose}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={loading || !email}
+                  className="flex-1"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Reset Link'
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Reset Password Page Component
+const ResetPasswordPage = () => {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
+  
+  // Get token from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/');
+    }
+  }, [token, navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      setMessage('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setMessage('Password must be at least 6 characters long');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      await axios.post(`${API}/auth/reset-password`, {
+        token,
+        new_password: password
+      });
+      
+      setSuccess(true);
+      setMessage('Password reset successfully! You can now login with your new password.');
+      
+      // Redirect to login after 3 seconds
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+      
+    } catch (error) {
+      setMessage(error.response?.data?.detail || 'Failed to reset password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center text-blue-600">
+            <Shield className="h-5 w-5 mr-2" />
+            Reset Your Password
+          </CardTitle>
+          <CardDescription>
+            Enter your new password below
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {success ? (
+            <div className="text-center space-y-4">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-green-700 font-medium">Password Reset Successful!</p>
+                <p className="text-green-600 text-sm mt-2">{message}</p>
+              </div>
+              <p className="text-gray-500 text-sm">Redirecting to login...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {message && (
+                <Alert className="border-red-200 bg-red-50">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-red-700">{message}</AlertDescription>
+                </Alert>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Password
+                </label>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  required
+                  minLength={6}
+                />
+                <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm New Password
+                </label>
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                disabled={loading || !password || !confirmPassword}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                    Resetting Password...
+                  </>
+                ) : (
+                  'Reset Password'
+                )}
+              </Button>
+
+              <div className="text-center">
+                <Button 
+                  type="button" 
+                  variant="link" 
+                  onClick={() => navigate('/')}
+                  className="text-blue-600"
+                >
+                  Back to Home
+                </Button>
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // Address Autocomplete Component using OpenStreetMap
 const AddressAutocomplete = ({ value, onChange, placeholder = "Enter address..." }) => {
   const [suggestions, setSuggestions] = useState([]);
