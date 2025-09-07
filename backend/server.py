@@ -227,34 +227,36 @@ class AnalyticsData(BaseModel):
     peak_hours: List[dict]
 
 async def scrape_airbnb_listing(url: str) -> dict:
-    """Scrape Airbnb listing data from URL"""
+    """Advanced Airbnb scraper with anti-detection measures"""
     try:
-        # Use rotating user agents and better headers to avoid detection
+        import time
         import random
-        user_agents = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
-        ]
+        from urllib.parse import urljoin
         
+        # More aggressive headers to mimic real browser
         headers = {
-            'User-Agent': random.choice(user_agents),
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9,sr;q=0.8',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
+            'Referer': 'https://www.airbnb.com/',
+            'Origin': 'https://www.airbnb.com',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-Site': 'same-origin',
             'Sec-Fetch-User': '?1',
-            'Upgrade-Insecure-Requests': '1'
+            'Cache-Control': 'max-age=0',
+            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"'
         }
         
-        logger.info(f"Scraping URL: {url}")
+        logger.info(f"Advanced scraping attempt for: {url}")
         
-        # Try multiple approaches due to Airbnb's anti-bot measures
+        # Initialize result
         scraped_data = {
             'name': '',
             'address': '',
@@ -262,258 +264,168 @@ async def scrape_airbnb_listing(url: str) -> dict:
             'rules': []
         }
         
-        # Method 1: Try with different session and headers
+        # Create session with better settings
         session = requests.Session()
         session.headers.update(headers)
         
-        try:
-            response = session.get(url, timeout=15)
-            response.raise_for_status()
+        # Add random delay to seem more human-like
+        await asyncio.sleep(random.uniform(1, 3))
+        
+        # Make request
+        response = session.get(url, timeout=20, allow_redirects=True)
+        response.raise_for_status()
+        
+        html_content = response.text
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        logger.info(f"Page loaded: {len(html_content)} chars, status: {response.status_code}")
+        
+        # Method 1: Check for blocked indicators
+        blocked_indicators = [
+            'Access denied', 'blocked', 'robot', 'captcha', 
+            'security check', 'unusual activity', 'temporarily unavailable'
+        ]
+        
+        if any(indicator.lower() in html_content.lower() for indicator in blocked_indicators):
+            logger.warning("Page appears to be blocked or showing captcha")
+        
+        # Method 2: Try to extract from page title first (most reliable)
+        title_tag = soup.find('title')
+        if title_tag:
+            full_title = title_tag.get_text().strip()
+            logger.info(f"Page title: {full_title}")
             
-            soup = BeautifulSoup(response.content, 'html.parser')
-            page_content = response.text
-            
-            # Debug: Log page indicators
-            logger.info(f"Page content length: {len(page_content)}")
-            if 'Access denied' in page_content or 'blocked' in page_content.lower():
-                logger.warning("Page access appears blocked")
-            if 'robots' in page_content.lower():
-                logger.warning("Robot detection may be active")
+            # Clean up Airbnb title
+            if ' - ' in full_title and 'airbnb' in full_title.lower():
+                potential_name = full_title.split(' - ')[0].strip()
+                if len(potential_name) > 10 and potential_name not in ['Airbnb', 'Vacation Rentals']:
+                    scraped_data['name'] = potential_name
+                    logger.info(f"Extracted name from title: {potential_name}")
+        
+        # Method 3: Try meta tags
+        meta_selectors = [
+            'meta[property="og:title"]',
+            'meta[name="twitter:title"]',
+            'meta[property="og:description"]',
+            'meta[name="description"]'
+        ]
+        
+        for selector in meta_selectors:
+            meta = soup.select_one(selector)
+            if meta and meta.get('content'):
+                content = meta.get('content').strip()
+                logger.info(f"Meta {selector}: {content[:100]}...")
                 
-        except Exception as e:
-            logger.error(f"Initial request failed: {e}")
-            # Continue with fallback
-        
-        # Method 1: Try to extract from JavaScript data (most reliable for Airbnb)
-        try:
-            # Look for window.__INITIAL_STATE__ or similar data structures
-            import re
-            
-            # Pattern to find JSON data in script tags
-            json_patterns = [
-                r'window\.__INITIAL_STATE__\s*=\s*({.*?});',
-                r'"listing":\s*({.*?"name":"[^"]*".*?})',
-                r'"pdpConfiguration":\s*({.*?})',
-                r'"__APOLLO_STATE__":\s*({.*?})'
-            ]
-            
-            for pattern in json_patterns:
-                matches = re.findall(pattern, page_content, re.DOTALL)
-                for match in matches:
-                    try:
-                        # Clean the JSON string
-                        json_str = match.strip()
-                        if json_str.endswith(','):
-                            json_str = json_str[:-1]
-                            
-                        data = json.loads(json_str)
+                if not scraped_data['name'] and 'og:title' in selector:
+                    if content and len(content) > 5 and 'airbnb' not in content.lower():
+                        scraped_data['name'] = content
                         
-                        if isinstance(data, dict):
-                            # Look for listing data in various paths
-                            if 'listing' in data:
-                                listing = data['listing']
-                                if isinstance(listing, dict):
-                                    if 'name' in listing:
-                                        scraped_data['name'] = listing['name']
-                                    if 'publicAddress' in listing:
-                                        scraped_data['address'] = listing['publicAddress']
-                                    if 'description' in listing:
-                                        scraped_data['description'] = listing['description']
-                            
-                            # Look for ROOT_QUERY patterns in Apollo state
-                            for key, value in data.items():
-                                if isinstance(value, dict) and 'name' in value:
-                                    if value['name'] and len(value['name']) > 5:
-                                        scraped_data['name'] = value['name']
-                                        break
-                    except:
-                        continue
-                        
-            if scraped_data['name']:
-                logger.info(f"Found name from JSON: {scraped_data['name']}")
-        except Exception as e:
-            logger.debug(f"JSON extraction failed: {e}")
+                if not scraped_data['description'] and ('description' in selector or 'og:description' in selector):
+                    if content and len(content) > 20:
+                        scraped_data['description'] = content[:300]
         
-        # Method 2: Try meta tags
+        # Method 4: Look for JSON-LD structured data
+        json_scripts = soup.find_all('script', type='application/ld+json')
+        for script in json_scripts:
+            try:
+                data = json.loads(script.string)
+                if isinstance(data, dict):
+                    if 'name' in data and not scraped_data['name']:
+                        scraped_data['name'] = data['name']
+                    if 'description' in data and not scraped_data['description']:
+                        scraped_data['description'] = data['description'][:300]
+                    if 'address' in data and not scraped_data['address']:
+                        if isinstance(data['address'], dict):
+                            addr_parts = []
+                            for key in ['streetAddress', 'addressLocality', 'addressRegion']:
+                                if key in data['address']:
+                                    addr_parts.append(data['address'][key])
+                            if addr_parts:
+                                scraped_data['address'] = ', '.join(addr_parts)
+                        elif isinstance(data['address'], str):
+                            scraped_data['address'] = data['address']
+            except:
+                continue
+        
+        # Method 5: Try alternative selectors with broader patterns
         if not scraped_data['name']:
-            meta_tags = [
-                'meta[property="og:title"]',
-                'meta[name="title"]',
-                'meta[property="twitter:title"]'
+            # Try various heading patterns
+            heading_selectors = [
+                'h1', 'h2[data-testid]', '[data-testid*="title"]', 
+                '[class*="title"]', '[class*="name"]'
             ]
             
-            for selector in meta_tags:
-                meta = soup.select_one(selector)
-                if meta and meta.get('content'):
-                    content = meta.get('content')
-                    if content and 'airbnb' not in content.lower() and len(content.strip()) > 5:
-                        scraped_data['name'] = content.strip()
-                        logger.info(f"Found name from meta: {scraped_data['name']}")
-                        break
-        
-        # Extract title/name - more comprehensive selectors
-        title_selectors = [
-            'h1[data-testid="listing-title"]',
-            'h1._14i3z6h',
-            'h1[class*="title"]',
-            '.hpud4pj h1',
-            '[data-testid="overview-title"] h1',
-            'section h1',
-            'h1',
-            'title',  # fallback to page title
-            # Look in any container that might have the property name
-            'div[data-section-id="OVERVIEW_DEFAULT"] h1',
-            'div[data-plugin-in-point-id="OVERVIEW_DEFAULT"] h1'
-        ]
-        
-        for selector in title_selectors:
-            if selector == 'title':
-                # Special handling for page title
-                title_elem = soup.find('title')
-                if title_elem:
-                    title_text = title_elem.get_text()
-                    # Clean up title (remove " - Airbnb" etc.)
-                    if ' - ' in title_text:
-                        title_text = title_text.split(' - ')[0]
-                    if title_text and title_text not in ['Airbnb', 'Oops!']:
-                        scraped_data['name'] = title_text.strip()
-                        break
-            else:
-                title_element = soup.select_one(selector)
-                if title_element and title_element.get_text(strip=True):
-                    title_text = title_element.get_text(strip=True)
-                    if title_text not in ['Oops!', 'Airbnb']:
-                        scraped_data['name'] = title_text
-                        logger.info(f"Found title: {scraped_data['name']}")
-                        break
-        
-        # Extract location/address - try multiple selectors
-        location_selectors = [
-            '[data-testid="listing-location"]',
-            '[data-section-id="OVERVIEW_DEFAULT"] [data-testid="listing-location"]',
-            '.l1ovpqvx',
-            '[class*="location"]',
-            'span[data-testid="listing-location"]',
-            '[data-plugin-in-point-id="OVERVIEW_DEFAULT"] span',
-            'div[data-section-id="OVERVIEW_DEFAULT"] span'
-        ]
-        
-        for selector in location_selectors:
-            location_element = soup.select_one(selector)
-            if location_element and location_element.get_text(strip=True):
-                scraped_data['address'] = location_element.get_text(strip=True)
-                logger.info(f"Found address: {scraped_data['address']}")
-                break
-        
-        # Extract description - try multiple approaches
-        description_text = ""
-        
-        # Method 1: Look for description sections
-        desc_selectors = [
-            '[data-section-id="DESCRIPTION_DEFAULT"] span',
-            '[data-testid="listing-description"]',
-            'div[data-section-id="DESCRIPTION_DEFAULT"] div span',
-            '[data-section-id="DESCRIPTION_DEFAULT"] div[data-row-id] span'
-        ]
-        
-        for selector in desc_selectors:
-            desc_elements = soup.select(selector)
-            if desc_elements:
-                descriptions = []
-                for elem in desc_elements:
+            for selector in heading_selectors:
+                elements = soup.select(selector)
+                for elem in elements:
                     text = elem.get_text(strip=True)
-                    if text and len(text) > 20 and text not in descriptions:
-                        descriptions.append(text)
-                if descriptions:
-                    description_text = ' '.join(descriptions)
+                    if text and len(text) > 10 and len(text) < 200:
+                        # Filter out obvious non-property names
+                        exclude_words = ['airbnb', 'sign up', 'log in', 'book', 'search', 'filter']
+                        if not any(word in text.lower() for word in exclude_words):
+                            scraped_data['name'] = text
+                            break
+                if scraped_data['name']:
                     break
         
-        # Method 2: Try to get text from paragraphs
-        if not description_text:
-            paragraphs = soup.find_all('div', string=True)
-            for p in paragraphs:
-                text = p.get_text(strip=True) if hasattr(p, 'get_text') else str(p).strip()
-                if text and len(text) > 50 and 'airbnb' not in text.lower():
-                    description_text = text
-                    break
-        
-        scraped_data['description'] = description_text[:500] if description_text else ""
-        logger.info(f"Found description: {len(scraped_data['description'])} characters")
-        
-        # Extract house rules and policies
-        rules = []
-        
-        # Look for house rules sections
-        rules_selectors = [
-            '[data-section-id="HOUSE_RULES_DEFAULT"] div',
-            '[data-testid="house-rules"] div',
-            '[class*="house-rules"] div',
-            '[class*="rule"] span',
-            '[data-section-id="POLICIES_DEFAULT"] div'
-        ]
-        
-        for selector in rules_selectors:
-            rule_elements = soup.select(selector)
-            for elem in rule_elements:
-                rule_text = elem.get_text(strip=True)
-                if rule_text and len(rule_text) > 5 and len(rule_text) < 100:
-                    # Filter out common non-rule text
-                    if not any(word in rule_text.lower() for word in ['show more', 'show less', 'see all', 'house rules', 'policies']):
-                        if rule_text not in rules:
-                            rules.append(rule_text)
-        
-        # If no specific rules found, extract from amenities/policies
-        if not rules:
-            amenity_selectors = [
-                '[data-testid="amenity-item"]',
-                '[data-section-id="AMENITIES_DEFAULT"] button div'
+        # Method 6: Look for address/location info
+        if not scraped_data['address']:
+            location_patterns = [
+                '[data-testid*="location"]', '[class*="location"]',
+                '[class*="address"]', 'span[dir="ltr"]'
             ]
             
-            for selector in amenity_selectors:
-                amenity_elements = soup.select(selector)
-                for elem in amenity_elements:
-                    amenity_text = elem.get_text(strip=True)
-                    if amenity_text:
-                        amenity_lower = amenity_text.lower()
-                        if 'no smoking' in amenity_lower or 'smoke-free' in amenity_lower:
-                            rules.append('No smoking inside the property')
-                        elif 'no pets' in amenity_lower:
-                            rules.append('No pets allowed')
-                        elif 'no parties' in amenity_lower or 'no events' in amenity_lower:
-                            rules.append('No parties or events allowed')
+            for pattern in location_patterns:
+                elements = soup.select(pattern)
+                for elem in elements:
+                    text = elem.get_text(strip=True)
+                    if text and len(text) > 5 and len(text) < 150:
+                        # Check if it looks like an address
+                        if any(word in text.lower() for word in ['st', 'street', 'ave', 'road', 'city', ',']):
+                            scraped_data['address'] = text
+                            break
+                if scraped_data['address']:
+                    break
         
-        # Add some default rules if none found
-        if not rules:
-            rules = [
-                'Follow standard check-in and check-out times',
-                'Keep the property clean and tidy',
-                'Respect the neighbors and local community',
-                'No smoking inside the property'
-            ]
+        # Method 7: Extract any house rules or policies
+        rules_patterns = [
+            '[data-testid*="rule"]', '[class*="rule"]', 
+            '[data-testid*="policy"]', '[class*="policy"]'
+        ]
         
-        scraped_data['rules'] = rules[:6]  # Max 6 rules
+        rules_found = []
+        for pattern in rules_patterns:
+            elements = soup.select(pattern)
+            for elem in elements:
+                text = elem.get_text(strip=True)
+                if text and 10 < len(text) < 100:
+                    if text not in rules_found:
+                        rules_found.append(text)
         
-        logger.info(f"Scraped data for URL {url}: name='{scraped_data['name']}', address='{scraped_data['address']}', rules={len(scraped_data['rules'])}")
+        if rules_found:
+            scraped_data['rules'] = rules_found[:5]
         
-        # Validate and provide helpful feedback
-        if not scraped_data['name'] or 'airbnb' in scraped_data['name'].lower():
-            # Extract room ID from URL for a meaningful name
-            import re
-            room_id_match = re.search(r'/rooms/(\d+)', url)
-            if room_id_match:
-                room_id = room_id_match.group(1)
-                scraped_data['name'] = f"Airbnb Property {room_id}"
-            else:
-                scraped_data['name'] = "Airbnb Property (please edit the name)"
+        # Fallback with meaningful data based on URL
+        room_id_match = re.search(r'/rooms/(\d+)', url)
+        room_id = room_id_match.group(1) if room_id_match else 'unknown'
         
-        if not scraped_data['address'] or scraped_data['address'] in ['Become a host', '']:
-            scraped_data['address'] = "Address not found - please enter manually"
+        if not scraped_data['name']:
+            scraped_data['name'] = f"Property {room_id}"
+        
+        if not scraped_data['address']:
+            scraped_data['address'] = f"Location details needed - Property ID: {room_id}"
             
         if not scraped_data['description']:
-            scraped_data['description'] = "Property description not found - please add your own description"
+            scraped_data['description'] = f"Property details not available due to website restrictions. Property ID: {room_id}. Please add your own description."
         
-        logger.info(f"Final scraped data - Name: '{scraped_data['name']}', Address: '{scraped_data['address']}', Description length: {len(scraped_data['description'])}")
+        if not scraped_data['rules']:
+            scraped_data['rules'] = [
+                "Standard check-in and check-out procedures apply",
+                "Keep the property clean and follow house rules",
+                "Respect neighbors and local community guidelines"
+            ]
         
+        logger.info(f"Scraping completed - Name: '{scraped_data['name']}', Address: '{scraped_data['address']}'")
         return scraped_data
         
     except requests.RequestException as e:
