@@ -3734,6 +3734,7 @@ function App() {
             <Route path="/" element={<LandingHome />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route 
               path="/dashboard" 
               element={
