@@ -2216,6 +2216,24 @@ const HostDashboard = () => {
     }
   };
 
+  const handleImportedData = (importedData) => {
+    setFormData(prev => ({
+      ...prev,
+      name: importedData.name || prev.name,
+      address: importedData.address || prev.address,
+      description: importedData.description || prev.description,
+      rules: importedData.rules || prev.rules,
+      contact: {
+        ...prev.contact,
+        ...importedData.contact
+      },
+      recommendations: {
+        ...prev.recommendations,
+        ...importedData.recommendations
+      }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
