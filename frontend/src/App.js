@@ -504,15 +504,12 @@ const PropertyLinkImporter = ({ onDataImported }) => {
     setError('');
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const extractedData = extractPropertyData(linkUrl);
+      const extractedData = await extractPropertyData(linkUrl);
       onDataImported(extractedData);
       setShowImporter(false);
       setLinkUrl('');
     } catch (err) {
-      setError('Failed to extract property data. Please try again or fill manually.');
+      setError(err.message || 'Failed to extract property data. Please try again or fill manually.');
     } finally {
       setLoading(false);
     }
