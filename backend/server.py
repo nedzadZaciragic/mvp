@@ -229,17 +229,20 @@ class AnalyticsData(BaseModel):
 async def scrape_airbnb_listing(url: str) -> dict:
     """Scrape Airbnb listing data from URL"""
     try:
+        # Use different headers and ensure fresh request
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
         }
         
-        # Make request to Airbnb listing
-        response = requests.get(url, headers=headers, timeout=10)
+        logger.info(f"Scraping URL: {url}")
+        
+        # Make fresh request to the specific URL
+        response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
         
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -249,150 +252,147 @@ async def scrape_airbnb_listing(url: str) -> dict:
             'name': '',
             'address': '',
             'description': '',
-            'rules': [],
-            'contact': {'phone': '', 'email': '', 'whatsapp': ''},
-            'recommendations': {
-                'restaurants': [],
-                'hidden_gems': [],
-                'transport': ''
-            }
+            'rules': []
         }
         
-        # Extract title/name from multiple possible selectors
+        # Extract title/name - try multiple selectors
         title_selectors = [
             'h1[data-testid="listing-title"]',
             'h1._14i3z6h',
             'h1[class*="title"]',
             '.hpud4pj h1',
-            'h1'
+            'h1',
+            '[data-testid="overview-title"] h1',
+            'section h1'
         ]
         
         for selector in title_selectors:
             title_element = soup.select_one(selector)
-            if title_element:
+            if title_element and title_element.get_text(strip=True):
                 scraped_data['name'] = title_element.get_text(strip=True)
+                logger.info(f"Found title: {scraped_data['name']}")
                 break
         
-        # Extract location/address
+        # Extract location/address - try multiple selectors
         location_selectors = [
             '[data-testid="listing-location"]',
             '[data-section-id="OVERVIEW_DEFAULT"] [data-testid="listing-location"]',
             '.l1ovpqvx',
             '[class*="location"]',
-            '.hgk4rk3 span'
+            'span[data-testid="listing-location"]',
+            '[data-plugin-in-point-id="OVERVIEW_DEFAULT"] span',
+            'div[data-section-id="OVERVIEW_DEFAULT"] span'
         ]
         
         for selector in location_selectors:
             location_element = soup.select_one(selector)
-            if location_element:
+            if location_element and location_element.get_text(strip=True):
                 scraped_data['address'] = location_element.get_text(strip=True)
+                logger.info(f"Found address: {scraped_data['address']}")
                 break
         
-        # Try to extract from script tags (Airbnb often loads data via JavaScript)
-        script_tags = soup.find_all('script', type='application/ld+json')
-        for script in script_tags:
-            try:
-                data = json.loads(script.string)
-                if isinstance(data, dict):
-                    # Check for structured data
-                    if 'name' in data and not scraped_data['name']:
-                        scraped_data['name'] = data['name']
-                    if 'address' in data and not scraped_data['address']:
-                        if isinstance(data['address'], dict):
-                            address_parts = []
-                            for key in ['streetAddress', 'addressLocality', 'addressRegion', 'addressCountry']:
-                                if key in data['address']:
-                                    address_parts.append(data['address'][key])
-                            scraped_data['address'] = ', '.join(address_parts)
-                        else:
-                            scraped_data['address'] = str(data['address'])
-                    if 'description' in data and not scraped_data['description']:
-                        scraped_data['description'] = data['description']
-            except:
-                continue
+        # Extract description - try multiple approaches
+        description_text = ""
         
-        # Extract description from various selectors
+        # Method 1: Look for description sections
         desc_selectors = [
             '[data-section-id="DESCRIPTION_DEFAULT"] span',
             '[data-testid="listing-description"]',
-            '.ll4r2nl',
-            '[class*="description"] span',
-            'div[data-section-id="DESCRIPTION_DEFAULT"] div[data-row-id] span'
+            'div[data-section-id="DESCRIPTION_DEFAULT"] div span',
+            '[data-section-id="DESCRIPTION_DEFAULT"] div[data-row-id] span'
         ]
         
-        if not scraped_data['description']:
-            for selector in desc_selectors:
-                desc_elements = soup.select(selector)
-                if desc_elements:
-                    descriptions = []
-                    for elem in desc_elements:
-                        text = elem.get_text(strip=True)
-                        if text and len(text) > 20:  # Only meaningful descriptions
-                            descriptions.append(text)
-                    if descriptions:
-                        scraped_data['description'] = ' '.join(descriptions)[:500]  # Limit length
-                        break
+        for selector in desc_selectors:
+            desc_elements = soup.select(selector)
+            if desc_elements:
+                descriptions = []
+                for elem in desc_elements:
+                    text = elem.get_text(strip=True)
+                    if text and len(text) > 20 and text not in descriptions:
+                        descriptions.append(text)
+                if descriptions:
+                    description_text = ' '.join(descriptions)
+                    break
         
-        # Extract amenities and convert some to rules
-        amenity_selectors = [
-            '[data-testid="amenity-item"]',
-            '[data-section-id="AMENITIES_DEFAULT"] button div',
-            '.t1qa5xaj div'
-        ]
+        # Method 2: Try to get text from paragraphs
+        if not description_text:
+            paragraphs = soup.find_all('div', string=True)
+            for p in paragraphs:
+                text = p.get_text(strip=True) if hasattr(p, 'get_text') else str(p).strip()
+                if text and len(text) > 50 and 'airbnb' not in text.lower():
+                    description_text = text
+                    break
         
-        amenities = []
-        for selector in amenity_selectors:
-            amenity_elements = soup.select(selector)
-            for elem in amenity_elements:
-                amenity_text = elem.get_text(strip=True)
-                if amenity_text and len(amenity_text) > 2:
-                    amenities.append(amenity_text)
+        scraped_data['description'] = description_text[:500] if description_text else ""
+        logger.info(f"Found description: {len(scraped_data['description'])} characters")
         
-        # Convert some amenities to rules (basic logic)
+        # Extract house rules and policies
         rules = []
-        for amenity in amenities:
-            amenity_lower = amenity.lower()
-            if 'no smoking' in amenity_lower or 'smoke-free' in amenity_lower:
-                rules.append('No smoking inside the property')
-            elif 'no pets' in amenity_lower or 'pet-free' in amenity_lower:
-                rules.append('No pets allowed')
-            elif 'no parties' in amenity_lower or 'no events' in amenity_lower:
-                rules.append('No parties or events')
-            elif 'quiet hours' in amenity_lower or 'quiet time' in amenity_lower:
-                rules.append('Quiet hours must be respected')
+        
+        # Look for house rules sections
+        rules_selectors = [
+            '[data-section-id="HOUSE_RULES_DEFAULT"] div',
+            '[data-testid="house-rules"] div',
+            '[class*="house-rules"] div',
+            '[class*="rule"] span',
+            '[data-section-id="POLICIES_DEFAULT"] div'
+        ]
+        
+        for selector in rules_selectors:
+            rule_elements = soup.select(selector)
+            for elem in rule_elements:
+                rule_text = elem.get_text(strip=True)
+                if rule_text and len(rule_text) > 5 and len(rule_text) < 100:
+                    # Filter out common non-rule text
+                    if not any(word in rule_text.lower() for word in ['show more', 'show less', 'see all', 'house rules', 'policies']):
+                        if rule_text not in rules:
+                            rules.append(rule_text)
+        
+        # If no specific rules found, extract from amenities/policies
+        if not rules:
+            amenity_selectors = [
+                '[data-testid="amenity-item"]',
+                '[data-section-id="AMENITIES_DEFAULT"] button div'
+            ]
+            
+            for selector in amenity_selectors:
+                amenity_elements = soup.select(selector)
+                for elem in amenity_elements:
+                    amenity_text = elem.get_text(strip=True)
+                    if amenity_text:
+                        amenity_lower = amenity_text.lower()
+                        if 'no smoking' in amenity_lower or 'smoke-free' in amenity_lower:
+                            rules.append('No smoking inside the property')
+                        elif 'no pets' in amenity_lower:
+                            rules.append('No pets allowed')
+                        elif 'no parties' in amenity_lower or 'no events' in amenity_lower:
+                            rules.append('No parties or events allowed')
         
         # Add some default rules if none found
         if not rules:
             rules = [
-                'Check-in after 3 PM, check-out before 11 AM',
-                'No smoking inside the property',
-                'Please keep the property clean and tidy',
-                'Respect quiet hours after 10 PM'
+                'Follow standard check-in and check-out times',
+                'Keep the property clean and tidy',
+                'Respect the neighbors and local community',
+                'No smoking inside the property'
             ]
         
-        scraped_data['rules'] = rules[:5]  # Limit to 5 rules
+        scraped_data['rules'] = rules[:6]  # Max 6 rules
         
-        # Add some generic recommendations (since these are rarely available in listings)
-        scraped_data['recommendations'] = {
-            'restaurants': [
-                {'name': 'Local Restaurant', 'type': 'Restaurant', 'tip': 'Ask host for specific recommendations'},
-                {'name': 'Nearby Cafe', 'type': 'Cafe', 'tip': 'Perfect for morning coffee'}
-            ],
-            'hidden_gems': [
-                {'name': 'Local Attraction', 'tip': 'Ask your host about hidden gems in the area'},
-                {'name': 'Scenic Spot', 'tip': 'Great for photos and relaxation'}
-            ],
-            'transport': 'Public transportation and taxi services available nearby'
-        }
+        logger.info(f"Scraped data for URL {url}: name='{scraped_data['name']}', address='{scraped_data['address']}', rules={len(scraped_data['rules'])}")
         
-        logger.info(f"Successfully scraped Airbnb listing: {scraped_data['name']}")
+        # Validate that we got meaningful data
+        if not scraped_data['name'] and not scraped_data['description']:
+            logger.warning(f"Very little data scraped from {url}")
+            # Still return what we have rather than failing
+        
         return scraped_data
         
     except requests.RequestException as e:
-        logger.error(f"Network error scraping Airbnb: {str(e)}")
+        logger.error(f"Network error scraping {url}: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Could not access the listing URL: {str(e)}")
     except Exception as e:
-        logger.error(f"Error scraping Airbnb listing: {str(e)}")
+        logger.error(f"Error scraping {url}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to parse listing data: {str(e)}")
 
 class PropertyImportRequest(BaseModel):
