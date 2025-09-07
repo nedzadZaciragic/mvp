@@ -480,16 +480,24 @@ async def scrape_airbnb_listing(url: str) -> dict:
         
         logger.info(f"Scraped data for URL {url}: name='{scraped_data['name']}', address='{scraped_data['address']}', rules={len(scraped_data['rules'])}")
         
-        # Validate that we got meaningful data
-        if not scraped_data['name'] and not scraped_data['description']:
-            logger.warning(f"Very little data scraped from {url} - might be blocked or page structure changed")
-            # Try a basic fallback - extract any meaningful text
-            all_text = soup.get_text()
-            if 'airbnb' in all_text.lower() and len(all_text) > 100:
-                # This confirms we reached Airbnb but couldn't parse properly
-                scraped_data['name'] = f"Property from {url.split('/')[-1]}"
-                scraped_data['description'] = "Unable to extract description - please enter manually"
-                scraped_data['address'] = "Unable to extract address - please enter manually"
+        # Validate and provide helpful feedback
+        if not scraped_data['name'] or 'airbnb' in scraped_data['name'].lower():
+            # Extract room ID from URL for a meaningful name
+            import re
+            room_id_match = re.search(r'/rooms/(\d+)', url)
+            if room_id_match:
+                room_id = room_id_match.group(1)
+                scraped_data['name'] = f"Airbnb Property {room_id}"
+            else:
+                scraped_data['name'] = "Airbnb Property (please edit the name)"
+        
+        if not scraped_data['address'] or scraped_data['address'] in ['Become a host', '']:
+            scraped_data['address'] = "Address not found - please enter manually"
+            
+        if not scraped_data['description']:
+            scraped_data['description'] = "Property description not found - please add your own description"
+        
+        logger.info(f"Final scraped data - Name: '{scraped_data['name']}', Address: '{scraped_data['address']}', Description length: {len(scraped_data['description'])}")
         
         return scraped_data
         
