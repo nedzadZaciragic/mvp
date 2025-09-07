@@ -1716,9 +1716,8 @@ const GuestChat = ({ apartmentId }) => {
               )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">{apartmentInfo.name}</h1>
-                <p className="text-sm text-gray-600 flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {apartmentInfo.address}
+                <p className="text-sm text-gray-600">
+                  AI Assistant
                 </p>
               </div>
             </div>
