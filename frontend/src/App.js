@@ -569,13 +569,12 @@ const PropertyLinkImporter = ({ onDataImported }) => {
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <h4 className="text-sm font-medium text-amber-900 mb-2">What will be imported:</h4>
+                <h4 className="text-sm font-medium text-amber-900 mb-2">⚠️ Important Note:</h4>
                 <div className="text-xs text-amber-700 space-y-1">
-                  <p>• ✅ Property name (if available)</p>
-                  <p>• ✅ Address and location (if available)</p>
-                  <p>• ✅ Description text (if available)</p>
-                  <p>• ✅ Basic house rules (if available)</p>
-                  <p>• ⚠️ <strong>Note:</strong> Some fields may need manual editing due to website protection</p>
+                  <p>• Airbnb has strong bot protection - some data may not extract</p>
+                  <p>• If import shows "please enter manually", that's normal</p>
+                  <p>• The system still saves time by setting up the form structure</p>
+                  <p>• You can edit all imported information before saving</p>
                 </div>
               </div>
 
