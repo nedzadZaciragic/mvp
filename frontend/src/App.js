@@ -1975,26 +1975,34 @@ const AnalyticsDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {[
-                { time: '9:00 AM - 11:00 AM', usage: 85, label: 'Check-in questions' },
-                { time: '6:00 PM - 8:00 PM', usage: 72, label: 'Dinner recommendations' },
-                { time: '10:00 PM - 12:00 AM', usage: 45, label: 'Night inquiries' },
-              ].map((period) => (
-                <div key={period.time}>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm text-gray-600">{period.time}</span>
-                    <span className="text-xs text-gray-500">{period.label}</span>
+            {analyticsData && analyticsData.apartments && analyticsData.apartments.length > 0 ? (
+              <div className="space-y-3">
+                {/* Show peak hours from first apartment or aggregate across all */}
+                {analyticsData.apartments[0].peak_hours.slice(0, 3).map((period, index) => (
+                  <div key={index}>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm text-gray-600">{period.time}</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-gray-500">{period.label}</span>
+                        {period.count > 0 && <Badge variant="outline">{period.count} chats</Badge>}
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-500" 
+                        style={{ width: `${period.usage}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-500 h-2 rounded-full" 
-                      style={{ width: `${period.usage}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Clock className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm">No usage data yet</p>
+                <p className="text-gray-400 text-xs">Analytics will appear once guests start chatting</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
