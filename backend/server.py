@@ -1903,22 +1903,57 @@ async def get_analytics_dashboard(current_user: User = Depends(get_current_user)
                     "percentage": 0
                 }]
             
-            # Daily chat statistics (last 7 days)
-            daily_chats = []
-            for i in range(7):
-                day = datetime.now(timezone.utc) - timedelta(days=i)
-                day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
-                day_end = day_start + timedelta(days=1)
-                
-                day_messages = [
-                    msg for msg in messages
-                    if day_start <= datetime.fromisoformat(msg['timestamp']) < day_end
-                ]
-                
-                daily_chats.append({
-                    "date": day_start.strftime("%Y-%m-%d"),
-                    "chats": len(day_messages)
-                })
+            # Calculate REAL peak usage hours based on actual message timestamps
+            hourly_usage = {}
+            for msg in messages:
+                try:
+                    timestamp = datetime.fromisoformat(msg['timestamp'])
+                    hour = timestamp.hour
+                    hourly_usage[hour] = hourly_usage.get(hour, 0) + 1
+                except:
+                    continue
+            
+            # Find peak hours and create meaningful labels
+            peak_hours = []
+            if hourly_usage:
+                # Get top 3 most active hours
+                sorted_hours = sorted(hourly_usage.items(), key=lambda x: x[1], reverse=True)
+                for hour, count in sorted_hours[:3]:
+                    # Create time range (hour to hour+2)
+                    end_hour = min(hour + 2, 24)
+                    time_range = f"{hour:02d}:00 - {end_hour:02d}:00"
+                    
+                    # Create contextual labels based on time of day
+                    if 6 <= hour <= 11:
+                        label = "Morning inquiries"
+                    elif 12 <= hour <= 17:
+                        label = "Afternoon questions" 
+                    elif 18 <= hour <= 22:
+                        label = "Evening support"
+                    elif 23 <= hour or hour <= 5:
+                        label = "Night inquiries"
+                    else:
+                        label = "General questions"
+                    
+                    # Calculate usage percentage relative to peak hour
+                    max_usage = max(hourly_usage.values())
+                    usage_percentage = int((count / max_usage) * 100) if max_usage > 0 else 0
+                    
+                    peak_hours.append({
+                        'time': time_range,
+                        'usage': usage_percentage,
+                        'label': label,
+                        'count': count
+                    })
+            
+            # If no data, show meaningful empty state
+            if not peak_hours:
+                peak_hours = [{
+                    'time': 'No data yet',
+                    'usage': 0,
+                    'label': 'Start chatting to see patterns',
+                    'count': 0
+                }]
             
             total_chats += len(messages)
             
@@ -1929,7 +1964,7 @@ async def get_analytics_dashboard(current_user: User = Depends(get_current_user)
                 total_sessions=len(set(msg.get('session_id', '') for msg in messages if msg.get('session_id'))),
                 last_chat=datetime.fromisoformat(apartment['last_chat']) if apartment.get('last_chat') else None,
                 popular_questions=popular_questions,
-                daily_chats=daily_chats
+                peak_hours=peak_hours
             ))
         
         return {
