@@ -478,37 +478,14 @@ const PropertyLinkImporter = ({ onDataImported }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const extractPropertyData = (url) => {
-    // Mock property data extraction (in real implementation, this would scrape or use APIs)
-    const mockData = {
-      name: "Beautiful Downtown Apartment",
-      description: "Cozy 2-bedroom apartment in the heart of the city with modern amenities and stunning views.",
-      address: "123 Main Street, Downtown, City Center",
-      rules: [
-        "No smoking inside the apartment",
-        "No parties or loud music after 10 PM",
-        "Maximum 4 guests",
-        "Check-in after 3 PM, check-out before 11 AM"
-      ],
-      contact: {
-        phone: "",
-        email: "",
-        whatsapp: ""
-      },
-      recommendations: {
-        restaurants: [
-          { name: "Cafe Central", type: "Coffee & Breakfast", tip: "Great morning coffee and pastries" },
-          { name: "Pasta Paradise", type: "Italian", tip: "Best carbonara in the city" }
-        ],
-        hidden_gems: [
-          { name: "Rooftop Garden", tip: "Hidden garden with city views, 5 minutes walk" },
-          { name: "Local Market", tip: "Fresh produce every Tuesday and Friday" }
-        ],
-        transport: "Subway station 2 blocks away, bus stop right outside building"
-      }
-    };
-
-    return mockData;
+  const extractPropertyData = async (url) => {
+    // Call the backend API to scrape real data
+    try {
+      const response = await axios.post(`${API}/apartments/import-from-url`, { url });
+      return response.data.data; // The scraped property data
+    } catch (error) {
+      throw new Error(error.response?.data?.detail || 'Failed to import property data');
+    }
   };
 
   const handleImport = async () => {
