@@ -224,7 +224,7 @@ class AnalyticsData(BaseModel):
     total_sessions: int
     last_chat: Optional[datetime]
     popular_questions: List[dict]
-    daily_chats: List[dict]
+    peak_hours: List[dict]
 
 async def scrape_airbnb_listing(url: str) -> dict:
     """Scrape Airbnb listing data from URL"""
