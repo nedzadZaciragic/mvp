@@ -2845,14 +2845,97 @@ const HostDashboard = () => {
                       Booking Calendar Integration
                     </h3>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        iCal URL (from Airbnb, Booking.com, etc.)
-                      </label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          iCal URL (from Airbnb, Booking.com, etc.)
+                        </label>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowiCalHelper(!showiCalHelper)}
+                          className="text-xs"
+                        >
+                          <BookOpen className="h-3 w-3 mr-1" />
+                          {showiCalHelper ? 'Hide' : 'Show'} Guide
+                        </Button>
+                      </div>
+                      
                       <Input
                         placeholder="https://airbnb.com/calendar/ical/..."
                         value={formData.ical_url}
                         onChange={(e) => setFormData(prev => ({...prev, ical_url: e.target.value}))}
                       />
+                      
+                      {showiCalHelper && (
+                        <div className="mt-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                          <h4 className="text-sm font-bold text-amber-900 mb-3 flex items-center">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            📋 How to Find Your iCal URL
+                          </h4>
+                          
+                          <div className="space-y-4 text-xs text-amber-800">
+                            {/* Airbnb Instructions */}
+                            <div className="bg-white/70 p-3 rounded-lg">
+                              <h5 className="font-bold text-red-700 mb-2">🏠 Airbnb:</h5>
+                              <ol className="list-decimal list-inside space-y-1 text-amber-900">
+                                <li>Go to your <strong>Airbnb Host Dashboard</strong></li>
+                                <li>Click on <strong>"Calendar"</strong> in the menu</li>
+                                <li>Select your listing</li>
+                                <li>Click <strong>"Availability settings"</strong></li>
+                                <li>Scroll to <strong>"Calendar sync"</strong></li>
+                                <li>Click <strong>"Export calendar"</strong></li>
+                                <li>Copy the <strong>"Calendar address (URL)"</strong></li>
+                              </ol>
+                            </div>
+                            
+                            {/* Booking.com Instructions */}
+                            <div className="bg-white/70 p-3 rounded-lg">
+                              <h5 className="font-bold text-blue-700 mb-2">🌐 Booking.com:</h5>
+                              <ol className="list-decimal list-inside space-y-1 text-amber-900">
+                                <li>Go to your <strong>Extranet dashboard</strong></li>
+                                <li>Navigate to <strong>"Rates & Availability"</strong></li>
+                                <li>Select <strong>"Calendar"</strong></li>
+                                <li>Click <strong>"Calendar sync"</strong> or <strong>"Import/Export"</strong></li>
+                                <li>Find <strong>"Export calendar"</strong> section</li>
+                                <li>Copy the <strong>iCal URL</strong></li>
+                              </ol>
+                            </div>
+                            
+                            {/* VRBO/HomeAway Instructions */}
+                            <div className="bg-white/70 p-3 rounded-lg">
+                              <h5 className="font-bold text-purple-700 mb-2">🏡 VRBO/HomeAway:</h5>
+                              <ol className="list-decimal list-inside space-y-1 text-amber-900">
+                                <li>Go to your <strong>Owner Dashboard</strong></li>
+                                <li>Click <strong>"Calendar"</strong></li>
+                                <li>Select <strong>"Sync Calendars"</strong></li>
+                                <li>Choose <strong>"Export"</strong></li>
+                                <li>Copy the <strong>iCal feed URL</strong></li>
+                              </ol>
+                            </div>
+                            
+                            {/* General Tips */}
+                            <div className="bg-white/70 p-3 rounded-lg border-l-4 border-green-500">
+                              <h5 className="font-bold text-green-700 mb-2">💡 Pro Tips:</h5>
+                              <ul className="list-disc list-inside space-y-1 text-amber-900">
+                                <li>URL usually starts with <code className="bg-gray-200 px-1 rounded">https://</code></li>
+                                <li>Contains keywords like "ical", "calendar", or "export"</li>
+                                <li>Ends with <code className="bg-gray-200 px-1 rounded">.ics</code> file extension</li>
+                                <li>Keep this URL private - it contains your booking data</li>
+                                <li>Test the URL in a browser - it should download a calendar file</li>
+                              </ul>
+                            </div>
+                            
+                            <div className="bg-red-50 border border-red-200 p-3 rounded-lg">
+                              <p className="text-red-800 text-xs">
+                                <strong>⚠️ Important:</strong> Don't have a calendar URL? Most platforms generate this automatically. 
+                                If you can't find it, contact your platform's support team and ask for your "iCal export URL" or "calendar sync URL".
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                         <p className="text-sm text-blue-800 mb-2">
                           <strong>🚀 Automatic Guest Notifications</strong>
