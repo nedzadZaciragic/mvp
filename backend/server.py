@@ -741,6 +741,13 @@ PROPERTY INFORMATION:
     
     return base_prompt
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordReset(BaseModel):
+    token: str
+    new_password: str
+
 # Authentication Routes
 @api_router.post("/auth/register", response_model=Token)
 async def register(user_data: UserCreate):
