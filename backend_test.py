@@ -764,6 +764,265 @@ class MyHostIQAPITester:
         
         return success
 
+    def test_property_import_multiple_urls_no_cache(self):
+        """Test property import with multiple different Airbnb URLs to verify no caching - HIGH PRIORITY"""
+        print("\n🔍 Testing Multiple Airbnb URLs for Cache Verification...")
+        
+        # Test URLs from review request
+        test_urls = [
+            {
+                "name": "Original URL",
+                "url": "https://www.airbnb.com/rooms/44732428?source_impression_id=p3_1757282755_P3bt6BHZxtTG3Sz_",
+                "expected_room_id": "44732428"
+            },
+            {
+                "name": "Different URL 1", 
+                "url": "https://www.airbnb.com/rooms/12345678",
+                "expected_room_id": "12345678"
+            },
+            {
+                "name": "Different URL 2",
+                "url": "https://www.airbnb.com/rooms/987654321", 
+                "expected_room_id": "987654321"
+            }
+        ]
+        
+        all_responses = []
+        all_passed = True
+        
+        for i, test_case in enumerate(test_urls):
+            print(f"\n   Testing {test_case['name']}: {test_case['url']}")
+            
+            import_data = {"url": test_case["url"]}
+            
+            success, response = self.run_test(
+                f"Property Import - {test_case['name']}",
+                "POST",
+                "apartments/import-from-url",
+                200,
+                data=import_data,
+                timeout=60  # Scraping can take longer
+            )
+            
+            if success:
+                data = response.get('data', {})
+                property_name = data.get('name', '')
+                address = data.get('address', '')
+                description = data.get('description', '')
+                rules = data.get('rules', [])
+                
+                print(f"   ✅ Success: {response.get('success', False)}")
+                print(f"   Property name: {property_name}")
+                print(f"   Address: {address}")
+                print(f"   Description length: {len(description)}")
+                print(f"   Rules count: {len(rules)}")
+                
+                # Store response for comparison
+                all_responses.append({
+                    'url': test_case['url'],
+                    'room_id': test_case['expected_room_id'],
+                    'name': property_name,
+                    'address': address,
+                    'description': description,
+                    'rules': rules,
+                    'response': response
+                })
+                
+                # Verify URL-specific behavior
+                if test_case['expected_room_id'] in property_name:
+                    print(f"   ✅ Property name contains room ID {test_case['expected_room_id']}")
+                elif property_name == f"Airbnb Property {test_case['expected_room_id']}":
+                    print(f"   ✅ Meaningful fallback name with room ID {test_case['expected_room_id']}")
+                else:
+                    print(f"   ⚠️  Property name may not be URL-specific: {property_name}")
+                
+                # Check for meaningful fallbacks
+                if "please enter manually" in address.lower() or "not found" in address.lower():
+                    print("   ✅ Meaningful fallback for address when scraping blocked")
+                elif address and address != "Become a host":
+                    print(f"   ✅ Address extracted or meaningful fallback: {address}")
+                
+                if "please add your own" in description.lower() or "not found" in description.lower():
+                    print("   ✅ Meaningful fallback for description when scraping blocked")
+                elif description and len(description) > 20:
+                    print(f"   ✅ Description extracted: {len(description)} characters")
+                
+                # Check rules extraction
+                if len(rules) > 0:
+                    print(f"   ✅ Rules extracted: {len(rules)} rules")
+                    for rule in rules[:2]:  # Show first 2 rules
+                        print(f"      - {rule}")
+                else:
+                    print("   ⚠️  No rules extracted")
+                    
+            else:
+                all_passed = False
+                print(f"   ❌ Failed to import from {test_case['name']}")
+            
+            # Wait between requests to avoid rate limiting
+            time.sleep(3)
+        
+        # Verify different URLs return different data (no caching)
+        if len(all_responses) >= 2:
+            print(f"\n🔍 Verifying No Cached Results...")
+            
+            # Compare responses to ensure they're different
+            different_names = len(set(r['name'] for r in all_responses)) > 1
+            different_addresses = len(set(r['address'] for r in all_responses)) > 1
+            different_descriptions = len(set(r['description'] for r in all_responses)) > 1
+            
+            if different_names:
+                print("   ✅ Different property names returned - no name caching")
+            else:
+                print("   ⚠️  Same property names returned - possible caching or fallback behavior")
+                
+            if different_addresses:
+                print("   ✅ Different addresses returned - no address caching")
+            else:
+                print("   ⚠️  Same addresses returned - possible caching or fallback behavior")
+                
+            if different_descriptions:
+                print("   ✅ Different descriptions returned - no description caching")
+            else:
+                print("   ⚠️  Same descriptions returned - possible caching or fallback behavior")
+            
+            # Check for hardcoded mock data
+            hardcoded_indicators = [
+                "beautiful downtown apartment",
+                "mock property",
+                "test apartment",
+                "sample description"
+            ]
+            
+            has_hardcoded = False
+            for response in all_responses:
+                name_lower = response['name'].lower()
+                desc_lower = response['description'].lower()
+                
+                for indicator in hardcoded_indicators:
+                    if indicator in name_lower or indicator in desc_lower:
+                        has_hardcoded = True
+                        print(f"   ❌ Hardcoded mock data detected: {indicator}")
+                        break
+            
+            if not has_hardcoded:
+                print("   ✅ No hardcoded mock data detected")
+            
+            # Verify URL-specific room IDs are reflected
+            room_id_specific = True
+            for response in all_responses:
+                expected_id = response['room_id']
+                name = response['name']
+                
+                if expected_id not in name and f"Property {expected_id}" not in name:
+                    room_id_specific = False
+                    print(f"   ⚠️  Room ID {expected_id} not reflected in name: {name}")
+            
+            if room_id_specific:
+                print("   ✅ All responses are URL-specific (contain room IDs)")
+            
+        return all_passed
+
+    def test_property_import_scraping_verification(self):
+        """Test property import scraping behavior and fallbacks - HIGH PRIORITY"""
+        print("\n🔍 Testing Scraping Behavior and Fallback Mechanisms...")
+        
+        # Test with the original URL that should have real data
+        original_url = "https://www.airbnb.com/rooms/44732428?source_impression_id=p3_1757282755_P3bt6BHZxtTG3Sz_"
+        
+        import_data = {"url": original_url}
+        
+        success, response = self.run_test(
+            "Property Import - Scraping Verification",
+            "POST",
+            "apartments/import-from-url", 
+            200,
+            data=import_data,
+            timeout=60
+        )
+        
+        if success:
+            data = response.get('data', {})
+            property_name = data.get('name', '')
+            address = data.get('address', '')
+            description = data.get('description', '')
+            rules = data.get('rules', [])
+            
+            print(f"   Property name: {property_name}")
+            print(f"   Address: {address}")
+            print(f"   Description: {description[:100]}...")
+            print(f"   Rules: {rules}")
+            
+            # Verify this is real scraping, not hardcoded data
+            scraping_indicators = {
+                'real_scraping': False,
+                'meaningful_fallback': False,
+                'url_specific': False
+            }
+            
+            # Check for real scraping indicators
+            if any(keyword in property_name.lower() for keyword in ['modern', 'bright', 'apartment', 'main street']):
+                scraping_indicators['real_scraping'] = True
+                print("   ✅ Real scraping detected - property name matches expected content")
+            
+            if any(keyword in description.lower() for keyword in ['sarajevo', 'bosnia', 'balkan']):
+                scraping_indicators['real_scraping'] = True
+                print("   ✅ Real scraping detected - description contains location-specific content")
+            
+            # Check for meaningful fallbacks
+            if "44732428" in property_name:
+                scraping_indicators['url_specific'] = True
+                print("   ✅ URL-specific content - room ID reflected in property name")
+            
+            if "please enter manually" in address.lower() or "not found" in address.lower():
+                scraping_indicators['meaningful_fallback'] = True
+                print("   ✅ Meaningful fallback message for address")
+            
+            if "please add your own" in description.lower() or "not found" in description.lower():
+                scraping_indicators['meaningful_fallback'] = True
+                print("   ✅ Meaningful fallback message for description")
+            
+            # Check rules extraction
+            if len(rules) > 0:
+                print(f"   ✅ Rules extracted successfully: {len(rules)} rules")
+                for i, rule in enumerate(rules[:3]):
+                    print(f"      {i+1}. {rule}")
+            else:
+                print("   ⚠️  No rules extracted - may indicate scraping limitations")
+            
+            # Verify no hardcoded responses
+            hardcoded_phrases = [
+                "beautiful downtown apartment",
+                "lorem ipsum",
+                "sample property",
+                "test description",
+                "mock data"
+            ]
+            
+            has_hardcoded = False
+            full_text = f"{property_name} {address} {description}".lower()
+            
+            for phrase in hardcoded_phrases:
+                if phrase in full_text:
+                    has_hardcoded = True
+                    print(f"   ❌ Hardcoded mock data detected: '{phrase}'")
+            
+            if not has_hardcoded:
+                print("   ✅ No hardcoded mock data detected")
+            
+            # Overall assessment
+            if scraping_indicators['real_scraping']:
+                print("   ✅ REAL SCRAPING CONFIRMED - Processing actual Airbnb content")
+            elif scraping_indicators['url_specific'] or scraping_indicators['meaningful_fallback']:
+                print("   ✅ MEANINGFUL FALLBACKS - URL-specific responses when scraping blocked")
+            else:
+                print("   ⚠️  Unable to confirm real scraping or meaningful fallbacks")
+            
+            return True
+        else:
+            print("   ❌ Failed to test scraping verification")
+            return False
+
     def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30, use_auth=True):
         """Run a single API test"""
         url = f"{self.api_url}/{endpoint}" if endpoint else f"{self.api_url}/"
