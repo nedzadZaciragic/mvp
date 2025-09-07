@@ -943,7 +943,7 @@ async def reset_password(request: PasswordReset):
                 
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=400, detail="Reset token has expired")
-        except jwt.JWTError:
+        except jwt.InvalidTokenError:
             raise HTTPException(status_code=400, detail="Invalid reset token")
         
         # Check if token exists and is not used
