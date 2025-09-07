@@ -1544,19 +1544,27 @@ async def import_property_from_url(
         # Scrape the listing data
         if 'airbnb.com' in url.lower():
             scraped_data = await scrape_airbnb_listing(url)
-        else:
-            # For now, only Airbnb is implemented
-            # You can extend this for other platforms
-            raise HTTPException(
-                status_code=400, 
-                detail="Currently only Airbnb links are supported. Booking.com and VRBO coming soon!"
-            )
-        
-        return {
-            "success": True,
-            "data": scraped_data,
-            "message": "Property data imported successfully!"
-        }
+            
+            # Return only the fields you need: name, address, description, rules
+            filtered_data = {
+                'name': scraped_data.get('name', ''),
+                'address': scraped_data.get('address', ''),
+                'description': scraped_data.get('description', ''),
+                'rules': scraped_data.get('rules', []),
+                # Keep empty structures for frontend compatibility
+                'contact': {'phone': '', 'email': '', 'whatsapp': ''},
+                'recommendations': {
+                    'restaurants': [],
+                    'hidden_gems': [],
+                    'transport': ''
+                }
+            }
+            
+            return {
+                "success": True,
+                "data": filtered_data,
+                "message": f"Property data imported successfully from {url}!"
+            }
         
     except HTTPException:
         raise
