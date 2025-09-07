@@ -201,6 +201,18 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE MULTI-URL TESTING COMPLETED: Tested with 3 different Airbnb URLs as requested. Each URL returns DIFFERENT data (no caching) - property names are URL-specific with room IDs (44732428, 12345678, 987654321). Meaningful fallbacks implemented when scraping is blocked: 'Address not found - please enter manually' and 'Property description not found - please add your own description'. Rules extraction working (4 rules per property). No hardcoded mock data detected. URL-specific responses confirmed - system processes the SPECIFIC URL provided, not cached results. Authentication properly required (403 status). Minor: Non-existent URLs return fallback data instead of errors (acceptable behavior for user experience)."
 
+  - task: "Real Analytics Implementation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ REAL ANALYTICS CONFIRMED: Created 8 test chat messages and verified analytics dashboard calculates popular questions from ACTUAL chat data. Found 5 popular questions with correct counts and percentages calculated from real message frequency. Analytics reflect actual chat messages (not hardcoded). Dashboard shows real metrics: total_chats: 24, total_apartments: 6, active_apartments: 6. Popular questions include 'What are the check-in instructions' (25.0%), 'Can you recommend a good restaurant' (25.0%), etc. This is real data processing, not mocked responses."
+
 frontend:
   - task: "Email Credentials Management UI"
     implemented: true
