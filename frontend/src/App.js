@@ -571,11 +571,11 @@ const PropertyLinkImporter = ({ onDataImported }) => {
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <h4 className="text-sm font-medium text-amber-900 mb-2">What will be imported:</h4>
                 <div className="text-xs text-amber-700 space-y-1">
-                  <p>• Property name and description</p>
-                  <p>• Address and location</p>
-                  <p>• House rules and policies</p>
-                  <p>• Amenities information</p>
-                  <p>• You can edit everything after import</p>
+                  <p>• ✅ Property name (if available)</p>
+                  <p>• ✅ Address and location (if available)</p>
+                  <p>• ✅ Description text (if available)</p>
+                  <p>• ✅ Basic house rules (if available)</p>
+                  <p>• ⚠️ <strong>Note:</strong> Some fields may need manual editing due to website protection</p>
                 </div>
               </div>
 
