@@ -1905,6 +1905,7 @@ const HostDashboard = () => {
   const [newRule, setNewRule] = useState("");
   const [newRestaurant, setNewRestaurant] = useState({ name: "", type: "", tip: "" });
   const [newGem, setNewGem] = useState({ name: "", tip: "" });
+  const [showiCalHelper, setShowiCalHelper] = useState(false);
 
   useEffect(() => {
     fetchApartments();
