@@ -1083,9 +1083,22 @@ const LandingHome = () => {
         
         <div className="relative max-w-7xl mx-auto px-6 py-24">
           <div className="text-center mb-16">
-            {/* Logo area */}
+            {/* Logo */}
             <div className="mb-8">
-              <h1 className="text-7xl md:text-8xl font-bold mb-2">
+              <img 
+                src="https://customer-assets.emergentagent.com/job_hostai/artifacts/h1aih2u5_image.png" 
+                alt="MyHostIQ Logo" 
+                className="h-20 mx-auto mb-4"
+                onError={(e) => {
+                  // Fallback to text if image fails to load
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'block';
+                }}
+              />
+              <h1 
+                className="text-7xl md:text-8xl font-bold mb-2 hidden"
+                style={{ display: 'none' }}
+              >
                 My<span className="text-blue-400">Host</span>IQ
               </h1>
               <div className="w-24 h-1 bg-blue-400 mx-auto rounded-full"></div>
