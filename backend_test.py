@@ -1159,6 +1159,12 @@ def main():
         ("💳 Get Payment Plans", tester.test_get_payment_plans),
         ("💳 Simulate Payment", tester.test_simulate_payment),
         
+        # PROPERTY IMPORT TESTS - HIGH PRIORITY
+        ("🏠 Property Import - Real Airbnb", tester.test_property_import_real_airbnb),
+        ("🏠 Property Import - Invalid URLs", tester.test_property_import_invalid_url),
+        ("🏠 Property Import - Malformed Requests", tester.test_property_import_malformed_requests),
+        ("🏠 Property Import - Authentication", tester.test_property_import_authentication),
+        
         # APARTMENT AND ICAL TESTS
         ("🏠 Create Apartment", tester.test_create_apartment),
         ("🏠 Get User's Apartments", tester.test_get_apartments),
