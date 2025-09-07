@@ -2108,34 +2108,52 @@ const AnalyticsDashboard = () => {
       </div>
 
       {/* Insights & Recommendations */}
-      <Card className="bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center text-indigo-800">
+          <CardTitle className="flex items-center">
             <Sparkles className="h-5 w-5 mr-2" />
-            AI Insights & Recommendations
+            AI Performance Insights
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white p-4 rounded-lg border border-indigo-200">
-                <h5 className="font-semibold text-indigo-800 mb-2">📈 Performance Insights</h5>
-                <ul className="text-sm space-y-1 text-gray-700">
-                  <li>• Peak usage during check-in hours (9-11 AM)</li>
-                  <li>• Most common questions about WiFi & local dining</li>
-                  <li>• 94% successful response rate across all properties</li>
-                </ul>
-              </div>
-              <div className="bg-white p-4 rounded-lg border border-indigo-200">
-                <h5 className="font-semibold text-indigo-800 mb-2">💡 Optimization Tips</h5>
-                <ul className="text-sm space-y-1 text-gray-700">
-                  <li>• Add more restaurant recommendations</li>
-                  <li>• Include transport details for better responses</li>
-                  <li>• Consider adding emergency contact information</li>
-                </ul>
+          {analyticsData && analyticsData.overview ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded-lg border border-indigo-200">
+                  <h5 className="font-semibold text-indigo-800 mb-2">📊 Usage Statistics</h5>
+                  <ul className="text-sm space-y-1 text-gray-700">
+                    <li>• Total properties: {analyticsData.overview.total_apartments}</li>
+                    <li>• Total conversations: {analyticsData.overview.total_chats}</li>
+                    <li>• Active properties: {analyticsData.overview.active_apartments}</li>
+                    <li>• Avg chats per property: {analyticsData.overview.avg_chats_per_apartment.toFixed(1)}</li>
+                  </ul>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-indigo-200">
+                  <h5 className="font-semibold text-indigo-800 mb-2">💡 Quick Tips</h5>
+                  <ul className="text-sm space-y-1 text-gray-700">
+                    {analyticsData.overview.total_chats === 0 ? (
+                      <>
+                        <li>• Share your AI assistant link with guests</li>
+                        <li>• Add property details for better AI responses</li>
+                        <li>• Enable iCal integration for automated notifications</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>• Review popular questions to improve property info</li>
+                        <li>• Monitor peak usage hours for guest patterns</li>
+                        <li>• Update recommendations based on guest feedback</li>
+                      </>
+                    )}
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-8">
+              <Sparkles className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">Analytics loading...</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
