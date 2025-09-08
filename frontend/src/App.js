@@ -3282,6 +3282,11 @@ const HostDashboard = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Admin Tab */}
+          <TabsContent value="admin">
+            <AdminDashboard />
+          </TabsContent>
         </Tabs>
 
         {/* QR Code Modal */}
