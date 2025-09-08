@@ -1616,7 +1616,6 @@ async def import_property_from_url(
 @api_router.get("/admin/users", response_model=List[dict])
 async def get_all_users(current_user: User = Depends(get_current_user)):
     """Get all users - Admin only"""
-    # Add admin check if needed
     try:
         users = await db.users.find({}, {"hashed_password": 0}).to_list(length=None)
         return users
@@ -1632,12 +1631,113 @@ async def get_all_apartments(current_user: User = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.put("/admin/apartments/{apartment_id}")
+async def admin_update_apartment(
+    apartment_id: str,
+    apartment_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Update any apartment - Admin only"""
+    try:
+        # Prepare data for MongoDB
+        update_data = prepare_for_mongo(apartment_data)
+        
+        result = await db.apartments.update_one(
+            {"id": apartment_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        
+        return {"message": "Apartment updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/admin/apartments/{apartment_id}")
+async def admin_delete_apartment(
+    apartment_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete any apartment - Admin only"""
+    try:
+        result = await db.apartments.delete_one({"id": apartment_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        
+        # Also delete related chat messages
+        await db.chat_messages.delete_many({"apartment_id": apartment_id})
+        
+        return {"message": "Apartment and related data deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/admin/chat-messages", response_model=List[dict])
 async def get_all_chat_messages(current_user: User = Depends(get_current_user)):
     """Get all chat messages - Admin only"""
     try:
         messages = await db.chat_messages.find().to_list(length=None)
         return messages
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/chat-messages/{apartment_id}")
+async def get_apartment_chat_messages(
+    apartment_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get chat messages for specific apartment - Admin only"""
+    try:
+        messages = await db.chat_messages.find({"apartment_id": apartment_id}).to_list(length=None)
+        return messages
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/stats")
+async def get_admin_stats(current_user: User = Depends(get_current_user)):
+    """Get overall platform statistics - Admin only"""
+    try:
+        # Count totals
+        total_users = await db.users.count_documents({})
+        total_apartments = await db.apartments.count_documents({})  
+        total_messages = await db.chat_messages.count_documents({})
+        total_email_creds = await db.email_credentials.count_documents({})
+        
+        # Recent activity (last 24 hours)
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+        
+        recent_users = await db.users.count_documents({
+            "created_at": {"$gte": yesterday.isoformat()}
+        })
+        
+        recent_messages = await db.chat_messages.count_documents({
+            "timestamp": {"$gte": yesterday.isoformat()}
+        })
+        
+        # Most active apartments
+        pipeline = [
+            {"$group": {"_id": "$apartment_id", "message_count": {"$sum": 1}}},
+            {"$sort": {"message_count": -1}},
+            {"$limit": 5}
+        ]
+        
+        most_active = await db.chat_messages.aggregate(pipeline).to_list(length=5)
+        
+        return {
+            "totals": {
+                "users": total_users,
+                "apartments": total_apartments,
+                "messages": total_messages,
+                "email_credentials": total_email_creds
+            },
+            "recent_activity": {
+                "new_users_24h": recent_users,
+                "messages_24h": recent_messages
+            },
+            "most_active_apartments": most_active
+        }
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
