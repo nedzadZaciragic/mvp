@@ -2162,13 +2162,11 @@ const AnalyticsDashboard = () => {
 // Admin Dashboard Component
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
+  const [apartments, setApartments] = useState([]);
+  const [allStats, setAllStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalApartments: 0,
-    totalConversations: 0,
-    activeUsers: 0
-  });
+  const [activeView, setActiveView] = useState('overview');
+  const [editingApartment, setEditingApartment] = useState(null);
 
   useEffect(() => {
     fetchAdminData();
@@ -2176,17 +2174,48 @@ const AdminDashboard = () => {
 
   const fetchAdminData = async () => {
     try {
-      const [usersResponse, statsResponse] = await Promise.all([
+      const [usersResponse, apartmentsResponse, statsResponse] = await Promise.all([
         axios.get(`${API}/admin/users`),
+        axios.get(`${API}/admin/apartments`),
         axios.get(`${API}/admin/stats`)
       ]);
       
       setUsers(usersResponse.data);
-      setStats(statsResponse.data);
+      setApartments(apartmentsResponse.data);
+      setAllStats(statsResponse.data);
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditApartment = (apartment) => {
+    setEditingApartment(apartment);
+  };
+
+  const handleSaveApartment = async (apartmentData) => {
+    try {
+      await axios.put(`${API}/admin/apartments/${editingApartment.id}`, apartmentData);
+      setEditingApartment(null);
+      fetchAdminData(); // Refresh data
+      alert('Apartment updated successfully!');
+    } catch (error) {
+      console.error('Error updating apartment:', error);
+      alert('Failed to update apartment');
+    }
+  };
+
+  const handleDeleteApartment = async (apartmentId) => {
+    if (!window.confirm('Are you sure you want to delete this apartment?')) return;
+    
+    try {
+      await axios.delete(`${API}/admin/apartments/${apartmentId}`);
+      fetchAdminData(); // Refresh data
+      alert('Apartment deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting apartment:', error);
+      alert('Failed to delete apartment');
     }
   };
 
@@ -2200,89 +2229,226 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Admin Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Apartments</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalApartments}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Conversations</CardTitle>
-            <MessageCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalConversations}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeUsers}</div>
-          </CardContent>
-        </Card>
+      {/* Admin Navigation */}
+      <div className="flex space-x-4 border-b">
+        <button
+          onClick={() => setActiveView('overview')}
+          className={`pb-2 px-1 border-b-2 ${activeView === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
+        >
+          Overview
+        </button>
+        <button
+          onClick={() => setActiveView('users')}
+          className={`pb-2 px-1 border-b-2 ${activeView === 'users' ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
+        >
+          Users ({users.length})
+        </button>
+        <button
+          onClick={() => setActiveView('apartments')}
+          className={`pb-2 px-1 border-b-2 ${activeView === 'apartments' ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
+        >
+          All Apartments ({apartments.length})
+        </button>
       </div>
 
-      {/* Users Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Shield className="h-5 w-5 mr-2" />
-            User Management
-          </CardTitle>
-          <CardDescription>
-            Manage all users and their properties
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {users.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-blue-100 p-2 rounded-full">
-                    <User className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{user.full_name}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                    <p className="text-xs text-gray-400">
-                      {user.apartment_count} apartments • Joined {new Date(user.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant={user.is_active ? "default" : "secondary"}>
-                    {user.is_active ? "Active" : "Inactive"}
-                  </Badge>
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+      {/* Overview Tab */}
+      {activeView === 'overview' && allStats && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{allStats.totals.users}</div>
+                <p className="text-xs text-muted-foreground">
+                  +{allStats.recent_activity.new_users_24h} in last 24h
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Apartments</CardTitle>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{allStats.totals.apartments}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
+                <MessageCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{allStats.totals.messages}</div>
+                <p className="text-xs text-muted-foreground">
+                  +{allStats.recent_activity.messages_24h} in last 24h
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Email Configs</CardTitle>
+                <Mail className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{allStats.totals.email_credentials}</div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Most Active Apartments */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Most Active Apartments</CardTitle>
+              <CardDescription>Apartments with most guest interactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {allStats.most_active_apartments.map((apt, index) => (
+                  <div key={apt._id} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Badge variant="outline">{index + 1}</Badge>
+                      <span className="font-medium">Apartment ID: {apt._id}</span>
+                    </div>
+                    <Badge>{apt.message_count} messages</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Users Tab */}
+      {activeView === 'users' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Shield className="h-5 w-5 mr-2" />
+              User Management
+            </CardTitle>
+            <CardDescription>Manage all users and their properties</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {users.map((user) => (
+                <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-blue-100 p-2 rounded-full">
+                      <User className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{user.full_name}</p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                      <p className="text-xs text-gray-400">
+                        Created: {new Date(user.created_at).toLocaleDateString()}
+                      </p>
+                      {user.brand_name && (
+                        <p className="text-xs text-purple-600">Brand: {user.brand_name}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={user.email_verified ? "default" : "secondary"}>
+                      {user.email_verified ? "Verified" : "Unverified"}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Apartments Tab */}
+      {activeView === 'apartments' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Building2 className="h-5 w-5 mr-2" />
+              All Apartments Management
+            </CardTitle>
+            <CardDescription>View and edit all apartments across all users</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {apartments.map((apartment) => {
+                const owner = users.find(u => u.id === apartment.user_id);
+                return (
+                  <div key={apartment.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="font-semibold text-lg">{apartment.name}</h3>
+                        <p className="text-sm text-gray-600">{apartment.address}</p>
+                        <p className="text-xs text-purple-600">
+                          Owner: {owner?.full_name} ({owner?.email})
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline">
+                          {apartment.total_chats || 0} chats
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditApartment(apartment)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteApartment(apartment.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p><strong>Description:</strong></p>
+                        <p className="text-gray-600 text-xs">{apartment.description?.substring(0, 100)}...</p>
+                      </div>
+                      <div>
+                        <p><strong>Rules:</strong> {apartment.rules?.length || 0}</p>
+                        <p><strong>iCal URL:</strong> {apartment.ical_url ? '✅ Set' : '❌ Not set'}</p>
+                        <p><strong>Created:</strong> {new Date(apartment.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Edit Apartment Modal */}
+      {editingApartment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <CardTitle>Edit Apartment: {editingApartment.name}</CardTitle>
+              <CardDescription>Make changes to apartment details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AdminApartmentEditForm
+                apartment={editingApartment}
+                onSave={handleSaveApartment}
+                onCancel={() => setEditingApartment(null)}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
