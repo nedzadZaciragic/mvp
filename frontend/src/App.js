@@ -2453,6 +2453,204 @@ const AdminDashboard = () => {
   );
 };
 
+// Admin Apartment Edit Form Component
+const AdminApartmentEditForm = ({ apartment, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    name: apartment.name || '',
+    address: apartment.address || '',
+    description: apartment.description || '',
+    rules: apartment.rules || [],
+    ical_url: apartment.ical_url || '',
+    contact: apartment.contact || { phone: '', email: '', whatsapp: '' },
+    recommendations: apartment.recommendations || {
+      restaurants: [],
+      hidden_gems: [],
+      transport: ''
+    }
+  });
+
+  const handleRuleChange = (index, value) => {
+    const newRules = [...formData.rules];
+    newRules[index] = value;
+    setFormData(prev => ({ ...prev, rules: newRules }));
+  };
+
+  const addRule = () => {
+    setFormData(prev => ({
+      ...prev,
+      rules: [...prev.rules, '']
+    }));
+  };
+
+  const removeRule = (index) => {
+    const newRules = formData.rules.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, rules: newRules }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Property Name *
+          </label>
+          <Input
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Address *
+          </label>
+          <Input
+            value={formData.address}
+            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Description
+        </label>
+        <textarea
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          rows={4}
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Describe your property..."
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          iCal URL
+        </label>
+        <Input
+          value={formData.ical_url}
+          onChange={(e) => setFormData(prev => ({ ...prev, ical_url: e.target.value }))}
+          placeholder="https://airbnb.com/calendar/ical/..."
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          House Rules
+        </label>
+        <div className="space-y-2">
+          {formData.rules.map((rule, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <Input
+                value={rule}
+                onChange={(e) => handleRuleChange(index, e.target.value)}
+                placeholder="Enter a house rule..."
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removeRule(index)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addRule}
+            className="mt-2"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Rule
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Contact Phone
+          </label>
+          <Input
+            value={formData.contact.phone}
+            onChange={(e) => setFormData(prev => ({
+              ...prev,
+              contact: { ...prev.contact, phone: e.target.value }
+            }))}
+            placeholder="+1234567890"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Contact Email
+          </label>
+          <Input
+            type="email"
+            value={formData.contact.email}
+            onChange={(e) => setFormData(prev => ({
+              ...prev,
+              contact: { ...prev.contact, email: e.target.value }
+            }))}
+            placeholder="host@example.com"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            WhatsApp
+          </label>
+          <Input
+            value={formData.contact.whatsapp}
+            onChange={(e) => setFormData(prev => ({
+              ...prev,
+              contact: { ...prev.contact, whatsapp: e.target.value }
+            }))}
+            placeholder="+1234567890"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Transport Information
+        </label>
+        <textarea
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          rows={2}
+          value={formData.recommendations.transport}
+          onChange={(e) => setFormData(prev => ({
+            ...prev,
+            recommendations: { ...prev.recommendations, transport: e.target.value }
+          }))}
+          placeholder="Public transport, parking information, etc..."
+        />
+      </div>
+
+      <div className="flex justify-end space-x-3 pt-4 border-t">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          Save Changes
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 // Email Credentials Manager Component
 const EmailCredentialsManager = () => {
   const [emailCreds, setEmailCreds] = useState(null);
