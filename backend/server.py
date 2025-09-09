@@ -1775,7 +1775,7 @@ async def get_all_users(request: Request, admin_user: dict = Depends(get_admin_u
 
 @api_router.get("/admin/apartments", response_model=List[dict])
 @limiter.limit("20/minute")
-async def get_all_apartments(request: Request, current_admin: User = Depends(get_admin_user)):
+async def get_all_apartments(request: Request, admin_user: dict = Depends(get_admin_user_from_token)):
     """Get all apartments - Admin only"""
     try:
         apartments = await db.apartments.find().to_list(length=None)
@@ -1789,7 +1789,7 @@ async def admin_update_apartment(
     request: Request,
     apartment_id: str,
     apartment_data: dict,
-    current_admin: User = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user_from_token)
 ):
     """Update any apartment - Admin only"""
     try:
@@ -1813,7 +1813,7 @@ async def admin_update_apartment(
 async def admin_delete_apartment(
     request: Request,
     apartment_id: str,
-    current_admin: User = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user_from_token)
 ):
     """Delete any apartment - Admin only"""
     try:
@@ -1831,7 +1831,7 @@ async def admin_delete_apartment(
 
 @api_router.get("/admin/stats")
 @limiter.limit("30/minute")
-async def get_admin_stats(request: Request, current_admin: User = Depends(get_admin_user)):
+async def get_admin_stats(request: Request, admin_user: dict = Depends(get_admin_user_from_token)):
     """Get overall platform statistics - Admin only"""
     try:
         # Count totals
