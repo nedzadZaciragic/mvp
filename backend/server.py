@@ -2209,6 +2209,169 @@ async def get_chat_history(apartment_id: str, current_user: User = Depends(get_c
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# AI Insights Routes
+@api_router.get("/analytics/insights/{apartment_id}")
+@limiter.limit("10/minute")  # Rate limit insights generation
+async def get_ai_insights(request: Request, apartment_id: str, current_user: User = Depends(get_current_user)):
+    """Generate AI-powered insights and optimization advice for apartment"""
+    try:
+        # Verify apartment belongs to user
+        apartment = await db.apartments.find_one({
+            "id": apartment_id, 
+            "user_id": current_user.id
+        })
+        if not apartment:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        
+        # Get apartment analytics data
+        chat_messages = await db.chat_messages.find(
+            {"apartment_id": apartment_id}
+        ).sort("timestamp", -1).limit(100).to_list(100)
+        
+        booking_notifications = await db.booking_notifications.find(
+            {"apartment_id": apartment_id}
+        ).sort("created_at", -1).limit(20).to_list(20)
+        
+        # Calculate analytics
+        total_messages = len(chat_messages)
+        total_bookings = len(booking_notifications)
+        
+        # Get popular questions
+        question_frequency = {}
+        for msg in chat_messages:
+            if msg.get('type') == 'user':
+                question = msg.get('content', '').lower().strip()
+                if question:
+                    question_frequency[question] = question_frequency.get(question, 0) + 1
+        
+        popular_questions = sorted(question_frequency.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        # Get recent activity patterns
+        recent_hours = [msg.get('timestamp') for msg in chat_messages[:30] if msg.get('timestamp')]
+        
+        # Create context for AI insights
+        context_data = {
+            "apartment_name": apartment.get('name', 'Unknown'),
+            "apartment_type": apartment.get('property_type', 'apartment'),
+            "location": apartment.get('address', 'Location not specified'),
+            "total_messages": total_messages,
+            "total_bookings": total_bookings,
+            "popular_questions": popular_questions[:3],  # Top 3 questions
+            "recent_activity": len(recent_hours),
+            "apartment_features": apartment.get('amenities', []),
+            "house_rules": apartment.get('rules', [])
+        }
+        
+        # Generate AI insights using Emergent LLM
+        system_message = """You are an AI property management advisor specializing in vacation rental optimization. 
+        Analyze the provided apartment data and generate specific, actionable insights and recommendations. 
+        Focus on guest experience improvement, operational efficiency, and revenue optimization.
+        Provide concise, practical advice that hosts can implement immediately."""
+        
+        user_prompt = f"""
+        Analyze this apartment's performance data and provide insights:
+        
+        Property: {context_data['apartment_name']} ({context_data['apartment_type']})
+        Location: {context_data['location']}
+        Total guest messages: {context_data['total_messages']}
+        Total bookings: {context_data['total_bookings']}
+        
+        Most asked questions:
+        {', '.join([q[0] for q in context_data['popular_questions'][:3]]) if context_data['popular_questions'] else 'No questions yet'}
+        
+        Recent activity: {context_data['recent_activity']} messages in last 30 interactions
+        
+        Features: {', '.join(context_data['apartment_features'][:5]) if context_data['apartment_features'] else 'Not specified'}
+        
+        Generate 3-4 specific insights and recommendations for this property. Format as JSON:
+        {{
+            "insights": [
+                {{
+                    "title": "Insight Title",
+                    "description": "Detailed insight description",
+                    "priority": "high|medium|low",
+                    "category": "guest_experience|operational|revenue|marketing"
+                }}
+            ],
+            "recommendations": [
+                {{
+                    "title": "Recommendation Title", 
+                    "action": "Specific action to take",
+                    "impact": "Expected positive impact",
+                    "difficulty": "easy|medium|hard"
+                }}
+            ],
+            "performance_score": 85,
+            "key_strengths": ["Strength 1", "Strength 2"],
+            "improvement_areas": ["Area 1", "Area 2"]
+        }}
+        """
+        
+        # Initialize LLM chat
+        api_key = os.getenv('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="AI service not configured")
+        
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"insights_{apartment_id}_{datetime.now().strftime('%Y%m%d')}",
+            system_message=system_message
+        ).with_model("openai", "gpt-4o-mini")
+        
+        # Send message and get AI insights
+        user_message = UserMessage(text=user_prompt)
+        ai_response = await chat.send_message(user_message)
+        
+        # Parse AI response
+        try:
+            # Extract JSON from AI response
+            import json
+            ai_content = ai_response.strip()
+            if ai_content.startswith('```json'):
+                ai_content = ai_content.split('```json')[1].split('```')[0].strip()
+            elif ai_content.startswith('```'):
+                ai_content = ai_content.split('```')[1].split('```')[0].strip()
+            
+            insights_data = json.loads(ai_content)
+        except:
+            # Fallback if JSON parsing fails
+            insights_data = {
+                "insights": [
+                    {
+                        "title": "AI Analysis Available",
+                        "description": ai_response[:500] + "..." if len(ai_response) > 500 else ai_response,
+                        "priority": "medium",
+                        "category": "operational"
+                    }
+                ],
+                "recommendations": [
+                    {
+                        "title": "Review AI Analysis",
+                        "action": "Check the detailed AI insights provided",
+                        "impact": "Improved property management",
+                        "difficulty": "easy"
+                    }
+                ],
+                "performance_score": 75,
+                "key_strengths": ["Active guest communication"],
+                "improvement_areas": ["Data collection"]
+            }
+        
+        # Add metadata
+        insights_data["generated_at"] = datetime.now(timezone.utc).isoformat()
+        insights_data["apartment_id"] = apartment_id
+        insights_data["data_points"] = {
+            "messages": total_messages,
+            "bookings": total_bookings,
+            "popular_questions_count": len(popular_questions)
+        }
+        
+        return insights_data
+        
+    except Exception as e:
+        logger.error(f"Error generating AI insights: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate insights: {str(e)}")
+
 # Root route
 @api_router.get("/")
 async def root():
