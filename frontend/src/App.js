@@ -1326,9 +1326,9 @@ const LandingHome = () => {
             {/* Logo */}
             <div className="mb-8">
               <img 
-                src="https://customer-assets.emergentagent.com/job_hostai/artifacts/h1aih2u5_image.png" 
-                alt="MyHostIQ Logo" 
-                className="h-20 mx-auto mb-4"
+                src="https://customer-assets.emergentagent.com/job_hostai/artifacts/s1jbiqoq_image-removebg-preview%20%281%29.png" 
+                alt="MyHomeIQ Logo" 
+                className="h-24 mx-auto mb-4 filter drop-shadow-lg"
                 onError={(e) => {
                   // Fallback to text if image fails to load
                   e.target.style.display = 'none';
@@ -1336,10 +1336,10 @@ const LandingHome = () => {
                 }}
               />
               <h1 
-                className="text-7xl md:text-8xl font-bold mb-2 hidden"
+                className="text-6xl font-bold text-white hidden"
                 style={{ display: 'none' }}
               >
-                My<span className="text-blue-400">Host</span>IQ
+                My<span className="text-blue-400">Home</span>IQ
               </h1>
               <div className="w-24 h-1 bg-blue-400 mx-auto rounded-full"></div>
             </div>
