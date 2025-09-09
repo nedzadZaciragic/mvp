@@ -1366,7 +1366,7 @@ const LandingHome = () => {
                 className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-5 text-xl font-semibold shadow-lg transform hover:scale-105 transition-all"
               >
                 <Zap className="h-6 w-6 mr-3" />
-                Start Free Trial - No Credit Card
+                Start Free Trial
               </Button>
               <Button 
                 onClick={() => setShowDemo(true)}
