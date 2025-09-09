@@ -902,6 +902,15 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    """Get current user and verify admin privileges"""
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=403, 
+            detail="Admin privileges required"
+        )
+    return current_user
+
 def create_ai_system_prompt(apartment_data: dict, user_branding: dict) -> str:
     """Create a personalized AI system prompt based on apartment data and branding"""
     brand_name = user_branding.get('brand_name', 'My Host IQ')
