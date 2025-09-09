@@ -1403,22 +1403,22 @@ const LandingHome = () => {
           </div>
 
           {/* Enhanced stats with better metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div className="bg-white/10 backdrop-blur rounded-xl p-6 transform hover:scale-105 transition-all">
-              <div className="text-4xl font-bold mb-2">80%</div>
-              <div className="text-gray-700">Fewer Support Messages</div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 text-center px-4">
+            <div className="bg-white/10 backdrop-blur rounded-lg sm:rounded-xl p-4 sm:p-6 transform hover:scale-105 transition-all">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">80%</div>
+              <div className="text-gray-700 text-xs sm:text-sm">Fewer Support Messages</div>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded-xl p-6 transform hover:scale-105 transition-all">
-              <div className="text-4xl font-bold mb-2">24/7</div>
-              <div className="text-gray-700">Always Available</div>
+            <div className="bg-white/10 backdrop-blur rounded-lg sm:rounded-xl p-4 sm:p-6 transform hover:scale-105 transition-all">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">24/7</div>
+              <div className="text-gray-700 text-xs sm:text-sm">Always Available</div>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded-xl p-6 transform hover:scale-105 transition-all">
-              <div className="text-4xl font-bold mb-2">5min</div>
-              <div className="text-gray-700">Setup Time</div>
+            <div className="bg-white/10 backdrop-blur rounded-lg sm:rounded-xl p-4 sm:p-6 transform hover:scale-105 transition-all">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">5min</div>
+              <div className="text-gray-700 text-xs sm:text-sm">Setup Time</div>
             </div>
-            <div className="bg-white/10 backdrop-blur rounded-xl p-6 transform hover:scale-105 transition-all">
-              <div className="text-4xl font-bold mb-2">€15</div>
-              <div className="text-gray-700">Per Month</div>
+            <div className="bg-white/10 backdrop-blur rounded-lg sm:rounded-xl p-4 sm:p-6 transform hover:scale-105 transition-all">
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">€15</div>
+              <div className="text-gray-700 text-xs sm:text-sm">Per Month</div>
             </div>
           </div>
         </div>
