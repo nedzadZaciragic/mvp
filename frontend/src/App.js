@@ -1702,32 +1702,32 @@ const GuestChat = ({ apartmentId }) => {
         </div>
       </div>
 
-      {/* Chat Container */}
-      <div className="max-w-4xl mx-auto px-6 py-6">
-        <div className="bg-white rounded-xl shadow-lg border h-[600px] flex flex-col">
+      {/* Chat Container - Mobile Optimized */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6 h-[calc(100vh-80px)] flex flex-col">
+        <div className="bg-white rounded-xl shadow-lg border flex-1 flex flex-col overflow-hidden">
           {/* Welcome Message with enhanced branding */}
           <div 
-            className="p-6 border-b text-white rounded-t-xl"
+            className="p-4 sm:p-6 border-b text-white rounded-t-xl flex-shrink-0"
             style={{ background: `linear-gradient(135deg, ${primaryColor}, ${branding.brand_secondary_color || BRAND_COLORS.secondary})` }}
           >
             <div className="flex items-center space-x-3">
               <div className="bg-white/20 p-2 rounded-lg">
-                <Bot className="h-6 w-6" />
+                <Bot className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold">{branding.brand_name} AI Assistant</h2>
-                <p className="text-white/90 text-sm">Your personal concierge for this stay</p>
+                <h2 className="text-base sm:text-lg font-semibold">{branding.brand_name} AI Assistant</h2>
+                <p className="text-white/90 text-xs sm:text-sm">Your personal concierge for this stay</p>
               </div>
             </div>
           </div>
 
-          {/* Messages with enhanced styling */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {/* Messages with enhanced styling - Only this scrolls */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
             {messages.map((message, index) => (
               <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`flex items-start space-x-3 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                <div className={`flex items-start space-x-2 sm:space-x-3 max-w-[85%] sm:max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                   <div 
-                    className={`p-2 rounded-full ${
+                    className={`p-1.5 sm:p-2 rounded-full flex-shrink-0 ${
                       message.type === 'user' 
                         ? `text-white` 
                         : 'bg-gray-100'
@@ -1735,19 +1735,19 @@ const GuestChat = ({ apartmentId }) => {
                     style={message.type === 'user' ? { backgroundColor: primaryColor } : {}}
                   >
                     {message.type === 'user' ? (
-                      <User className="h-5 w-5" />
+                      <User className="h-4 w-4 sm:h-5 sm:w-5" />
                     ) : (
-                      <Bot className="h-5 w-5 text-gray-600" />
+                      <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                     )}
                   </div>
-                  <div className={`p-4 rounded-2xl ${
+                  <div className={`p-3 sm:p-4 rounded-2xl ${
                     message.type === 'user' 
                       ? 'text-white rounded-br-sm' 
                       : 'bg-gray-100 text-gray-900 rounded-bl-sm'
                   }`}
                   style={message.type === 'user' ? { backgroundColor: primaryColor } : {}}
                   >
-                    <div className="text-sm leading-relaxed whitespace-pre-line">{message.content}</div>
+                    <div className="text-sm leading-relaxed whitespace-pre-line break-words">{message.content}</div>
                     <p className={`text-xs mt-2 ${message.type === 'user' ? 'text-white/70' : 'text-gray-500'}`}>
                       {new Date(message.timestamp).toLocaleTimeString()}
                     </p>
@@ -1758,11 +1758,11 @@ const GuestChat = ({ apartmentId }) => {
             
             {loading && (
               <div className="flex justify-start">
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 rounded-full bg-gray-100">
-                    <Bot className="h-5 w-5 text-gray-600" />
+                <div className="flex items-start space-x-2 sm:space-x-3">
+                  <div className="p-1.5 sm:p-2 rounded-full bg-gray-100">
+                    <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                   </div>
-                  <div className="bg-gray-100 p-4 rounded-2xl rounded-bl-sm">
+                  <div className="bg-gray-100 p-3 sm:p-4 rounded-2xl rounded-bl-sm">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
@@ -1774,9 +1774,9 @@ const GuestChat = ({ apartmentId }) => {
             )}
           </div>
 
-          {/* Enhanced input with suggestions */}
-          <div className="border-t p-6 bg-gray-50">
-            <div className="mb-3">
+          {/* Enhanced input with suggestions - Fixed at bottom */}
+          <div className="border-t p-4 sm:p-6 bg-gray-50 flex-shrink-0">
+            <div className="mb-3 hidden sm:block">
               <div className="flex flex-wrap gap-2">
                 {['Check-in instructions', 'WiFi password', 'Local restaurants', 'Emergency contacts'].map((suggestion) => (
                   <button
@@ -1789,7 +1789,7 @@ const GuestChat = ({ apartmentId }) => {
                 ))}
               </div>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex space-x-2 sm:space-x-4">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
