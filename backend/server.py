@@ -1706,9 +1706,66 @@ async def import_property_from_url(
         raise HTTPException(status_code=500, detail=f"Failed to import property: {str(e)}")
 
 # Admin Routes for Database Management
+@api_router.post("/admin/login", response_model=Token)
+@limiter.limit("5/minute")  # Limit admin login attempts
+async def admin_login(request: Request, credentials: dict):
+    """Admin login with hardcoded credentials"""
+    try:
+        username = credentials.get("username")
+        password = credentials.get("password")
+        
+        # Hardcoded admin credentials - change these in production
+        ADMIN_USERNAME = "myhomeiq_admin"
+        ADMIN_PASSWORD = "Admin123!MyHomeIQ"
+        
+        if username != ADMIN_USERNAME or password != ADMIN_PASSWORD:
+            raise HTTPException(status_code=401, detail="Invalid admin credentials")
+        
+        # Create admin token
+        admin_data = {
+            "sub": "admin_user",
+            "admin": True,
+            "username": ADMIN_USERNAME
+        }
+        
+        access_token = create_access_token(admin_data)
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            user_info={
+                "id": "admin_user",
+                "email": "admin@myhomeiq.com",
+                "full_name": "MyHomeIQ Admin",
+                "is_admin": True,
+                "brand_name": "MyHomeIQ"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Admin login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+# Admin authentication helper
+async def get_admin_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Get admin user from token"""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        
+        if not payload.get("admin"):
+            raise HTTPException(status_code=403, detail="Admin privileges required")
+            
+        return payload
+        
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
 @api_router.get("/admin/users", response_model=List[dict])
 @limiter.limit("20/minute")  # Rate limit admin operations
-async def get_all_users(request: Request, current_admin: User = Depends(get_admin_user)):
+async def get_all_users(request: Request, admin_user: dict = Depends(get_admin_user_from_token)):
     """Get all users - Admin only"""
     try:
         users = await db.users.find({}, {"hashed_password": 0}).to_list(length=None)
