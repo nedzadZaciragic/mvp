@@ -1311,14 +1311,16 @@ const LandingHome = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with better hook */}
-      <section className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black/30"></div>
-        
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl"></div>
+      {/* Hero Section with improved colors */}
+      <section className="relative py-20 overflow-hidden">
+        {/* Background with better contrast */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20"></div>
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                             radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                             radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)`
+          }}></div>
         </div>
         
         <div className="relative max-w-7xl mx-auto px-6 py-24">
