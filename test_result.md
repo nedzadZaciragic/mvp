@@ -258,6 +258,42 @@ backend:
         agent: "testing"
         comment: "✅ ADMIN AUTHORIZATION TESTED SUCCESSFULLY: Non-admin users properly blocked from accessing admin endpoints with 403 Forbidden status. Admin token validation working correctly. Endpoints without authentication return 403 (acceptable behavior). Admin JWT token contains proper admin flag and privileges. Security measures working as expected."
 
+  - task: "AI Insights Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/analytics/insights/{apartment_id} endpoint that generates AI-powered insights and optimization advice for apartments using Emergent LLM with GPT-4o-mini model. Rate limited to 10/minute. Requires authentication and apartment ownership verification."
+
+  - task: "Question Normalization Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/analytics/normalized-questions/{apartment_id} endpoint that semantically groups similar guest questions using AI. Rate limited to 5/minute. Uses Emergent LLM to analyze chat messages and create meaningful question groups with categories and insights."
+
+  - task: "Detailed iCal Test Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented POST /api/ical/detailed-test/{apartment_id} endpoint for comprehensive iCal integration testing with step-by-step feedback. Rate limited to 3/minute. Provides detailed validation of URL format, HTTP connectivity, iCal format, calendar parsing, email configuration, and full sync testing."
+
 frontend:
   - task: "Email Credentials Management UI"
     implemented: true
