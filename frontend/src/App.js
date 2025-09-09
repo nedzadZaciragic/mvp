@@ -174,7 +174,7 @@ const ForgotPassword = ({ isOpen, onClose }) => {
                 />
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="bg-blue-100 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm text-blue-700">
                   We'll send you a secure link to reset your password. The link will expire in 1 hour.
                 </p>
