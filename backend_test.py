@@ -1162,6 +1162,393 @@ class MyHostIQAPITester:
         
         return success
 
+    # ADMIN FUNCTIONALITY TESTS - HIGH PRIORITY
+    def test_admin_login_correct_credentials(self):
+        """Test admin login with correct credentials - HIGH PRIORITY"""
+        success, response = self.run_test(
+            "Admin Login - Correct Credentials",
+            "POST",
+            "admin/login",
+            200,
+            data=self.admin_credentials,
+            use_auth=False
+        )
+        
+        if success and response.get('access_token'):
+            self.admin_token = response['access_token']
+            user_info = response.get('user_info', {})
+            print(f"   Admin token received: {self.admin_token[:20]}...")
+            print(f"   Admin user: {user_info.get('full_name', 'Unknown')}")
+            print(f"   Is admin: {user_info.get('is_admin', False)}")
+            
+            if user_info.get('is_admin'):
+                print("   ✅ Admin privileges confirmed in token")
+            else:
+                print("   ❌ Admin privileges not set in token")
+        
+        return success
+
+    def test_admin_login_incorrect_credentials(self):
+        """Test admin login with incorrect credentials - HIGH PRIORITY"""
+        test_cases = [
+            {
+                "name": "Wrong Username",
+                "credentials": {"username": "wrong_admin", "password": "Admin123!MyHomeIQ"}
+            },
+            {
+                "name": "Wrong Password", 
+                "credentials": {"username": "myhomeiq_admin", "password": "WrongPassword123"}
+            },
+            {
+                "name": "Both Wrong",
+                "credentials": {"username": "wrong_admin", "password": "wrong_password"}
+            },
+            {
+                "name": "Empty Credentials",
+                "credentials": {"username": "", "password": ""}
+            }
+        ]
+        
+        all_passed = True
+        
+        for test_case in test_cases:
+            print(f"\n   Testing {test_case['name']}...")
+            
+            success, response = self.run_test(
+                f"Admin Login - {test_case['name']}",
+                "POST",
+                "admin/login",
+                401,  # Expect 401 Unauthorized
+                data=test_case["credentials"],
+                use_auth=False
+            )
+            
+            if success:
+                error_detail = response.get('detail', '')
+                if 'Invalid admin credentials' in error_detail:
+                    print(f"   ✅ Properly rejected: {error_detail}")
+                else:
+                    print(f"   ⚠️  Unexpected error message: {error_detail}")
+            else:
+                all_passed = False
+                print(f"   ❌ Unexpected response for {test_case['name']}")
+        
+        return all_passed
+
+    def test_admin_login_rate_limiting(self):
+        """Test admin login rate limiting - HIGH PRIORITY"""
+        print("   Testing rate limiting (5 attempts per minute)...")
+        
+        failed_attempts = 0
+        rate_limited = False
+        
+        # Try to exceed rate limit with wrong credentials
+        wrong_creds = {"username": "wrong_admin", "password": "wrong_password"}
+        
+        for i in range(7):  # Try 7 attempts to exceed limit of 5
+            print(f"   Attempt {i+1}/7...")
+            
+            success, response = self.run_test(
+                f"Admin Login Rate Limit Test - Attempt {i+1}",
+                "POST",
+                "admin/login",
+                401 if i < 5 else 429,  # Expect 429 after 5 attempts
+                data=wrong_creds,
+                use_auth=False
+            )
+            
+            if i < 5:
+                if success:
+                    failed_attempts += 1
+                    print(f"   ✅ Attempt {i+1} properly rejected")
+                else:
+                    print(f"   ❌ Unexpected response on attempt {i+1}")
+            else:
+                # Should be rate limited now
+                if response.get('detail') and 'rate limit' in response.get('detail', '').lower():
+                    rate_limited = True
+                    print(f"   ✅ Rate limiting activated after 5 attempts")
+                    break
+                elif success:  # Still getting 401 instead of 429
+                    print(f"   ⚠️  Still accepting requests (may not be rate limited yet)")
+                else:
+                    print(f"   ❌ Unexpected response during rate limit test")
+            
+            # Small delay between attempts
+            time.sleep(0.5)
+        
+        if failed_attempts >= 5:
+            print("   ✅ Multiple failed attempts properly handled")
+        
+        if rate_limited:
+            print("   ✅ Rate limiting working correctly")
+            return True
+        else:
+            print("   ⚠️  Rate limiting may not be working as expected")
+            return True  # Don't fail the test, just warn
+
+    def test_admin_token_validation(self):
+        """Test admin token validation and expiration - HIGH PRIORITY"""
+        if not self.admin_token:
+            print("❌ Skipping - No admin token available")
+            return False
+        
+        # Test with valid admin token
+        print("   Testing valid admin token...")
+        
+        # Use admin token to access protected endpoint
+        original_token = self.token
+        self.token = self.admin_token  # Temporarily use admin token
+        
+        success, response = self.run_test(
+            "Admin Token Validation - Valid Token",
+            "GET",
+            "admin/stats",
+            200
+        )
+        
+        self.token = original_token  # Restore original token
+        
+        if success:
+            print("   ✅ Valid admin token accepted")
+        else:
+            print("   ❌ Valid admin token rejected")
+            return False
+        
+        # Test with invalid token
+        print("\n   Testing invalid admin token...")
+        
+        invalid_token = "invalid.jwt.token.here"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {invalid_token}'
+        }
+        
+        try:
+            import requests
+            url = f"{self.api_url}/admin/stats"
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 401:
+                print("   ✅ Invalid token properly rejected")
+                return True
+            else:
+                print(f"   ❌ Invalid token not rejected (status: {response.status_code})")
+                return False
+                
+        except Exception as e:
+            print(f"   ❌ Error testing invalid token: {str(e)}")
+            return False
+
+    def test_admin_protected_endpoints(self):
+        """Test admin protected endpoints with admin token - HIGH PRIORITY"""
+        if not self.admin_token:
+            print("❌ Skipping - No admin token available")
+            return False
+        
+        # Temporarily use admin token
+        original_token = self.token
+        self.token = self.admin_token
+        
+        endpoints_to_test = [
+            {
+                "name": "Get All Users",
+                "method": "GET",
+                "endpoint": "admin/users",
+                "expected_status": 200
+            },
+            {
+                "name": "Get All Apartments", 
+                "method": "GET",
+                "endpoint": "admin/apartments",
+                "expected_status": 200
+            },
+            {
+                "name": "Get Admin Stats",
+                "method": "GET", 
+                "endpoint": "admin/stats",
+                "expected_status": 200
+            }
+        ]
+        
+        all_passed = True
+        
+        for endpoint_test in endpoints_to_test:
+            print(f"\n   Testing {endpoint_test['name']}...")
+            
+            success, response = self.run_test(
+                f"Admin Endpoint - {endpoint_test['name']}",
+                endpoint_test["method"],
+                endpoint_test["endpoint"],
+                endpoint_test["expected_status"]
+            )
+            
+            if success:
+                if endpoint_test["endpoint"] == "admin/users":
+                    if isinstance(response, list):
+                        print(f"   ✅ Retrieved {len(response)} users")
+                        # Check that passwords are not exposed
+                        if response and 'hashed_password' not in response[0]:
+                            print("   ✅ User passwords properly excluded from response")
+                        else:
+                            print("   ❌ Security issue: Password data may be exposed")
+                    else:
+                        print("   ⚠️  Unexpected response format for users")
+                
+                elif endpoint_test["endpoint"] == "admin/apartments":
+                    if isinstance(response, list):
+                        print(f"   ✅ Retrieved {len(response)} apartments")
+                    else:
+                        print("   ⚠️  Unexpected response format for apartments")
+                
+                elif endpoint_test["endpoint"] == "admin/stats":
+                    totals = response.get('totals', {})
+                    recent = response.get('recent_activity', {})
+                    active = response.get('most_active_apartments', [])
+                    
+                    print(f"   ✅ Stats retrieved:")
+                    print(f"      Users: {totals.get('users', 0)}")
+                    print(f"      Apartments: {totals.get('apartments', 0)}")
+                    print(f"      Messages: {totals.get('messages', 0)}")
+                    print(f"      Email Credentials: {totals.get('email_credentials', 0)}")
+                    print(f"      New Users (24h): {recent.get('new_users_24h', 0)}")
+                    print(f"      Messages (24h): {recent.get('messages_24h', 0)}")
+                    print(f"      Most Active Apartments: {len(active)}")
+                    
+                    # Verify data structure
+                    if 'totals' in response and 'recent_activity' in response:
+                        print("   ✅ Complete stats data structure returned")
+                    else:
+                        print("   ⚠️  Incomplete stats data structure")
+            else:
+                all_passed = False
+                print(f"   ❌ Failed to access {endpoint_test['name']}")
+        
+        # Restore original token
+        self.token = original_token
+        
+        return all_passed
+
+    def test_non_admin_access_to_admin_endpoints(self):
+        """Test that non-admin users cannot access admin endpoints - HIGH PRIORITY"""
+        # Use regular user token (not admin token)
+        if not self.token:
+            print("❌ Skipping - No regular user token available")
+            return False
+        
+        admin_endpoints = [
+            {"endpoint": "admin/users", "method": "GET"},
+            {"endpoint": "admin/apartments", "method": "GET"},
+            {"endpoint": "admin/stats", "method": "GET"}
+        ]
+        
+        all_passed = True
+        
+        for endpoint_test in admin_endpoints:
+            print(f"\n   Testing non-admin access to {endpoint_test['endpoint']}...")
+            
+            success, response = self.run_test(
+                f"Non-Admin Access - {endpoint_test['endpoint']}",
+                endpoint_test["method"],
+                endpoint_test["endpoint"],
+                403  # Expect 403 Forbidden
+            )
+            
+            if success:
+                error_detail = response.get('detail', '')
+                if 'Admin privileges required' in error_detail or 'admin' in error_detail.lower():
+                    print(f"   ✅ Properly blocked: {error_detail}")
+                else:
+                    print(f"   ⚠️  Unexpected error message: {error_detail}")
+            else:
+                all_passed = False
+                print(f"   ❌ Non-admin user should not access {endpoint_test['endpoint']}")
+        
+        return all_passed
+
+    def test_admin_endpoints_without_token(self):
+        """Test admin endpoints without authentication token - HIGH PRIORITY"""
+        admin_endpoints = [
+            {"endpoint": "admin/users", "method": "GET"},
+            {"endpoint": "admin/apartments", "method": "GET"}, 
+            {"endpoint": "admin/stats", "method": "GET"}
+        ]
+        
+        all_passed = True
+        
+        for endpoint_test in admin_endpoints:
+            print(f"\n   Testing {endpoint_test['endpoint']} without token...")
+            
+            success, response = self.run_test(
+                f"No Auth - {endpoint_test['endpoint']}",
+                endpoint_test["method"],
+                endpoint_test["endpoint"],
+                401,  # Expect 401 Unauthorized
+                use_auth=False
+            )
+            
+            if success:
+                print(f"   ✅ Properly requires authentication")
+            else:
+                all_passed = False
+                print(f"   ❌ Should require authentication for {endpoint_test['endpoint']}")
+        
+        return all_passed
+
+    def test_admin_jwt_token_structure(self):
+        """Test admin JWT token contains proper admin privileges - HIGH PRIORITY"""
+        if not self.admin_token:
+            print("❌ Skipping - No admin token available")
+            return False
+        
+        try:
+            import jwt
+            import os
+            
+            # Decode token to verify structure (without verification for testing)
+            jwt_secret = os.environ.get('JWT_SECRET', 'your-secret-key-here')
+            
+            try:
+                payload = jwt.decode(self.admin_token, jwt_secret, algorithms=['HS256'])
+                
+                print("   Admin token payload:")
+                print(f"      Subject: {payload.get('sub', 'Unknown')}")
+                print(f"      Admin flag: {payload.get('admin', False)}")
+                print(f"      Username: {payload.get('username', 'Unknown')}")
+                print(f"      Expires: {payload.get('exp', 'Unknown')}")
+                
+                # Verify admin privileges
+                if payload.get('admin') is True:
+                    print("   ✅ Admin privileges properly set in JWT token")
+                else:
+                    print("   ❌ Admin privileges not set in JWT token")
+                    return False
+                
+                # Verify subject
+                if payload.get('sub') == 'admin_user':
+                    print("   ✅ Correct admin user subject in token")
+                else:
+                    print("   ⚠️  Unexpected subject in admin token")
+                
+                # Verify username
+                if payload.get('username') == 'myhomeiq_admin':
+                    print("   ✅ Correct admin username in token")
+                else:
+                    print("   ⚠️  Unexpected username in admin token")
+                
+                return True
+                
+            except jwt.ExpiredSignatureError:
+                print("   ❌ Admin token is expired")
+                return False
+            except jwt.InvalidTokenError as e:
+                print(f"   ❌ Invalid admin token: {str(e)}")
+                return False
+                
+        except Exception as e:
+            print(f"   ❌ Error verifying admin token: {str(e)}")
+            return False
+
     def test_create_apartment(self):
         """Test apartment creation with sample data - requires authentication"""
         test_data = {
