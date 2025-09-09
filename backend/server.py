@@ -1059,7 +1059,8 @@ async def login(request: Request, user_data: UserLogin):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/auth/forgot-password")
-async def forgot_password(request: PasswordResetRequest):
+@limiter.limit("5/minute")  # Limit password reset attempts
+async def forgot_password(request: Request, forgot_request: PasswordResetRequest):
     """Send password reset email"""
     try:
         # Find user
