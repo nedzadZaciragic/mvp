@@ -2162,6 +2162,371 @@ const AnalyticsDashboard = () => {
   );
 };
 
+// AI Insights Dashboard Component
+const AIInsightsDashboard = ({ apartments }) => {
+  const [selectedApartment, setSelectedApartment] = useState(null);
+  const [insights, setInsights] = useState(null);
+  const [normalizedQuestions, setNormalizedQuestions] = useState(null);
+  const [icalTestResults, setIcalTestResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [activeView, setActiveView] = useState('overview');
+
+  const fetchAIInsights = async (apartmentId) => {
+    if (!apartmentId) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/analytics/insights/${apartmentId}`);
+      setInsights(response.data);
+    } catch (error) {
+      console.error('Error fetching AI insights:', error);
+      setInsights(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchNormalizedQuestions = async (apartmentId) => {
+    if (!apartmentId) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/analytics/normalized-questions/${apartmentId}`);
+      setNormalizedQuestions(response.data);
+    } catch (error) {
+      console.error('Error fetching normalized questions:', error);
+      setNormalizedQuestions(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runIcalTest = async (apartmentId) => {
+    if (!apartmentId) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API}/ical/detailed-test/${apartmentId}`);
+      setIcalTestResults(response.data);
+    } catch (error) {
+      console.error('Error running iCal test:', error);
+      setIcalTestResults({ test_status: 'failed', error: error.response?.data?.detail || 'Test failed' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApartmentChange = (apartmentId) => {
+    setSelectedApartment(apartmentId);
+    setInsights(null);
+    setNormalizedQuestions(null);
+    setIcalTestResults(null);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Sparkles className="h-5 w-5 mr-2 text-purple-500" />
+            AI-Powered Property Intelligence
+          </CardTitle>
+          <CardDescription>
+            Get AI-driven insights, question analytics, and test your integrations
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Apartment Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Property for AI Analysis
+              </label>
+              <Select onValueChange={handleApartmentChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a property to analyze..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {apartments.map((apartment) => (
+                    <SelectItem key={apartment.id} value={apartment.id}>
+                      {apartment.name} - {apartment.address}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Action Buttons */}
+            {selectedApartment && (
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={() => {
+                    setActiveView('insights');
+                    fetchAIInsights(selectedApartment);
+                  }}
+                  className="bg-purple-500 hover:bg-purple-600"
+                  disabled={loading}
+                >
+                  <Target className="h-4 w-4 mr-2" />
+                  Generate AI Insights
+                </Button>
+                <Button
+                  onClick={() => {
+                    setActiveView('questions');
+                    fetchNormalizedQuestions(selectedApartment);
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600"
+                  disabled={loading}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Analyze Questions
+                </Button>
+                <Button
+                  onClick={() => {
+                    setActiveView('ical');
+                    runIcalTest(selectedApartment);
+                  }}
+                  className="bg-green-500 hover:bg-green-600"
+                  disabled={loading}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Test iCal Integration
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Loading State */}
+      {loading && (
+        <Card>
+          <CardContent className="py-8">
+            <div className="text-center">
+              <div className="animate-spin h-8 w-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">AI is analyzing your data...</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* AI Insights View */}
+      {activeView === 'insights' && insights && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Sparkles className="h-5 w-5 mr-2 text-purple-500" />
+              AI Performance Insights
+            </CardTitle>
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <span>Performance Score: {insights.performance_score}/100</span>
+              <span>Generated: {new Date(insights.generated_at).toLocaleString()}</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Insights */}
+              <div>
+                <h4 className="font-semibold mb-3 text-gray-900">🎯 Key Insights</h4>
+                <div className="space-y-3">
+                  {insights.insights?.map((insight, index) => (
+                    <div key={index} className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-medium text-purple-900">{insight.title}</h5>
+                        <Badge 
+                          variant={insight.priority === 'high' ? 'destructive' : 
+                                 insight.priority === 'medium' ? 'default' : 'secondary'}
+                        >
+                          {insight.priority}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-purple-800">{insight.description}</p>
+                      <div className="mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          {insight.category}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recommendations */}
+              <div>
+                <h4 className="font-semibold mb-3 text-gray-900">💡 Recommendations</h4>
+                <div className="space-y-3">
+                  {insights.recommendations?.map((rec, index) => (
+                    <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-medium text-blue-900">{rec.title}</h5>
+                        <Badge 
+                          variant={rec.difficulty === 'easy' ? 'default' : 
+                                 rec.difficulty === 'medium' ? 'secondary' : 'destructive'}
+                        >
+                          {rec.difficulty}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-blue-800 mb-2">{rec.action}</p>
+                      <p className="text-xs text-blue-600">Impact: {rec.impact}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Key Strengths & Improvements */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h5 className="font-semibold text-green-800 mb-2">✅ Key Strengths</h5>
+                <ul className="text-sm text-green-700 space-y-1">
+                  {insights.key_strengths?.map((strength, index) => (
+                    <li key={index}>• {strength}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <h5 className="font-semibold text-orange-800 mb-2">📈 Improvement Areas</h5>
+                <ul className="text-sm text-orange-700 space-y-1">
+                  {insights.improvement_areas?.map((area, index) => (
+                    <li key={index}>• {area}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Question Normalization View */}
+      {activeView === 'questions' && normalizedQuestions && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <MessageCircle className="h-5 w-5 mr-2 text-blue-500" />
+              Question Analysis & Grouping
+            </CardTitle>
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <span>Total Questions: {normalizedQuestions.total_questions}</span>
+              <span>Groups Created: {normalizedQuestions.groups_created}</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {normalizedQuestions.question_groups?.map((group, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-lg border">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-gray-900">{group.normalized_question}</h4>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline">{group.frequency} times</Badge>
+                      <Badge 
+                        variant={group.urgency === 'high' ? 'destructive' : 
+                               group.urgency === 'medium' ? 'default' : 'secondary'}
+                      >
+                        {group.urgency}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <h5 className="text-sm font-medium text-gray-700 mb-1">Similar Questions:</h5>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      {group.similar_questions?.slice(0, 3).map((question, qIndex) => (
+                        <p key={qIndex}>• "{question}"</p>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded border">
+                    <h5 className="text-sm font-medium text-green-700 mb-1">Suggested Response:</h5>
+                    <p className="text-sm text-gray-700">{group.suggested_response}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* iCal Test Results View */}
+      {activeView === 'ical' && icalTestResults && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Calendar className="h-5 w-5 mr-2 text-green-500" />
+              iCal Integration Test Results
+            </CardTitle>
+            <div className="flex items-center space-x-2">
+              <Badge 
+                variant={icalTestResults.test_status === 'passed' ? 'default' : 
+                       icalTestResults.test_status === 'warning' ? 'secondary' : 'destructive'}
+              >
+                {icalTestResults.test_status}
+              </Badge>
+              {icalTestResults.summary && (
+                <span className="text-sm text-gray-600">
+                  Success Rate: {icalTestResults.summary.success_rate}
+                </span>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Test Steps */}
+              <div>
+                <h4 className="font-semibold mb-3">Test Steps</h4>
+                <div className="space-y-2">
+                  {icalTestResults.steps?.map((step, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-2 rounded">
+                      <div className={`w-3 h-3 rounded-full ${
+                        step.status === 'passed' ? 'bg-green-500' :
+                        step.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}></div>
+                      <span className="font-medium">{step.step}</span>
+                      <span className="text-sm text-gray-600 flex-1">{step.message}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sample Events */}
+              {icalTestResults.sample_events && (
+                <div>
+                  <h4 className="font-semibold mb-3">Sample Calendar Events</h4>
+                  <div className="space-y-2">
+                    {icalTestResults.sample_events.map((event, index) => (
+                      <div key={index} className="bg-blue-50 p-3 rounded border">
+                        <p className="font-medium">{event.summary}</p>
+                        <p className="text-sm text-gray-600">
+                          {event.start} - {event.end}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {icalTestResults.recommendations && (
+                <div>
+                  <h4 className="font-semibold mb-3">Recommendations</h4>
+                  <ul className="space-y-1 text-sm">
+                    {icalTestResults.recommendations.map((rec, index) => (
+                      <li key={index} className="flex items-start space-x-2">
+                        <span className="text-blue-500">•</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
 // Admin Dashboard Component
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
