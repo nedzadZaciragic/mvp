@@ -2209,6 +2209,167 @@ async def get_chat_history(apartment_id: str, current_user: User = Depends(get_c
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Question Normalization Route
+@api_router.get("/analytics/normalized-questions/{apartment_id}")
+@limiter.limit("5/minute")  # Rate limit for intensive processing
+async def get_normalized_questions(request: Request, apartment_id: str, current_user: User = Depends(get_current_user)):
+    """Get semantically grouped and normalized questions for apartment"""
+    try:
+        # Verify apartment belongs to user
+        apartment = await db.apartments.find_one({
+            "id": apartment_id, 
+            "user_id": current_user.id
+        })
+        if not apartment:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        
+        # Get all user messages (questions)
+        chat_messages = await db.chat_messages.find(
+            {"apartment_id": apartment_id, "type": "user"}
+        ).sort("timestamp", -1).limit(200).to_list(200)
+        
+        if not chat_messages:
+            return {
+                "normalized_questions": [],
+                "total_questions": 0,
+                "groups_created": 0,
+                "processed_at": datetime.now(timezone.utc).isoformat()
+            }
+        
+        # Extract unique questions
+        questions = []
+        for msg in chat_messages:
+            content = msg.get('content', '').strip()
+            if content and len(content) > 10:  # Filter out very short messages
+                questions.append({
+                    "text": content,
+                    "timestamp": msg.get('timestamp'),
+                    "message_id": msg.get('id')
+                })
+        
+        if not questions:
+            return {
+                "normalized_questions": [],
+                "total_questions": 0,
+                "groups_created": 0,
+                "processed_at": datetime.now(timezone.utc).isoformat()
+            }
+        
+        # Prepare questions for AI processing
+        questions_text = "\n".join([f"{i+1}. {q['text']}" for i, q in enumerate(questions[:50])])  # Limit to 50 for processing
+        
+        # AI-powered question normalization
+        system_message = """You are an expert in semantic analysis and question categorization for vacation rental properties.
+        Your task is to analyze guest questions and group similar ones together, identifying common themes and patterns.
+        Focus on creating meaningful groups that help hosts understand guest needs better."""
+        
+        user_prompt = f"""
+        Analyze these guest questions from a vacation rental property and group similar ones together:
+        
+        {questions_text}
+        
+        Group similar questions semantically (not just by exact words) and provide normalized versions.
+        For example, "Where is the WiFi password?" and "How do I connect to internet?" should be grouped together.
+        
+        Return JSON format:
+        {{
+            "question_groups": [
+                {{
+                    "normalized_question": "How to connect to WiFi?",
+                    "category": "amenities",
+                    "similar_questions": ["Where is the WiFi password?", "How do I connect to internet?"],
+                    "frequency": 5,
+                    "urgency": "high",
+                    "suggested_response": "Brief suggested response template"
+                }}
+            ],
+            "categories": {{
+                "amenities": 10,
+                "check_in": 8,
+                "local_info": 5,
+                "rules": 3
+            }},
+            "insights": ["Most guests ask about WiFi", "Check-in process needs clarification"]
+        }}
+        
+        Focus on practical groupings that help hosts improve their property information and guest experience.
+        """
+        
+        # Initialize LLM chat for question analysis
+        api_key = os.getenv('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="AI service not configured")
+        
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"normalize_{apartment_id}_{datetime.now().strftime('%Y%m%d')}",
+            system_message=system_message
+        ).with_model("openai", "gpt-4o-mini")
+        
+        # Send message and get normalized questions
+        user_message = UserMessage(text=user_prompt)
+        ai_response = await chat.send_message(user_message)
+        
+        # Parse AI response
+        try:
+            import json
+            ai_content = ai_response.strip()
+            if ai_content.startswith('```json'):
+                ai_content = ai_content.split('```json')[1].split('```')[0].strip()
+            elif ai_content.startswith('```'):
+                ai_content = ai_content.split('```')[1].split('```')[0].strip()
+            
+            normalized_data = json.loads(ai_content)
+        except Exception as parse_error:
+            logger.error(f"Failed to parse AI response: {parse_error}")
+            # Fallback: Create basic grouping
+            question_freq = {}
+            for q in questions:
+                text = q['text'].lower()
+                # Simple keyword-based grouping as fallback
+                if any(word in text for word in ['wifi', 'internet', 'password']):
+                    key = "WiFi and Internet"
+                elif any(word in text for word in ['checkin', 'check-in', 'key', 'access']):
+                    key = "Check-in Process"
+                elif any(word in text for word in ['restaurant', 'food', 'eat', 'dining']):
+                    key = "Dining and Restaurants"
+                elif any(word in text for word in ['parking', 'car', 'vehicle']):
+                    key = "Parking"
+                else:
+                    key = "General Questions"
+                
+                if key not in question_freq:
+                    question_freq[key] = {"questions": [], "count": 0}
+                question_freq[key]["questions"].append(q['text'])
+                question_freq[key]["count"] += 1
+            
+            normalized_data = {
+                "question_groups": [
+                    {
+                        "normalized_question": category,
+                        "category": "general",
+                        "similar_questions": data["questions"][:5],  # Limit to 5 examples
+                        "frequency": data["count"],
+                        "urgency": "medium",
+                        "suggested_response": f"Please provide information about {category.lower()}"
+                    } for category, data in question_freq.items()
+                ],
+                "categories": {cat: data["count"] for cat, data in question_freq.items()},
+                "insights": [f"Received {len(questions)} total questions", "Consider adding FAQ section"]
+            }
+        
+        # Add metadata
+        normalized_data["apartment_id"] = apartment_id
+        normalized_data["total_questions"] = len(questions)
+        normalized_data["groups_created"] = len(normalized_data.get("question_groups", []))
+        normalized_data["processed_at"] = datetime.now(timezone.utc).isoformat()
+        
+        return normalized_data
+        
+    except Exception as e:
+        logger.error(f"Error normalizing questions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to normalize questions: {str(e)}")
+
 # AI Insights Routes
 @api_router.get("/analytics/insights/{apartment_id}")
 @limiter.limit("10/minute")  # Rate limit insights generation
