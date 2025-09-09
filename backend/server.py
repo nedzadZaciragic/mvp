@@ -13,6 +13,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import redis
 import os
 import logging
+import traceback
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
