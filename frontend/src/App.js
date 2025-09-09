@@ -1353,10 +1353,10 @@ const LandingHome = () => {
               <span className="block text-blue-600">Over and Over Again</span>
             </h2>
             
-            <p className="text-xl md:text-2xl text-gray-800 mb-10 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-800 mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed px-2">
               Your AI assistant handles <span className="text-blue-700 font-semibold">80% of guest questions</span> instantly - 
               from check-in instructions to restaurant recommendations. 
-              <span className="block mt-2 text-lg text-gray-700">More happy guests, less stress for you.</span>
+              <span className="block mt-2 text-base sm:text-lg text-gray-700">More happy guests, less stress for you.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
