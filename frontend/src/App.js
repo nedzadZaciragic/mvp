@@ -2453,6 +2453,112 @@ const AdminDashboard = () => {
   );
 };
 
+// Admin Login Component
+const AdminLogin = () => {
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post(`${API}/admin/login`, credentials);
+      localStorage.setItem('authToken', response.data.access_token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
+      navigate('/dashboard');
+    } catch (error) {
+      setError(error.response?.data?.detail || 'Invalid admin credentials');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mb-4">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_hostai/artifacts/s1jbiqoq_image-removebg-preview%20%281%29.png" 
+              alt="MyHomeIQ Logo" 
+              className="h-16 mx-auto mb-4 filter brightness-0 invert"
+            />
+          </div>
+          <CardTitle className="text-2xl font-bold text-gray-900">Admin Access</CardTitle>
+          <CardDescription>Sign in to access admin dashboard</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert className="border-red-200 bg-red-50 mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-red-700">{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
+              <Input
+                type="text"
+                value={credentials.username}
+                onChange={(e) => setCredentials(prev => ({...prev, username: e.target.value}))}
+                placeholder="Enter admin username"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <Input
+                type="password"
+                value={credentials.password}
+                onChange={(e) => setCredentials(prev => ({...prev, password: e.target.value}))}
+                placeholder="Enter admin password"
+                required
+              />
+            </div>
+
+            <Button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Sign In
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button 
+              onClick={() => navigate('/')}
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              ← Back to Home
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // Admin Apartment Edit Form Component
 const AdminApartmentEditForm = ({ apartment, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
