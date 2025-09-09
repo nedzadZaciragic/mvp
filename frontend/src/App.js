@@ -3556,6 +3556,11 @@ const HostDashboard = () => {
             <AnalyticsDashboard />
           </TabsContent>
 
+          {/* AI Insights Tab */}
+          <TabsContent value="ai-insights">
+            <AIInsightsDashboard apartments={apartments} />
+          </TabsContent>
+
           {/* Enhanced Whitelabel Tab */}
           <TabsContent value="whitelabel">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
