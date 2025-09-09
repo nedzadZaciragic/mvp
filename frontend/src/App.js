@@ -1359,11 +1359,11 @@ const LandingHome = () => {
               <span className="block mt-2 text-lg text-gray-600">More happy guests, less stress for you.</span>
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button 
                 onClick={handleStartTrial}
                 size="lg" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 text-xl font-semibold shadow-2xl transform hover:scale-105 transition-all"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-5 text-xl font-semibold shadow-lg transform hover:scale-105 transition-all"
               >
                 <Zap className="h-6 w-6 mr-3" />
                 Start Free Trial - No Credit Card
@@ -1372,7 +1372,7 @@ const LandingHome = () => {
                 onClick={() => setShowDemo(true)}
                 variant="outline" 
                 size="lg" 
-                className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-10 py-5 text-xl transform hover:scale-105 transition-all"
+                className="border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white px-10 py-5 text-xl transform hover:scale-105 transition-all"
               >
                 <PlayCircle className="h-6 w-6 mr-3" />
                 See Live Demo
