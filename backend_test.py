@@ -1176,12 +1176,12 @@ class MyHostIQAPITester:
         
         if success and response.get('access_token'):
             self.admin_token = response['access_token']
-            user_info = response.get('user_info', {})
+            user = response.get('user', {})
             print(f"   Admin token received: {self.admin_token[:20]}...")
-            print(f"   Admin user: {user_info.get('full_name', 'Unknown')}")
-            print(f"   Is admin: {user_info.get('is_admin', False)}")
+            print(f"   Admin user: {user.get('full_name', 'Unknown')}")
+            print(f"   Is admin: {user.get('is_admin', False)}")
             
-            if user_info.get('is_admin'):
+            if user.get('is_admin'):
                 print("   ✅ Admin privileges confirmed in token")
             else:
                 print("   ❌ Admin privileges not set in token")
