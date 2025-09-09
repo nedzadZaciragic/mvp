@@ -147,7 +147,7 @@ class User(BaseModel):
     phone_verified: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     # Enhanced Whitelabeling settings
-    brand_name: str = "MyHostIQ"
+    brand_name: str = "MyHomeIQ"
     brand_logo_url: str = ""
     brand_primary_color: str = "#2563eb"
     brand_secondary_color: str = "#1d4ed8"
