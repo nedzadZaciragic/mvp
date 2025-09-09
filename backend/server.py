@@ -1896,7 +1896,8 @@ async def get_public_apartment(apartment_id: str):
 
 # Chat Routes
 @api_router.post("/chat")
-async def chat_with_ai(chat_request: ChatRequest):
+@limiter.limit("30/minute")  # Limit chat requests to prevent spam
+async def chat_with_ai(request: Request, chat_request: ChatRequest):
     """Chat with AI assistant for specific apartment (public route)"""
     try:
         # Get apartment data
