@@ -14,12 +14,19 @@ class MyHostIQAPITester:
         self.token = None
         self.user_id = None
         self.email_credentials_id = None
+        self.admin_token = None
         
         # Test user data - using specified credentials from review request
         self.test_user = {
             "email": "test@example.com",
             "full_name": "Test User",
             "password": "testpass123"
+        }
+        
+        # Admin credentials from review request
+        self.admin_credentials = {
+            "username": "myhomeiq_admin",
+            "password": "Admin123!MyHomeIQ"
         }
         
         # Test email credentials for testing
