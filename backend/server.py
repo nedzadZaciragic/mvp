@@ -50,6 +50,19 @@ app = FastAPI(
     redoc_url="/redoc" if os.getenv("ENVIRONMENT") != "production" else None
 )
 
+# Rate limiting setup
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Security Middleware
+app.add_middleware(
+    TrustedHostMiddleware, 
+    allowed_hosts=["*"]  # Configure properly in production
+)
+
+app.add_middleware(SlowAPIMiddleware)
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
