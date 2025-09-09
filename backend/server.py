@@ -1768,7 +1768,7 @@ async def get_admin_user_from_token(credentials: HTTPAuthorizationCredentials = 
 async def get_all_users(request: Request, admin_user: dict = Depends(get_admin_user_from_token)):
     """Get all users - Admin only"""
     try:
-        users = await db.users.find({}, {"hashed_password": 0}).to_list(length=None)
+        users = await db.users.find({}, {"hashed_password": 0, "_id": 0}).to_list(length=None)
         return users
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1778,7 +1778,7 @@ async def get_all_users(request: Request, admin_user: dict = Depends(get_admin_u
 async def get_all_apartments(request: Request, admin_user: dict = Depends(get_admin_user_from_token)):
     """Get all apartments - Admin only"""
     try:
-        apartments = await db.apartments.find().to_list(length=None)
+        apartments = await db.apartments.find({}, {"_id": 0}).to_list(length=None)
         return apartments
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
