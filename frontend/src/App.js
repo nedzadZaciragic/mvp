@@ -3654,20 +3654,20 @@ const HostDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Enhanced Onboarding Guide */}
-        <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center text-blue-900">
-              <Target className="h-6 w-6 mr-2" />
+        <Card className="mb-6 sm:mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="flex items-center text-blue-900 text-lg sm:text-xl">
+              <Target className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
               MyHostIQ Setup Guide
             </CardTitle>
-            <CardDescription className="text-blue-700">
+            <CardDescription className="text-blue-700 text-sm sm:text-base">
               Complete these steps to maximize your guest satisfaction
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <div className="flex items-center mb-3">
                   <div className="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-3">
