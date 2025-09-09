@@ -1323,7 +1323,7 @@ const LandingHome = () => {
           }}></div>
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-6 py-16">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
           <div className="text-center mb-12">
             {/* Logo - Much better visibility on light background */}
             <div className="mb-6">
