@@ -2491,6 +2491,20 @@ def main():
         ("📅 Test iCal Sync", tester.test_ical_sync),
         ("📬 Get Booking Notifications", tester.test_get_notifications),
         
+        # NEW AI-POWERED ENDPOINTS TESTS - HIGH PRIORITY
+        ("🤖 AI Insights Endpoint", tester.test_ai_insights_endpoint),
+        ("🤖 AI Insights Rate Limiting", tester.test_ai_insights_rate_limiting),
+        ("🤖 AI Insights Invalid Apartment", tester.test_ai_insights_invalid_apartment),
+        ("🤖 AI Insights No Auth", tester.test_ai_insights_no_auth),
+        ("🔍 Question Normalization Endpoint", tester.test_question_normalization_endpoint),
+        ("🔍 Question Normalization Rate Limiting", tester.test_question_normalization_rate_limiting),
+        ("🔍 Question Normalization No Data", tester.test_question_normalization_no_data),
+        ("📋 Detailed iCal Test Endpoint", tester.test_detailed_ical_test_endpoint),
+        ("📋 Detailed iCal Test Rate Limiting", tester.test_detailed_ical_test_rate_limiting),
+        ("📋 Detailed iCal Test No iCal URL", tester.test_detailed_ical_test_no_ical_url),
+        ("🧠 AI Endpoints Emergent LLM Integration", tester.test_ai_endpoints_emergent_llm_integration),
+        ("⚠️ AI Endpoints Error Handling", tester.test_ai_endpoints_error_handling),
+        
         # CORE FUNCTIONALITY
         ("🤖 AI Chat (CRITICAL)", tester.test_ai_chat),
         ("📊 Analytics Dashboard", tester.test_analytics_dashboard),
