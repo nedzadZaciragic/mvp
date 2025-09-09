@@ -3624,29 +3624,29 @@ const HostDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Enhanced Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Building2 className="h-8 w-8 text-blue-600" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="bg-blue-100 p-2 sm:p-3 rounded-full">
+                <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                   {whitelabelData.brand_name}
                 </h1>
-                <p className="text-gray-600 mt-1">Welcome back, {user?.full_name}</p>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Welcome back, {user?.full_name}</p>
                 {whitelabelData.custom_domain && (
-                  <p className="text-sm text-blue-600">Custom domain: {whitelabelData.custom_domain}</p>
+                  <p className="text-xs sm:text-sm text-blue-600">Custom domain: {whitelabelData.custom_domain}</p>
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" />
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto">
+              <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none text-sm sm:text-base">
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Add Property
               </Button>
-              <Button onClick={logout} variant="outline">
-                <LogOut className="h-4 w-4 mr-2" />
+              <Button onClick={logout} variant="outline" className="text-sm sm:text-base">
+                <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Logout
               </Button>
             </div>
