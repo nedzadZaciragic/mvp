@@ -27,11 +27,11 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Updated brand colors based on the logo
+// Updated brand colors - much lighter blue tones
 const BRAND_COLORS = {
-  primary: "#2563eb", // Blue from logo
-  secondary: "#1d4ed8", // Darker blue
-  accent: "#3b82f6", // Light blue
+  primary: "#93c5fd", // Much lighter blue
+  secondary: "#bfdbfe", // Very light blue
+  accent: "#dbeafe", // Super light blue
   success: "#10b981",
   warning: "#f59e0b",
   danger: "#ef4444"
