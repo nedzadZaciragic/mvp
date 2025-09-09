@@ -41,8 +41,14 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+# Initialize FastAPI app with security settings
+app = FastAPI(
+    title="MyHostIQ API",
+    description="Smart Guest Assistant Platform API",
+    version="1.0.0",
+    docs_url="/docs" if os.getenv("ENVIRONMENT") != "production" else None,
+    redoc_url="/redoc" if os.getenv("ENVIRONMENT") != "production" else None
+)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
