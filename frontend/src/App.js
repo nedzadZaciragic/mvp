@@ -1348,7 +1348,7 @@ const LandingHome = () => {
             </div>
             
             {/* Updated text colors for light background */}
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight text-gray-900">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-gray-900">
               Stop Answering the Same Guest Questions 
               <span className="block text-blue-600">Over and Over Again</span>
             </h2>
