@@ -66,6 +66,58 @@ app.add_middleware(
 
 app.add_middleware(SlowAPIMiddleware)
 
+# Global Exception Handlers  
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors gracefully"""
+    logger.error(f"Validation error on {request.url}: {exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": "Validation Error", 
+            "message": "Invalid request data",
+            "details": exc.errors()
+        }
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions gracefully"""
+    logger.error(f"HTTP error on {request.url}: {exc.detail}")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": "Request Error",
+            "message": exc.detail,
+            "status_code": exc.status_code
+        }
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle all other exceptions gracefully"""
+    logger.error(f"Unexpected error on {request.url}: {str(exc)}")
+    logger.error(f"Traceback: {traceback.format_exc()}")
+    
+    # Don't expose internal errors in production
+    if os.getenv("ENVIRONMENT") == "production":
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Internal Server Error",
+                "message": "An unexpected error occurred. Please try again later."
+            }
+        )
+    else:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Internal Server Error", 
+                "message": str(exc),
+                "traceback": traceback.format_exc()
+            }
+        )
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
