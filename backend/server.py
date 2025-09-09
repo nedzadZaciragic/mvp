@@ -990,8 +990,9 @@ class PasswordReset(BaseModel):
 
 # Authentication Routes
 @api_router.post("/auth/register", response_model=Token)
-async def register(user_data: UserCreate):
-    """Register new user"""
+@limiter.limit("5/minute")  # Limit registration attempts
+async def register_user(request: Request, user_data: UserCreate):
+    """Register a new user"""
     try:
         # Check if user already exists
         existing_user = await db.users.find_one({"email": user_data.email})
