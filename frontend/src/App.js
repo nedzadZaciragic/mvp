@@ -1359,22 +1359,22 @@ const LandingHome = () => {
               <span className="block mt-2 text-base sm:text-lg text-gray-700">More happy guests, less stress for you.</span>
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
               <Button 
                 onClick={handleStartTrial}
                 size="lg" 
-                className="bg-blue-500 hover:bg-blue-600 text-white px-10 py-5 text-xl font-semibold shadow-lg transform hover:scale-105 transition-all"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl font-semibold shadow-lg transform hover:scale-105 transition-all"
               >
-                <Zap className="h-6 w-6 mr-3" />
+                <Zap className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
                 Start Free Trial
               </Button>
               <Button 
                 onClick={() => setShowDemo(true)}
                 variant="outline" 
                 size="lg" 
-                className="border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white px-10 py-5 text-xl transform hover:scale-105 transition-all"
+                className="border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white px-6 sm:px-10 py-4 sm:py-5 text-lg sm:text-xl transform hover:scale-105 transition-all"
               >
-                <PlayCircle className="h-6 w-6 mr-3" />
+                <PlayCircle className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
                 See Live Demo
               </Button>
             </div>
