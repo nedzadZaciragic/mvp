@@ -1017,7 +1017,7 @@ const DemoChat = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-lg border h-[500px] flex flex-col">
-      <div className="p-4 border-b bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-t-xl">
+      <div className="p-4 border-b bg-gradient-to-r from-blue-400 to-indigo-500 text-white rounded-t-xl">
         <div className="flex items-center space-x-3">
           <div className="bg-white/20 p-2 rounded-lg">
             <Bot className="h-5 w-5" />
