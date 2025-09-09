@@ -1795,6 +1795,16 @@ def main():
         ("🔐 Get Current User", tester.test_get_current_user),
         ("🎨 Update Whitelabel Settings", tester.test_update_whitelabel_settings),
         
+        # ADMIN FUNCTIONALITY TESTS - HIGH PRIORITY
+        ("🔐 Admin Login - Correct Credentials", tester.test_admin_login_correct_credentials),
+        ("🔐 Admin Login - Incorrect Credentials", tester.test_admin_login_incorrect_credentials),
+        ("🔐 Admin Login Rate Limiting", tester.test_admin_login_rate_limiting),
+        ("🔐 Admin Token Validation", tester.test_admin_token_validation),
+        ("🔐 Admin Protected Endpoints", tester.test_admin_protected_endpoints),
+        ("🔐 Non-Admin Access to Admin Endpoints", tester.test_non_admin_access_to_admin_endpoints),
+        ("🔐 Admin Endpoints Without Token", tester.test_admin_endpoints_without_token),
+        ("🔐 Admin JWT Token Structure", tester.test_admin_jwt_token_structure),
+        
         # EMAIL FUNCTIONALITY TESTS - HIGH PRIORITY
         ("📧 Create Email Credentials", tester.test_create_email_credentials),
         ("📧 Get Email Credentials", tester.test_get_email_credentials),
