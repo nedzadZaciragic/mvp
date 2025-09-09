@@ -1652,7 +1652,8 @@ async def import_property_from_url(
 
 # Admin Routes for Database Management
 @api_router.get("/admin/users", response_model=List[dict])
-async def get_all_users(current_user: User = Depends(get_current_user)):
+@limiter.limit("20/minute")  # Rate limit admin operations
+async def get_all_users(request: Request, current_admin: User = Depends(get_admin_user)):
     """Get all users - Admin only"""
     try:
         users = await db.users.find({}, {"hashed_password": 0}).to_list(length=None)
@@ -1661,7 +1662,8 @@ async def get_all_users(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/admin/apartments", response_model=List[dict])
-async def get_all_apartments(current_user: User = Depends(get_current_user)):
+@limiter.limit("20/minute")
+async def get_all_apartments(request: Request, current_admin: User = Depends(get_admin_user)):
     """Get all apartments - Admin only"""
     try:
         apartments = await db.apartments.find().to_list(length=None)
@@ -1670,10 +1672,12 @@ async def get_all_apartments(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.put("/admin/apartments/{apartment_id}")
+@limiter.limit("10/minute")
 async def admin_update_apartment(
+    request: Request,
     apartment_id: str,
     apartment_data: dict,
-    current_user: User = Depends(get_current_user)
+    current_admin: User = Depends(get_admin_user)
 ):
     """Update any apartment - Admin only"""
     try:
@@ -1693,9 +1697,11 @@ async def admin_update_apartment(
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.delete("/admin/apartments/{apartment_id}")
+@limiter.limit("5/minute")
 async def admin_delete_apartment(
+    request: Request,
     apartment_id: str,
-    current_user: User = Depends(get_current_user)
+    current_admin: User = Depends(get_admin_user)
 ):
     """Delete any apartment - Admin only"""
     try:
@@ -1711,29 +1717,9 @@ async def admin_delete_apartment(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/admin/chat-messages", response_model=List[dict])
-async def get_all_chat_messages(current_user: User = Depends(get_current_user)):
-    """Get all chat messages - Admin only"""
-    try:
-        messages = await db.chat_messages.find().to_list(length=None)
-        return messages
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@api_router.get("/admin/chat-messages/{apartment_id}")
-async def get_apartment_chat_messages(
-    apartment_id: str,
-    current_user: User = Depends(get_current_user)
-):
-    """Get chat messages for specific apartment - Admin only"""
-    try:
-        messages = await db.chat_messages.find({"apartment_id": apartment_id}).to_list(length=None)
-        return messages
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @api_router.get("/admin/stats")
-async def get_admin_stats(current_user: User = Depends(get_current_user)):
+@limiter.limit("30/minute")
+async def get_admin_stats(request: Request, current_admin: User = Depends(get_admin_user)):
     """Get overall platform statistics - Admin only"""
     try:
         # Count totals
