@@ -531,7 +531,7 @@ const PropertyLinkImporter = ({ onDataImported }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-lg">
             <CardHeader>
-              <CardTitle className="flex items-center text-blue-600">
+              <CardTitle className="flex items-center text-blue-400">{/* Much lighter blue */}
                 <LinkIcon className="h-5 w-5 mr-2" />
                 Import Property from Listing URL
               </CardTitle>
