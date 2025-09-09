@@ -1325,14 +1325,16 @@ const LandingHome = () => {
         
         <div className="relative max-w-7xl mx-auto px-6 py-24">
           <div className="text-center mb-16">
-            {/* Logo */}
+            {/* Logo - Enhanced with better contrast */}
             <div className="mb-8">
               <img 
-                src="https://customer-assets.emergentagent.com/job_hostai/artifacts/s1jbiqoq_image-removebg-preview%20%281%29.png" 
+                src="https://customer-assets.emergentagent.com/job_hostai/artifacts/uhrjjvxe_image-removebg-preview%20%282%29.png" 
                 alt="MyHomeIQ Logo" 
-                className="h-24 mx-auto mb-4 filter drop-shadow-lg"
+                className="h-28 mx-auto mb-6 filter drop-shadow-2xl"
+                style={{
+                  filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 30px rgba(59, 130, 246, 0.3))'
+                }}
                 onError={(e) => {
-                  // Fallback to text if image fails to load
                   e.target.style.display = 'none';
                   e.target.nextElementSibling.style.display = 'block';
                 }}
@@ -1343,7 +1345,6 @@ const LandingHome = () => {
               >
                 My<span className="text-blue-400">Home</span>IQ
               </h1>
-              <div className="w-24 h-1 bg-blue-400 mx-auto rounded-full"></div>
             </div>
             
             {/* New compelling hook */}
