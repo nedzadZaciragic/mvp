@@ -746,7 +746,7 @@ const QRCodeGenerator = ({ apartmentId, apartmentName, brandName, onClose }) => 
           <div className="flex space-x-3">
             <Button 
               onClick={downloadPDF} 
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 bg-blue-400 hover:bg-blue-500"
             >
               <Download className="h-4 w-4 mr-2" />
               Download PDF
