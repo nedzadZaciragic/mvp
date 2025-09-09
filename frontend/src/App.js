@@ -1311,28 +1311,28 @@ const LandingHome = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with enhanced contrast for bright logo */}
-      <section className="relative py-20 overflow-hidden text-white">
-        {/* Enhanced background with better contrast */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-gray-900 to-slate-900">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 to-indigo-900/40"></div>
+      {/* Hero Section with much lighter background for logo visibility */}
+      <section className="relative py-12 overflow-hidden text-gray-800">
+        {/* Much lighter background for better logo visibility */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-100/30 to-indigo-100/30"></div>
           <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-                             radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                             radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`
+            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                             radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                             radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%)`
           }}></div>
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-6 py-24">
-          <div className="text-center mb-16">
-            {/* Logo - Enhanced with better contrast */}
-            <div className="mb-8">
+        <div className="relative max-w-7xl mx-auto px-6 py-16">
+          <div className="text-center mb-12">
+            {/* Logo - Much better visibility on light background */}
+            <div className="mb-6">
               <img 
                 src="https://customer-assets.emergentagent.com/job_hostai/artifacts/uhrjjvxe_image-removebg-preview%20%282%29.png" 
                 alt="MyHomeIQ Logo" 
-                className="h-28 mx-auto mb-6 filter drop-shadow-2xl"
+                className="h-24 mx-auto mb-4 filter drop-shadow-lg"
                 style={{
-                  filter: 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 30px rgba(59, 130, 246, 0.3))'
+                  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15))'
                 }}
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -1340,23 +1340,23 @@ const LandingHome = () => {
                 }}
               />
               <h1 
-                className="text-6xl font-bold text-white hidden"
+                className="text-6xl font-bold text-gray-800 hidden"
                 style={{ display: 'none' }}
               >
-                My<span className="text-blue-400">Home</span>IQ
+                My<span className="text-blue-500">Home</span>IQ
               </h1>
             </div>
             
-            {/* New compelling hook */}
-            <h2 className="text-3xl md:text-5xl font-bold mb-8 leading-tight">
+            {/* Updated text colors for light background */}
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight text-gray-900">
               Stop Answering the Same Guest Questions 
-              <span className="block text-blue-300">Over and Over Again</span>
+              <span className="block text-blue-600">Over and Over Again</span>
             </h2>
             
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Your AI assistant handles <span className="text-blue-300 font-semibold">80% of guest questions</span> instantly - 
+            <p className="text-xl md:text-2xl text-gray-700 mb-10 max-w-4xl mx-auto leading-relaxed">
+              Your AI assistant handles <span className="text-blue-600 font-semibold">80% of guest questions</span> instantly - 
               from check-in instructions to restaurant recommendations. 
-              <span className="block mt-2 text-lg">More happy guests, less stress for you.</span>
+              <span className="block mt-2 text-lg text-gray-600">More happy guests, less stress for you.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
