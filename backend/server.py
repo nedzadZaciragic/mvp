@@ -1029,7 +1029,8 @@ async def register_user(request: Request, user_data: UserCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/auth/login", response_model=Token)
-async def login(user_data: UserLogin):
+@limiter.limit("10/minute")  # Limit login attempts 
+async def login(request: Request, user_data: UserLogin):
     """Login user"""
     try:
         # Find user
