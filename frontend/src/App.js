@@ -1311,15 +1311,15 @@ const LandingHome = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section with improved colors */}
-      <section className="relative py-20 overflow-hidden">
-        {/* Background with better contrast */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20"></div>
+      {/* Hero Section with enhanced contrast for bright logo */}
+      <section className="relative py-20 overflow-hidden text-white">
+        {/* Enhanced background with better contrast */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-gray-900 to-slate-900">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 to-indigo-900/40"></div>
           <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-                             radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-                             radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)`
+            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                             radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                             radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)`
           }}></div>
         </div>
         
