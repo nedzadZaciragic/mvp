@@ -4343,6 +4343,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/admin" element={<AdminLogin />} />
             <Route 
               path="/dashboard" 
               element={
