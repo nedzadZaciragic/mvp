@@ -1733,7 +1733,7 @@ async def admin_login(request: Request, credentials: dict):
         return Token(
             access_token=access_token,
             token_type="bearer",
-            user_info={
+            user={
                 "id": "admin_user",
                 "email": "admin@myhomeiq.com",
                 "full_name": "MyHomeIQ Admin",
