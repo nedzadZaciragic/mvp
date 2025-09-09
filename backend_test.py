@@ -1780,8 +1780,8 @@ class MyHostIQAPITester:
         return success
 
 def main():
-    print("🚀 Starting MyHostIQ Email & Payment Testing...")
-    print("📧 Testing Email Credentials, SMTP, and Payment Simulation")
+    print("🚀 Starting MyHostIQ Admin Login Testing...")
+    print("🔐 Testing Admin Authentication, Authorization, and Protected Endpoints")
     print("=" * 70)
     
     # Initialize tester
