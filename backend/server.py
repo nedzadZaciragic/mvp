@@ -2233,7 +2233,7 @@ async def get_public_apartment(apartment_id: str):
             del apartment['_id']
         
         return {
-            **apartment,  # Return FULL apartment data as top-level fields
+            "apartment": apartment,  # Return FULL apartment data under apartment key
             "branding": branding
         }
     except Exception as e:
