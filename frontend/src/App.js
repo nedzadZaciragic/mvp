@@ -3932,7 +3932,17 @@ const HostDashboard = () => {
           restaurants: [],
           hidden_gems: [],
           transport: ""
-        }
+        },
+        // Check-in/Check-out information
+        check_in_time: "",
+        check_out_time: "",
+        check_in_instructions: "",
+        // Apartment items locations
+        apartment_locations: {},
+        // WiFi information
+        wifi_network: "",
+        wifi_password: "",
+        wifi_instructions: ""
       });
       setShowForm(false);
       setEditingApartment(null);
