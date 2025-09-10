@@ -1310,7 +1310,7 @@ const LandingHome = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen landing-page">
       {/* Hero Section with much lighter background for logo visibility */}
       <section className="relative py-12 overflow-hidden text-gray-800">
         {/* Much lighter background for better logo visibility */}
