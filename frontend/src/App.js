@@ -3252,9 +3252,9 @@ const AdminLogin = () => {
 
     try {
       const response = await axios.post(`${API}/admin/login`, credentials);
-      localStorage.setItem('authToken', response.data.access_token);
+      localStorage.setItem('adminToken', response.data.access_token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
-      navigate('/dashboard');
+      navigate('/admin/dashboard');
     } catch (error) {
       setError(error.response?.data?.detail || 'Invalid admin credentials');
     } finally {
