@@ -3062,10 +3062,10 @@ const AdminDashboard = ({ adminToken }) => {
       {/* Edit Modal */}
       {editingApartment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">Edit Apartment</h3>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold">Admin Edit: {editingApartment.name}</h3>
                 <Button 
                   onClick={() => setEditingApartment(null)}
                   variant="ghost"
@@ -3075,66 +3075,451 @@ const AdminDashboard = ({ adminToken }) => {
                 </Button>
               </div>
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Name</label>
-                    <Input
-                      value={formData.name}
-                      onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
-                      placeholder="Apartment name"
-                    />
+              <div className="space-y-8">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">Basic Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Name</label>
+                      <Input
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                        placeholder="Apartment name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Address</label>
+                      <Input
+                        value={formData.address}
+                        onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
+                        placeholder="Full address"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Address</label>
-                    <Input
-                      value={formData.address}
-                      onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
-                      placeholder="Full address"
-                    />
-                  </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    rows="3"
-                    placeholder="Property description"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Check-in Time</label>
-                    <Input
-                      value={formData.check_in}
-                      onChange={(e) => setFormData(prev => ({...prev, check_in: e.target.value}))}
-                      placeholder="e.g., 3:00 PM"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Check-out Time</label>
-                    <Input
-                      value={formData.check_out}
-                      onChange={(e) => setFormData(prev => ({...prev, check_out: e.target.value}))}
-                      placeholder="e.g., 11:00 AM"
+                    <label className="block text-sm font-medium mb-2">Description</label>
+                    <Textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+                      rows="3"
+                      placeholder="Property description"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">iCal URL</label>
-                  <Input
-                    value={formData.ical_url}
-                    onChange={(e) => setFormData(prev => ({...prev, ical_url: e.target.value}))}
-                    placeholder="Calendar sync URL"
-                  />
+                {/* Check-in/Check-out Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">Check-in & Check-out</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Check-in Time</label>
+                      <Input
+                        value={formData.check_in_time || formData.check_in || ""}
+                        onChange={(e) => setFormData(prev => ({...prev, check_in_time: e.target.value}))}
+                        placeholder="e.g., 15:00 or 3:00 PM"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Check-out Time</label>
+                      <Input
+                        value={formData.check_out_time || formData.check_out || ""}
+                        onChange={(e) => setFormData(prev => ({...prev, check_out_time: e.target.value}))}
+                        placeholder="e.g., 11:00 or 11:00 AM"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Check-in Instructions</label>
+                    <Textarea
+                      value={formData.check_in_instructions || ""}
+                      onChange={(e) => setFormData(prev => ({...prev, check_in_instructions: e.target.value}))}
+                      rows="3"
+                      placeholder="Detailed check-in instructions for guests"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4 border-t">
+                {/* WiFi Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">WiFi Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">WiFi Network</label>
+                      <Input
+                        value={formData.wifi_network || ""}
+                        onChange={(e) => setFormData(prev => ({...prev, wifi_network: e.target.value}))}
+                        placeholder="Network name (SSID)"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">WiFi Password</label>
+                      <Input
+                        value={formData.wifi_password || ""}
+                        onChange={(e) => setFormData(prev => ({...prev, wifi_password: e.target.value}))}
+                        placeholder="WiFi password"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">WiFi Instructions</label>
+                    <Textarea
+                      value={formData.wifi_instructions || ""}
+                      onChange={(e) => setFormData(prev => ({...prev, wifi_instructions: e.target.value}))}
+                      rows="2"
+                      placeholder="Any special WiFi setup instructions"
+                    />
+                  </div>
+                </div>
+
+                {/* Apartment Locations */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">Item Locations</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Keys Location</label>
+                      <Input
+                        value={formData.apartment_locations?.keys || ""}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev, 
+                          apartment_locations: {...(prev.apartment_locations || {}), keys: e.target.value}
+                        }))}
+                        placeholder="Where to find keys"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Towels Location</label>
+                      <Input
+                        value={formData.apartment_locations?.towels || ""}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev, 
+                          apartment_locations: {...(prev.apartment_locations || {}), towels: e.target.value}
+                        }))}
+                        placeholder="Where to find towels"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Kitchen Utensils</label>
+                      <Input
+                        value={formData.apartment_locations?.kitchen_utensils || ""}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev, 
+                          apartment_locations: {...(prev.apartment_locations || {}), kitchen_utensils: e.target.value}
+                        }))}
+                        placeholder="Where to find kitchen items"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Cleaning Supplies</label>
+                      <Input
+                        value={formData.apartment_locations?.cleaning_supplies || ""}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev, 
+                          apartment_locations: {...(prev.apartment_locations || {}), cleaning_supplies: e.target.value}
+                        }))}
+                        placeholder="Where to find cleaning supplies"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Other Important Items</label>
+                    <Textarea
+                      value={formData.apartment_locations?.other || ""}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev, 
+                        apartment_locations: {...(prev.apartment_locations || {}), other: e.target.value}
+                      }))}
+                      rows="2"
+                      placeholder="Other important item locations"
+                    />
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">Contact Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Email</label>
+                      <Input
+                        value={formData.contact?.email || ""}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev, 
+                          contact: {...(prev.contact || {}), email: e.target.value}
+                        }))}
+                        placeholder="Contact email"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Phone</label>
+                      <Input
+                        value={formData.contact?.phone || ""}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev, 
+                          contact: {...(prev.contact || {}), phone: e.target.value}
+                        }))}
+                        placeholder="Contact phone"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">WhatsApp</label>
+                      <Input
+                        value={formData.contact?.whatsapp || ""}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev, 
+                          contact: {...(prev.contact || {}), whatsapp: e.target.value}
+                        }))}
+                        placeholder="WhatsApp number"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rules */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">House Rules</h4>
+                  <div className="space-y-2">
+                    {(formData.rules || []).map((rule, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input
+                          value={rule}
+                          onChange={(e) => {
+                            const newRules = [...(formData.rules || [])];
+                            newRules[index] = e.target.value;
+                            setFormData(prev => ({...prev, rules: newRules}));
+                          }}
+                          placeholder="House rule"
+                        />
+                        <Button
+                          onClick={() => {
+                            const newRules = (formData.rules || []).filter((_, i) => i !== index);
+                            setFormData(prev => ({...prev, rules: newRules}));
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev, 
+                          rules: [...(prev.rules || []), ""]
+                        }));
+                      }}
+                      variant="outline"
+                      size="sm"
+                    >
+                      + Add Rule
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Recommendations */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">Local Recommendations</h4>
+                  
+                  {/* Restaurants */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Restaurants</label>
+                    <div className="space-y-2">
+                      {(formData.recommendations?.restaurants || []).map((restaurant, index) => (
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <Input
+                            value={restaurant.name || ""}
+                            onChange={(e) => {
+                              const newRestaurants = [...(formData.recommendations?.restaurants || [])];
+                              newRestaurants[index] = {...newRestaurants[index], name: e.target.value};
+                              setFormData(prev => ({
+                                ...prev, 
+                                recommendations: {
+                                  ...(prev.recommendations || {}), 
+                                  restaurants: newRestaurants
+                                }
+                              }));
+                            }}
+                            placeholder="Restaurant name"
+                          />
+                          <Input
+                            value={restaurant.type || ""}
+                            onChange={(e) => {
+                              const newRestaurants = [...(formData.recommendations?.restaurants || [])];
+                              newRestaurants[index] = {...newRestaurants[index], type: e.target.value};
+                              setFormData(prev => ({
+                                ...prev, 
+                                recommendations: {
+                                  ...(prev.recommendations || {}), 
+                                  restaurants: newRestaurants
+                                }
+                              }));
+                            }}
+                            placeholder="Cuisine type"
+                          />
+                          <div className="flex space-x-2">
+                            <Input
+                              value={restaurant.tip || ""}
+                              onChange={(e) => {
+                                const newRestaurants = [...(formData.recommendations?.restaurants || [])];
+                                newRestaurants[index] = {...newRestaurants[index], tip: e.target.value};
+                                setFormData(prev => ({
+                                  ...prev, 
+                                  recommendations: {
+                                    ...(prev.recommendations || {}), 
+                                    restaurants: newRestaurants
+                                  }
+                                }));
+                              }}
+                              placeholder="Tip or description"
+                            />
+                            <Button
+                              onClick={() => {
+                                const newRestaurants = (formData.recommendations?.restaurants || []).filter((_, i) => i !== index);
+                                setFormData(prev => ({
+                                  ...prev, 
+                                  recommendations: {
+                                    ...(prev.recommendations || {}), 
+                                    restaurants: newRestaurants
+                                  }
+                                }));
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev, 
+                            recommendations: {
+                              ...(prev.recommendations || {}),
+                              restaurants: [...(prev.recommendations?.restaurants || []), {name: "", type: "", tip: ""}]
+                            }
+                          }));
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        + Add Restaurant
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Hidden Gems */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Hidden Gems & Local Tips</label>
+                    <div className="space-y-2">
+                      {(formData.recommendations?.hidden_gems || []).map((gem, index) => (
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <Input
+                            value={gem.name || ""}
+                            onChange={(e) => {
+                              const newGems = [...(formData.recommendations?.hidden_gems || [])];
+                              newGems[index] = {...newGems[index], name: e.target.value};
+                              setFormData(prev => ({
+                                ...prev, 
+                                recommendations: {
+                                  ...(prev.recommendations || {}), 
+                                  hidden_gems: newGems
+                                }
+                              }));
+                            }}
+                            placeholder="Place or attraction name"
+                          />
+                          <div className="flex space-x-2">
+                            <Input
+                              value={gem.tip || ""}
+                              onChange={(e) => {
+                                const newGems = [...(formData.recommendations?.hidden_gems || [])];
+                                newGems[index] = {...newGems[index], tip: e.target.value};
+                                setFormData(prev => ({
+                                  ...prev, 
+                                  recommendations: {
+                                    ...(prev.recommendations || {}), 
+                                    hidden_gems: newGems
+                                  }
+                                }));
+                              }}
+                              placeholder="Why visit / tip"
+                            />
+                            <Button
+                              onClick={() => {
+                                const newGems = (formData.recommendations?.hidden_gems || []).filter((_, i) => i !== index);
+                                setFormData(prev => ({
+                                  ...prev, 
+                                  recommendations: {
+                                    ...(prev.recommendations || {}), 
+                                    hidden_gems: newGems
+                                  }
+                                }));
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev, 
+                            recommendations: {
+                              ...(prev.recommendations || {}),
+                              hidden_gems: [...(prev.recommendations?.hidden_gems || []), {name: "", tip: ""}]
+                            }
+                          }));
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        + Add Hidden Gem
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Transport */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Transport Tips</label>
+                    <Textarea
+                      value={formData.recommendations?.transport || ""}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev, 
+                        recommendations: {
+                          ...(prev.recommendations || {}), 
+                          transport: e.target.value
+                        }
+                      }))}
+                      rows="3"
+                      placeholder="Transport information - how to get around, public transport, parking, etc."
+                    />
+                  </div>
+                </div>
+
+                {/* Calendar Integration */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">Calendar Integration</h4>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">iCal URL</label>
+                    <Input
+                      value={formData.ical_url}
+                      onChange={(e) => setFormData(prev => ({...prev, ical_url: e.target.value}))}
+                      placeholder="Airbnb/Booking.com calendar URL"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-6 border-t">
                   <Button 
                     onClick={() => setEditingApartment(null)}
                     variant="outline"
@@ -3142,7 +3527,7 @@ const AdminDashboard = ({ adminToken }) => {
                     Cancel
                   </Button>
                   <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-                    Save Changes
+                    Save All Changes
                   </Button>
                 </div>
               </div>
