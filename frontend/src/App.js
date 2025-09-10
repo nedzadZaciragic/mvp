@@ -1956,8 +1956,20 @@ const GuestChat = ({ apartmentId }) => {
             <div className={`max-w-[85%] sm:max-w-[80%] ${message.type === 'user' ? 'ml-12' : 'mr-12'}`}>
               {message.type === 'ai' && (
                 <div className="flex items-center space-x-2 mb-2">
-                  <div className="bg-gray-100 p-1.5 rounded-full">
-                    <Bot className="h-4 w-4 text-gray-600" />
+                  <div className="bg-gray-100 p-0 rounded-full w-8 h-8 flex items-center justify-center overflow-hidden">
+                    {branding.brand_logo_url ? (
+                      <img 
+                        src={branding.brand_logo_url} 
+                        alt="Brand Logo" 
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => {
+                          // Fallback to Bot icon if image fails to load
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
+                    <Bot className={`h-4 w-4 text-gray-600 ${branding.brand_logo_url ? 'hidden' : 'block'}`} />
                   </div>
                   <span className="text-sm text-gray-600 font-medium">{branding.ai_assistant_name || 'AI Assistant'}</span>
                 </div>
