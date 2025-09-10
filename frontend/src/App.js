@@ -21,7 +21,7 @@ import {
   Activity, Download, Upload, Link as LinkIcon, PieChart, Car,
   QrCode, FileText, Printer, MousePointer, Smartphone, UserPlus,
   PaintBucket, BarChart, Target, Sparkles, Edit, AlertTriangle,
-  Headphones, Volume2, VolumeX, BookOpen, Briefcase
+  Headphones, Volume2, VolumeX, BookOpen, Briefcase, Trash2
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
