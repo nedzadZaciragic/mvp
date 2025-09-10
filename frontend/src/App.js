@@ -1714,7 +1714,7 @@ const GuestChat = ({ apartmentId }) => {
   const primaryColor = branding.brand_primary_color || BRAND_COLORS.primary;
 
   return (
-    <div className="mobile-chat-container bg-gray-100 flex flex-col overflow-hidden">
+    <div className="h-screen bg-gray-100 flex flex-col">
       {/* Header - Blue gradient like in image */}
       <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white flex-shrink-0">
         <div className="flex items-center space-x-3">
@@ -1728,17 +1728,18 @@ const GuestChat = ({ apartmentId }) => {
         </div>
       </div>
 
-      {/* Messages Container - Scrollable middle section */}
+      {/* Messages Container - SCROLLABLE */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 relative bg-white"
+        className="flex-1 overflow-y-auto p-4 space-y-4 bg-white"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{ 
           transform: `translateY(${pullDistance * 0.5}px)`,
           transition: pullDistance === 0 ? 'transform 0.3s ease' : 'none',
-          paddingBottom: '120px' // Extra space to prevent last message being hidden
+          WebkitOverflowScrolling: 'touch', // iOS smooth scrolling
+          paddingBottom: '20px' // Space above input
         }}
       >
         {/* Pull-to-refresh indicator */}
