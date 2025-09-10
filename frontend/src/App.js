@@ -1813,7 +1813,7 @@ const GuestChat = ({ apartmentId }) => {
       </div>
 
       {/* Fixed Input at Bottom - Like ChatGPT Mobile */}
-      <div className="bg-white border-t border-gray-200 p-4 flex-shrink-0 safe-area-bottom">
+      <div className="bg-white border-t border-gray-200 p-4 flex-shrink-0 chat-input-container safe-area-bottom">
         {/* Suggestions - Only on larger screens */}
         <div className="mb-3 hidden sm:block">
           <div className="flex flex-wrap gap-2">
