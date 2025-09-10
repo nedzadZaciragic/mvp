@@ -3530,23 +3530,6 @@ const AdminDashboard = ({ adminToken }) => {
                       </Button>
                     </div>
                   </div>
-                      <Button
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev, 
-                            recommendations: {
-                              ...(prev.recommendations || {}),
-                              hidden_gems: [...(prev.recommendations?.hidden_gems || []), {name: "", tip: ""}]
-                            }
-                          }));
-                        }}
-                        variant="outline"
-                        size="sm"
-                      >
-                        + Add Hidden Gem
-                      </Button>
-                    </div>
-                  </div>
 
                   {/* Transport */}
                   <div>
