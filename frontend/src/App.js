@@ -3004,11 +3004,24 @@ const AdminDashboard = ({ adminToken }) => {
       description: apartment.description || '',
       rules: apartment.rules || [],
       amenities: apartment.amenities || [],
-      check_in: apartment.check_in_time || '',
-      check_out: apartment.check_out_time || '',
-      recommendations: apartment.recommendations || { restaurants: [], hidden_gems: [] },
-      contact: apartment.emergency_contact || { phone: '', email: '', whatsapp: '' },
-      ical_url: apartment.ical_url || ''
+      contact: apartment.emergency_contact || apartment.contact || { phone: '', email: '', whatsapp: '' },
+      ical_url: apartment.ical_url || '',
+      // Check-in/Check-out information
+      check_in_time: apartment.check_in_time || '',
+      check_out_time: apartment.check_out_time || '', 
+      check_in_instructions: apartment.check_in_instructions || '',
+      // Apartment items locations
+      apartment_locations: apartment.apartment_locations || {},
+      // WiFi information
+      wifi_network: apartment.wifi_network || '',
+      wifi_password: apartment.wifi_password || '',
+      wifi_instructions: apartment.wifi_instructions || '',
+      // Recommendations
+      recommendations: apartment.recommendations || { 
+        restaurants: [], 
+        hidden_gems: [], 
+        transport: '' 
+      }
     });
   };
 
