@@ -2091,17 +2091,24 @@ const GuestChat = ({ apartmentId }) => {
            style={{ 
              paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
              boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-             bottom: '10px' // Raise input 10px higher
+             bottom: '20px' // Raise input 20px higher
            }}>
         <div className="p-4">
-          {/* Suggestions - Only on larger screens */}
-          <div className="mb-3 hidden sm:block">
+          {/* Enhanced Suggestions - Better mobile display */}
+          <div className="mb-3">
             <div className="flex flex-wrap gap-2">
-              {['Check-in instructions', 'WiFi password', 'Local restaurants', 'Emergency contacts'].map((suggestion) => (
+              {[
+                'How do I check in?', 
+                'What\'s the WiFi password?', 
+                'Where are the towels?', 
+                'Best nearby restaurants?',
+                'Emergency contacts?',
+                'House rules?'
+              ].map((suggestion) => (
                 <button
                   key={suggestion}
                   onClick={() => setInputMessage(suggestion)}
-                  className="text-xs px-3 py-1 bg-gray-50 border rounded-full hover:bg-gray-100 transition-colors"
+                  className="text-xs px-3 py-2 bg-blue-50 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors text-blue-700 font-medium"
                 >
                   {suggestion}
                 </button>
