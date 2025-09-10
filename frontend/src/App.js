@@ -1888,12 +1888,12 @@ const GuestChat = ({ apartmentId }) => {
       {/* Header - Blue gradient like in image */}
       <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white flex-shrink-0 z-10">
         <div className="flex items-center space-x-3">
-          <div className="bg-white/20 p-2 rounded-lg">
+          <div className="bg-white/20 p-0 rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden">
             {branding.brand_logo_url ? (
               <img 
                 src={branding.brand_logo_url} 
                 alt="Brand Logo" 
-                className="h-6 w-6 object-contain"
+                className="w-full h-full object-cover rounded-lg"
                 onError={(e) => {
                   // Fallback to Bot icon if image fails to load
                   e.target.style.display = 'none';
