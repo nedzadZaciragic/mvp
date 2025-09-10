@@ -5653,24 +5653,33 @@ const HostDashboard = () => {
                       <MapIcon className="h-5 w-5 mr-2" />
                       Hidden Gems & Local Attractions
                     </h3>
-                    <div className="flex space-x-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       <Input
                         placeholder="Place or attraction name"
                         value={newGem.name}
                         onChange={(e) => setNewGem(prev => ({...prev, name: e.target.value}))}
                       />
                       <Input
-                        placeholder="Why is it special? Your personal tip"
-                        value={newGem.tip}
-                        onChange={(e) => setNewGem(prev => ({...prev, tip: e.target.value}))}
+                        placeholder="Location/Address"
+                        value={newGem.location}
+                        onChange={(e) => setNewGem(prev => ({...prev, location: e.target.value}))}
                       />
-                      <Button type="button" onClick={addGem}>Add</Button>
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="Why is it special? Your personal tip"
+                          value={newGem.tip}
+                          onChange={(e) => setNewGem(prev => ({...prev, tip: e.target.value}))}
+                        />
+                        <Button type="button" onClick={addGem}>Add</Button>
+                      </div>
                     </div>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
                       {formData.recommendations.hidden_gems.map((gem, index) => (
                         <div key={index} className="bg-blue-50 p-3 rounded-lg text-sm flex justify-between items-start">
                           <div>
-                            <strong>{gem.name}</strong> - {gem.tip}
+                            <strong>{gem.name}</strong>
+                            {gem.location && <div className="text-gray-600">📍 {gem.location}</div>}
+                            <div className="text-gray-700">{gem.tip}</div>
                           </div>
                           <Button 
                             type="button" 
