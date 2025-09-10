@@ -107,39 +107,48 @@ user_problem_statement: "Fix multiple issues with MyHostIQ chatbot and property 
 backend:
   - task: "AI Bot Missing Host Information - Full Apartment Data Access"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Updated public apartment endpoint to return FULL apartment data instead of limited fields. Enhanced AI system prompt to include check-in/out times, WiFi information, and item locations. AI bot now has access to all host-configured information during guest conversations."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED SUCCESSFULLY: Public apartment endpoint now returns FULL apartment data including all new fields (check_in_time, check_out_time, check_in_instructions, wifi_network, wifi_password, wifi_instructions, apartment_locations) and branding data with ai_assistant_name. Fixed MongoDB ObjectId serialization issue. AI chat endpoint confirmed to have access to comprehensive property information - AI responses include check-in details, WiFi information, and other property-specific data. System prompt enhancement working correctly."
 
   - task: "Custom AI Assistant Name Field Implementation"
     implemented: true
-    working: "NA" 
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added ai_assistant_name field to User and WhitelabelSettings models. Updated public apartment endpoint to return ai_assistant_name in branding data. Modified whitelabel settings endpoint to handle the new field."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED SUCCESSFULLY: Custom AI assistant name field fully integrated. Whitelabel settings endpoint accepts and stores ai_assistant_name field. User profile endpoint (GET /auth/me) returns ai_assistant_name correctly. Public apartment endpoint includes ai_assistant_name in branding data. Tested with custom name 'Sofia - Your Personal Concierge' - all endpoints return the correct custom name. Integration complete across all required endpoints."
 
   - task: "Booking.com Link Parser Implementation"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py" 
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Created comprehensive scrape_booking_listing function with multiple extraction methods for property name, address, description, and rules. Updated property import endpoint to support both Airbnb and Booking.com URLs. Added fallback mechanisms and error handling."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED SUCCESSFULLY: Booking.com property import functionality working correctly. Tested multiple Booking.com URL formats (standard, with parameters, short URLs). Property import endpoint properly detects Booking.com URLs and uses scrape_booking_listing function. Fallback mechanisms working - generates meaningful property names like 'Booking.com Property (example-property)', provides helpful fallback messages for address ('Address not found - please enter manually') and description ('Property description not found - please add your own description'). Default Booking.com rules generated (Check-in from 15:00, Check-out until 11:00, No smoking, No pets, No parties). Both Airbnb and Booking.com imports working side-by-side with platform-specific handling."
 
   - task: "Email Credentials CRUD API"
     implemented: true
