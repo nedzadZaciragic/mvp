@@ -3446,7 +3446,7 @@ const AdminDashboard = ({ adminToken }) => {
                     <label className="block text-sm font-medium mb-2">Hidden Gems & Local Tips</label>
                     <div className="space-y-2">
                       {(formData.recommendations?.hidden_gems || []).map((gem, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2">
                           <Input
                             value={gem.name || ""}
                             onChange={(e) => {
@@ -3461,6 +3461,21 @@ const AdminDashboard = ({ adminToken }) => {
                               }));
                             }}
                             placeholder="Place or attraction name"
+                          />
+                          <Input
+                            value={gem.location || ""}
+                            onChange={(e) => {
+                              const newGems = [...(formData.recommendations?.hidden_gems || [])];
+                              newGems[index] = {...newGems[index], location: e.target.value};
+                              setFormData(prev => ({
+                                ...prev, 
+                                recommendations: {
+                                  ...(prev.recommendations || {}), 
+                                  hidden_gems: newGems
+                                }
+                              }));
+                            }}
+                            placeholder="Location/Address"
                           />
                           <div className="flex space-x-2">
                             <Input
@@ -3498,6 +3513,23 @@ const AdminDashboard = ({ adminToken }) => {
                           </div>
                         </div>
                       ))}
+                      <Button
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev, 
+                            recommendations: {
+                              ...(prev.recommendations || {}),
+                              hidden_gems: [...(prev.recommendations?.hidden_gems || []), {name: "", location: "", tip: ""}]
+                            }
+                          }));
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        + Add Hidden Gem
+                      </Button>
+                    </div>
+                  </div>
                       <Button
                         onClick={() => {
                           setFormData(prev => ({
