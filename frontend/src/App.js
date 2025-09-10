@@ -2589,8 +2589,165 @@ const AIInsightsDashboard = ({ apartments }) => {
   );
 };
 
-// Admin Dashboard Component
-const AdminDashboard = () => {
+// Separate Admin Page Component - Independent of regular auth
+const AdminPage = () => {
+  const [adminCredentials, setAdminCredentials] = useState({ username: '', password: '' });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [adminToken, setAdminToken] = useState(null);
+  const [error, setError] = useState('');
+
+  // Check if admin is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      setAdminToken(token);
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post(`${API}/admin/login`, {
+        username: adminCredentials.username,
+        password: adminCredentials.password
+      });
+
+      if (response.data.access_token) {
+        const token = response.data.access_token;
+        localStorage.setItem('adminToken', token);
+        setAdminToken(token);
+        setIsLoggedIn(true);
+        
+        // Set axios default header for admin requests
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.error('Admin login error:', error);
+      setError(error.response?.data?.detail || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('adminToken');
+    delete axios.defaults.headers.common['Authorization'];
+    setAdminToken(null);
+    setIsLoggedIn(false);
+    setAdminCredentials({ username: '', password: '' });
+  };
+
+  // Admin Login Form
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-gray-900">Admin Login</CardTitle>
+            <CardDescription>Access the MyHomeIQ Admin Dashboard</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Username
+                </label>
+                <Input
+                  type="text"
+                  value={adminCredentials.username}
+                  onChange={(e) => setAdminCredentials(prev => ({...prev, username: e.target.value}))}
+                  placeholder="myhomeiq_admin"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <Input
+                  type="password"
+                  value={adminCredentials.password}
+                  onChange={(e) => setAdminCredentials(prev => ({...prev, password: e.target.value}))}
+                  placeholder="Enter admin password"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </form>
+            
+            <div className="mt-4 text-center">
+              <p className="text-xs text-gray-500">
+                Admin credentials: myhomeiq_admin / Admin123!MyHomeIQ
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Admin Dashboard - Once logged in
+  return (
+    <div className="min-h-screen bg-gray-50 admin-dashboard">
+      {/* Admin Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <div className="bg-red-100 p-2 rounded-full">
+                <Shield className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p className="text-gray-600">MyHomeIQ Platform Management</p>
+              </div>
+            </div>
+            <Button onClick={handleAdminLogout} variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Admin Dashboard Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <AdminDashboard adminToken={adminToken} />
+      </div>
+    </div>
+  );
+};
+
+// Update AdminDashboard to accept adminToken prop
+const AdminDashboard = ({ adminToken }) => {
   const [users, setUsers] = useState([]);
   const [apartments, setApartments] = useState([]);
   const [allStats, setAllStats] = useState(null);
