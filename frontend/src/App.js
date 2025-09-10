@@ -4839,6 +4839,173 @@ const HostDashboard = () => {
                     </div>
                   </div>
 
+                  {/* Check-in/Check-out Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Clock className="h-5 w-5 mr-2" />
+                      Check-in & Check-out Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Time</label>
+                        <Input
+                          placeholder="e.g., 3:00 PM"
+                          value={formData.check_in_time}
+                          onChange={(e) => setFormData(prev => ({...prev, check_in_time: e.target.value}))}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Time</label>
+                        <Input
+                          placeholder="e.g., 11:00 AM"
+                          value={formData.check_out_time}
+                          onChange={(e) => setFormData(prev => ({...prev, check_out_time: e.target.value}))}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Instructions</label>
+                      <Textarea
+                        placeholder="Provide detailed check-in instructions: where to find keys, door codes, meeting location, etc."
+                        value={formData.check_in_instructions}
+                        onChange={(e) => setFormData(prev => ({...prev, check_in_instructions: e.target.value}))}
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+
+                  {/* WiFi Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <Globe className="h-5 w-5 mr-2" />
+                      WiFi Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Network Name (SSID)</label>
+                        <Input
+                          placeholder="e.g., MyApartmentWiFi"
+                          value={formData.wifi_network}
+                          onChange={(e) => setFormData(prev => ({...prev, wifi_network: e.target.value}))}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">WiFi Password</label>
+                        <Input
+                          placeholder="Enter WiFi password"
+                          value={formData.wifi_password}
+                          onChange={(e) => setFormData(prev => ({...prev, wifi_password: e.target.value}))}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">WiFi Connection Instructions</label>
+                      <Textarea
+                        placeholder="Any special instructions for connecting to WiFi (e.g., router location, troubleshooting tips)"
+                        value={formData.wifi_instructions}
+                        onChange={(e) => setFormData(prev => ({...prev, wifi_instructions: e.target.value}))}
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Apartment Items & Locations */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <MapPin className="h-5 w-5 mr-2" />
+                      Apartment Items & Locations
+                    </h3>
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600">
+                        Help guests find important items in your apartment
+                      </p>
+                      
+                      {/* Common apartment items */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Keys Location</label>
+                          <Input
+                            placeholder="e.g., under the mat, with concierge"
+                            value={formData.apartment_locations.keys || ""}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              apartment_locations: {...prev.apartment_locations, keys: e.target.value}
+                            }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Towels Location</label>
+                          <Input
+                            placeholder="e.g., bathroom closet, bedroom wardrobe"
+                            value={formData.apartment_locations.towels || ""}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              apartment_locations: {...prev.apartment_locations, towels: e.target.value}
+                            }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Bed Sheets Location</label>
+                          <Input
+                            placeholder="e.g., bedroom closet, under the bed"
+                            value={formData.apartment_locations.bedsheets || ""}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              apartment_locations: {...prev.apartment_locations, bedsheets: e.target.value}
+                            }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Kitchen Utensils</label>
+                          <Input
+                            placeholder="e.g., kitchen drawer, cabinet above sink"
+                            value={formData.apartment_locations.kitchen_utensils || ""}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              apartment_locations: {...prev.apartment_locations, kitchen_utensils: e.target.value}
+                            }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Cleaning Supplies</label>
+                          <Input
+                            placeholder="e.g., bathroom cabinet, under kitchen sink"
+                            value={formData.apartment_locations.cleaning_supplies || ""}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              apartment_locations: {...prev.apartment_locations, cleaning_supplies: e.target.value}
+                            }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">First Aid Kit</label>
+                          <Input
+                            placeholder="e.g., bathroom medicine cabinet"
+                            value={formData.apartment_locations.first_aid || ""}
+                            onChange={(e) => setFormData(prev => ({
+                              ...prev, 
+                              apartment_locations: {...prev.apartment_locations, first_aid: e.target.value}
+                            }))}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Additional items textarea */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Other Important Items</label>
+                        <Textarea
+                          placeholder="Describe locations of other important items: TV remote, air conditioning controls, extra blankets, etc."
+                          value={formData.apartment_locations.other || ""}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev, 
+                            apartment_locations: {...prev.apartment_locations, other: e.target.value}
+                          }))}
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* iCal Integration */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 flex items-center">
