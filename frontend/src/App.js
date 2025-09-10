@@ -3341,7 +3341,7 @@ const AdminDashboard = ({ adminToken }) => {
                     <label className="block text-sm font-medium mb-2">Restaurants</label>
                     <div className="space-y-2">
                       {(formData.recommendations?.restaurants || []).map((restaurant, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-2">
                           <Input
                             value={restaurant.name || ""}
                             onChange={(e) => {
@@ -3371,6 +3371,21 @@ const AdminDashboard = ({ adminToken }) => {
                               }));
                             }}
                             placeholder="Cuisine type"
+                          />
+                          <Input
+                            value={restaurant.location || ""}
+                            onChange={(e) => {
+                              const newRestaurants = [...(formData.recommendations?.restaurants || [])];
+                              newRestaurants[index] = {...newRestaurants[index], location: e.target.value};
+                              setFormData(prev => ({
+                                ...prev, 
+                                recommendations: {
+                                  ...(prev.recommendations || {}), 
+                                  restaurants: newRestaurants
+                                }
+                              }));
+                            }}
+                            placeholder="Location/Address"
                           />
                           <div className="flex space-x-2">
                             <Input
@@ -3414,7 +3429,7 @@ const AdminDashboard = ({ adminToken }) => {
                             ...prev, 
                             recommendations: {
                               ...(prev.recommendations || {}),
-                              restaurants: [...(prev.recommendations?.restaurants || []), {name: "", type: "", tip: ""}]
+                              restaurants: [...(prev.recommendations?.restaurants || []), {name: "", type: "", location: "", tip: ""}]
                             }
                           }));
                         }}
