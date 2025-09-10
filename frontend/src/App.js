@@ -1714,52 +1714,19 @@ const GuestChat = ({ apartmentId }) => {
   const primaryColor = branding.brand_primary_color || BRAND_COLORS.primary;
 
   return (
-    <div className="min-h-screen" style={{ background: `linear-gradient(135deg, ${primaryColor}15, ${primaryColor}05)` }}>
-      {/* Header with enhanced branding */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {branding.brand_logo_url ? (
-                <img src={branding.brand_logo_url} alt="Logo" className="h-10 w-10 rounded" />
-              ) : (
-                <div 
-                  className="p-2 rounded-lg" 
-                  style={{ backgroundColor: `${primaryColor}20` }}
-                >
-                  <Building2 className="h-6 w-6" style={{ color: primaryColor }} />
-                </div>
-              )}
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">{apartmentInfo.name}</h1>
-                <p className="text-sm text-gray-600">
-                  AI Assistant
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-gray-500">Powered by</p>
-              <p className="font-semibold text-blue-600">{branding.brand_name}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Chat Container - Mobile Optimized */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6 h-[calc(100vh-80px)] flex flex-col">
-        <div className="bg-white rounded-xl shadow-lg border flex-1 flex flex-col overflow-hidden">
-          {/* Welcome Message with enhanced branding */}
-          <div 
-            className="p-4 sm:p-6 border-b text-white rounded-t-xl flex-shrink-0"
-            style={{ background: `linear-gradient(135deg, ${primaryColor}, ${branding.brand_secondary_color || BRAND_COLORS.secondary})` }}
-          >
+    <div className="min-h-screen bg-gray-100">
+      {/* Chat Container - Full screen mobile design */}
+      <div className="h-screen flex flex-col">
+        <div className="bg-white shadow-lg flex-1 flex flex-col overflow-hidden">
+          {/* Header - Blue gradient like in image */}
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white flex-shrink-0">
             <div className="flex items-center space-x-3">
               <div className="bg-white/20 p-2 rounded-lg">
-                <Bot className="h-5 w-5 sm:h-6 sm:w-6" />
+                <Bot className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-semibold">{branding.brand_name} AI Assistant</h2>
-                <p className="text-white/90 text-xs sm:text-sm">Your personal concierge for this stay</p>
+                <h1 className="text-lg font-semibold">{branding.ai_bot_name || `${apartmentInfo.name} AI Assistant`}</h1>
+                <p className="text-blue-100 text-sm">Your personal concierge for this stay</p>
               </div>
             </div>
           </div>
