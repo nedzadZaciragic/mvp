@@ -1604,10 +1604,50 @@ const GuestChat = ({ apartmentId }) => {
   const [apartmentInfo, setApartmentInfo] = useState(null);
   const [branding, setBranding] = useState(null);
   const [sessionId] = useState(`guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  
+  // Pull-to-refresh states
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [startY, setStartY] = useState(0);
+  const [currentY, setCurrentY] = useState(0);
+  const [pullDistance, setPullDistance] = useState(0);
+  const messagesContainerRef = useRef(null);
 
   useEffect(() => {
     fetchApartmentInfo();
   }, [apartmentId]);
+
+  // Pull-to-refresh handlers
+  const handleTouchStart = (e) => {
+    if (messagesContainerRef.current?.scrollTop === 0) {
+      setStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (messagesContainerRef.current?.scrollTop === 0 && startY > 0) {
+      const currentY = e.touches[0].clientY;
+      const distance = currentY - startY;
+      
+      if (distance > 0) {
+        setPullDistance(Math.min(distance, 120)); // Max pull distance
+        setCurrentY(currentY);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (pullDistance > 60 && !isRefreshing) { // Trigger refresh if pulled more than 60px
+      setIsRefreshing(true);
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
+    
+    // Reset states
+    setStartY(0);
+    setCurrentY(0);
+    setPullDistance(0);
+  };
 
   const fetchApartmentInfo = async () => {
     try {
