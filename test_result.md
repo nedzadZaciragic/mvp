@@ -123,6 +123,18 @@ backend:
         agent: "testing"
         comment: "✅ FIXED AND TESTED SUCCESSFULLY: Removed duplicate Apartment model definition. All new apartment fields now working perfectly. COMPREHENSIVE TESTING COMPLETED: 1) CREATE: Successfully created apartments with all new fields (check_in_time: '15:00', check_out_time: '11:00', check_in_instructions: 'Keys are under the blue mat', apartment_locations: {'keys': 'under the mat', 'towels': 'bathroom closet', 'kitchen_utensils': 'drawer'}, wifi_network: 'TestWiFi123', wifi_password: 'password123', wifi_instructions: 'Router is in living room'). 2) READ: All new fields properly retrieved via GET /api/apartments/{id}. 3) UPDATE: Successfully updated all new fields via PUT /api/apartments/{id}. 4) ADMIN ACCESS: Admin endpoints (GET /api/admin/apartments) can see and access all new fields. 5) BACKWARD COMPATIBILITY: Apartments created without new fields work properly with correct default values (empty strings for text fields, empty dict for apartment_locations). 6) MONGODB STORAGE: All new fields properly stored and retrieved from MongoDB. 7) VALIDATION: apartment_locations dictionary field handles complex nested data correctly. SUCCESS RATE: 100% (7/7 tests passed). All new apartment fields ready for production use."
 
+  - task: "Location Fields in Recommendations"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ LOCATION FIELDS TESTING COMPLETED SUCCESSFULLY: Comprehensive testing of new location fields in recommendations completed with 100% success rate (8/8 test scenarios passed). TESTED FUNCTIONALITY: 1) CREATE apartments with location fields in restaurants ({name: 'Mario's Pizza', type: 'Italian', location: 'Via Roma 123', tip: 'Best pizza in town'}) and hidden_gems ({name: 'Secret Garden', location: 'Behind the old church', tip: 'Beautiful sunset views'}). 2) RETRIEVE apartments with location fields via GET /api/apartments/{id} - all location fields properly returned. 3) UPDATE apartments to add new location fields - successfully added new restaurants and hidden gems with location fields while preserving existing ones. 4) ADMIN ENDPOINTS: GET /api/admin/apartments properly returns location fields for all apartments (tested with 57 apartments). 5) BACKWARD COMPATIBILITY: Apartments without location fields work perfectly - no unexpected location fields added. 6) MIXED RECOMMENDATIONS: Apartments with some recommendations having location fields and others without work correctly (1 with location, 1 without for both restaurants and hidden gems). 7) MONGODB STORAGE: All location fields properly stored and retrieved consistently. 8) DATA PERSISTENCE: Location fields maintained across multiple retrievals and updates. SUCCESS RATE: 100% (8/8 scenarios passed). Location fields in recommendations ready for production use across all CRUD operations."
+
   - task: "Email Credentials CRUD API"
     implemented: true
     working: true
