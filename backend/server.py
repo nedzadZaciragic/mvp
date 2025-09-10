@@ -1996,18 +1996,14 @@ async def get_public_apartment(apartment_id: str):
         user = await db.users.find_one({"id": apartment['user_id']})
         branding = {
             "brand_name": user.get('brand_name', 'My Host IQ'),
+            "ai_assistant_name": user.get('ai_assistant_name', 'AI Assistant'),
             "brand_logo_url": user.get('brand_logo_url', ''),
             "brand_primary_color": user.get('brand_primary_color', '#6366f1'),
             "brand_secondary_color": user.get('brand_secondary_color', '#10b981')
         }
         
         return {
-            "apartment": {
-                "id": apartment['id'],
-                "name": apartment['name'],
-                "address": apartment['address'],
-                "description": apartment['description']
-            },
+            "apartment": apartment,  # Return FULL apartment data
             "branding": branding
         }
     except Exception as e:
