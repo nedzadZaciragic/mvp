@@ -1029,6 +1029,35 @@ PROPERTY INFORMATION:
                 base_prompt += f"Email: {contact['email']}"
             base_prompt += "\n"
     
+    # Add check-in/check-out information
+    if apartment_data.get('check_in_time') or apartment_data.get('check_out_time') or apartment_data.get('check_in_instructions'):
+        base_prompt += "\nCHECK-IN/CHECK-OUT INFORMATION:\n"
+        if apartment_data.get('check_in_time'):
+            base_prompt += f"Check-in time: {apartment_data['check_in_time']}\n"
+        if apartment_data.get('check_out_time'):
+            base_prompt += f"Check-out time: {apartment_data['check_out_time']}\n"
+        if apartment_data.get('check_in_instructions'):
+            base_prompt += f"Check-in instructions: {apartment_data['check_in_instructions']}\n"
+    
+    # Add WiFi information
+    if apartment_data.get('wifi_network') or apartment_data.get('wifi_password') or apartment_data.get('wifi_instructions'):
+        base_prompt += "\nWIFI INFORMATION:\n"
+        if apartment_data.get('wifi_network'):
+            base_prompt += f"WiFi Network: {apartment_data['wifi_network']}\n"
+        if apartment_data.get('wifi_password'):
+            base_prompt += f"WiFi Password: {apartment_data['wifi_password']}\n"
+        if apartment_data.get('wifi_instructions'):
+            base_prompt += f"WiFi Instructions: {apartment_data['wifi_instructions']}\n"
+    
+    # Add item locations
+    if apartment_data.get('apartment_locations'):
+        locations = apartment_data['apartment_locations']
+        if locations and isinstance(locations, dict):
+            base_prompt += "\nAPARTMENT ITEM LOCATIONS:\n"
+            for item, location in locations.items():
+                if location:  # Only add if location is not empty
+                    base_prompt += f"- {item.replace('_', ' ').title()}: {location}\n"
+    
     # Add recommendations
     if apartment_data.get('recommendations'):
         recommendations = apartment_data['recommendations']
