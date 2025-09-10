@@ -276,8 +276,7 @@ def test_admin_location_fields():
     try:
         response = requests.get(f"{base_url}/admin/apartments", headers=admin_headers, timeout=30)
         if response.status_code == 200:
-            data = response.json()
-            apartments = data.get('apartments', [])
+            apartments = response.json()  # Direct list, not wrapped in object
             
             # Find both apartments
             location_apartment = None
