@@ -1959,7 +1959,7 @@ const GuestChat = ({ apartmentId }) => {
                   <div className="bg-gray-100 p-1.5 rounded-full">
                     <Bot className="h-4 w-4 text-gray-600" />
                   </div>
-                  <span className="text-sm text-gray-600 font-medium">AI Assistant</span>
+                  <span className="text-sm text-gray-600 font-medium">{branding.ai_assistant_name || 'AI Assistant'}</span>
                 </div>
               )}
               <div className={`p-3 sm:p-4 rounded-2xl ${
