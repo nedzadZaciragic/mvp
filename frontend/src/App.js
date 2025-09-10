@@ -1810,6 +1810,29 @@ const GuestChat = ({ apartmentId }) => {
       }]);
     } catch (error) {
       console.error("Error fetching apartment info:", error);
+      
+      // Set fallback data when apartment not found
+      setApartmentInfo({
+        id: apartmentId,
+        name: "Demo Property",
+        address: "Demo Location",
+        description: "This is a demo apartment for testing purposes."
+      });
+      
+      setBranding({
+        brand_name: "MyHostIQ",
+        ai_assistant_name: "AI Assistant",
+        brand_logo_url: "",
+        brand_primary_color: "#6366f1",
+        brand_secondary_color: "#10b981"
+      });
+      
+      // Add fallback welcome message
+      setMessages([{
+        type: 'ai',
+        content: `Welcome! 🏠 I'm your AI assistant. This appears to be a demo or the property information is currently unavailable. I can still help you with general questions about accommodations and local area information. What would you like to know?`,
+        timestamp: new Date().toISOString()
+      }]);
     }
   };
 
