@@ -84,7 +84,28 @@ class NewApartmentFieldsTester:
         """Setup user authentication"""
         print("🔐 Setting up authentication...")
         
-        # Register user
+        # Try to login first (user might already exist)
+        login_data = {
+            "email": self.test_user["email"],
+            "password": self.test_user["password"]
+        }
+        
+        success, response = self.run_test(
+            "User Login",
+            "POST",
+            "auth/login",
+            200,
+            data=login_data,
+            use_auth=False
+        )
+        
+        if success and response.get('access_token'):
+            self.token = response['access_token']
+            self.user_id = response['user']['id']
+            print(f"   ✅ User logged in successfully")
+            return True
+        
+        # If login failed, try to register
         success, response = self.run_test(
             "User Registration",
             "POST",
