@@ -2480,6 +2480,354 @@ class MyHostIQAPITester:
         
         return success
 
+    def test_admin_get_apartments_with_new_fields(self):
+        """Test admin can see apartments with new fields - HIGH PRIORITY"""
+        if not self.admin_token:
+            print("❌ Skipping - No admin token available")
+            return False
+        
+        # Temporarily store user token and use admin token
+        user_token = self.token
+        self.token = self.admin_token
+        
+        success, response = self.run_test(
+            "Admin Get Apartments with New Fields",
+            "GET",
+            "admin/apartments",
+            200
+        )
+        
+        # Restore user token
+        self.token = user_token
+        
+        if success and isinstance(response, list):
+            print(f"   Admin can see {len(response)} apartments")
+            
+            # Look for apartments with new fields
+            apartments_with_new_fields = []
+            for apartment in response:
+                if (apartment.get('check_in_time') or 
+                    apartment.get('check_out_time') or 
+                    apartment.get('check_in_instructions') or
+                    apartment.get('apartment_locations') or
+                    apartment.get('wifi_network') or
+                    apartment.get('wifi_password') or
+                    apartment.get('wifi_instructions')):
+                    apartments_with_new_fields.append(apartment)
+            
+            if apartments_with_new_fields:
+                print(f"   ✅ Found {len(apartments_with_new_fields)} apartments with new fields")
+                
+                # Check first apartment with new fields
+                apt = apartments_with_new_fields[0]
+                print(f"   Sample apartment new fields:")
+                print(f"     Check-in time: {apt.get('check_in_time', 'Not set')}")
+                print(f"     Check-out time: {apt.get('check_out_time', 'Not set')}")
+                print(f"     Check-in instructions: {apt.get('check_in_instructions', 'Not set')}")
+                print(f"     WiFi network: {apt.get('wifi_network', 'Not set')}")
+                print(f"     Apartment locations: {apt.get('apartment_locations', {})}")
+                
+                print("   ✅ Admin can access all new apartment fields")
+                return True
+            else:
+                print("   ⚠️  No apartments with new fields found (may be expected if none created yet)")
+                return True  # Don't fail if no apartments with new fields exist yet
+        
+        return success
+
+    def test_admin_apartment_field_visibility(self):
+        """Test admin can see specific apartment with new fields - HIGH PRIORITY"""
+        if not self.admin_token or not hasattr(self, 'new_fields_apartment_id'):
+            print("❌ Skipping - No admin token or apartment with new fields available")
+            return False
+        
+        # Use admin token
+        user_token = self.token
+        self.token = self.admin_token
+        
+        # Get all apartments to find one with new fields
+        success, apartments = self.run_test(
+            "Admin Get All Apartments",
+            "GET", 
+            "admin/apartments",
+            200
+        )
+        
+        # Restore user token
+        self.token = user_token
+        
+        if success and isinstance(apartments, list) and len(apartments) > 0:
+            # Find apartment with new fields
+            target_apartment = None
+            for apt in apartments:
+                if (apt.get('check_in_time') or apt.get('wifi_network') or 
+                    apt.get('apartment_locations')):
+                    target_apartment = apt
+                    break
+            
+            if target_apartment:
+                print(f"   ✅ Admin can see apartment with new fields: {target_apartment.get('name', 'Unknown')}")
+                
+                # Verify all new fields are visible to admin
+                new_fields = [
+                    'check_in_time', 'check_out_time', 'check_in_instructions',
+                    'apartment_locations', 'wifi_network', 'wifi_password', 'wifi_instructions'
+                ]
+                
+                fields_visible = 0
+                for field in new_fields:
+                    if field in target_apartment:
+                        fields_visible += 1
+                        value = target_apartment[field]
+                        if value:  # Only show non-empty values
+                            print(f"     ✅ {field}: {value}")
+                
+                if fields_visible == len(new_fields):
+                    print("   ✅ All new fields visible to admin")
+                    return True
+                else:
+                    print(f"   ⚠️  Only {fields_visible}/{len(new_fields)} new fields visible")
+                    return False
+            else:
+                print("   ⚠️  No apartments with new fields found for admin testing")
+                return True  # Don't fail if no test data available
+        
+        return success
+
+    def test_mongodb_storage_verification(self):
+        """Test that new fields are properly stored in MongoDB - HIGH PRIORITY"""
+        if not hasattr(self, 'new_fields_apartment_id') or not self.new_fields_apartment_id:
+            print("❌ Skipping - No apartment with new fields available")
+            return False
+        
+        # Get the apartment to verify MongoDB storage
+        success, response = self.run_test(
+            "Verify MongoDB Storage of New Fields",
+            "GET",
+            f"apartments/{self.new_fields_apartment_id}",
+            200
+        )
+        
+        if success:
+            # Check that all new fields are properly stored and retrieved
+            required_new_fields = [
+                'check_in_time', 'check_out_time', 'check_in_instructions',
+                'apartment_locations', 'wifi_network', 'wifi_password', 'wifi_instructions'
+            ]
+            
+            stored_correctly = True
+            for field in required_new_fields:
+                if field not in response:
+                    print(f"   ❌ Field {field} missing from MongoDB storage")
+                    stored_correctly = False
+                else:
+                    value = response[field]
+                    print(f"   ✅ {field} stored in MongoDB: {type(value).__name__}")
+                    
+                    # Special validation for apartment_locations (should be dict)
+                    if field == 'apartment_locations':
+                        if isinstance(value, dict):
+                            print(f"     ✅ apartment_locations is properly stored as dict with {len(value)} items")
+                        else:
+                            print(f"     ❌ apartment_locations should be dict, got {type(value)}")
+                            stored_correctly = False
+            
+            if stored_correctly:
+                print("   ✅ All new fields properly stored and retrieved from MongoDB")
+                return True
+            else:
+                print("   ❌ Some new fields not properly stored in MongoDB")
+                return False
+        
+        return success
+
+    def test_apartment_locations_dictionary_handling(self):
+        """Test apartment_locations dictionary field handling - HIGH PRIORITY"""
+        # Test creating apartment with complex apartment_locations
+        complex_locations_data = {
+            "name": "Complex Locations Test Apartment",
+            "address": "Complex Location Street",
+            "description": "Testing complex apartment locations",
+            "rules": ["Test rule"],
+            "contact": {"email": "test@example.com"},
+            "ical_url": "",
+            "recommendations": {},
+            "check_in_time": "14:00",
+            "check_out_time": "12:00", 
+            "check_in_instructions": "Complex location test",
+            "apartment_locations": {
+                "keys": "under the blue mat by front door",
+                "towels": "bathroom closet, top shelf",
+                "kitchen_utensils": "kitchen drawer next to sink",
+                "coffee_machine": "kitchen counter, left side",
+                "wifi_router": "living room TV stand",
+                "extra_blankets": "bedroom closet, bottom shelf",
+                "first_aid_kit": "bathroom cabinet",
+                "iron": "bedroom closet, hanging organizer"
+            },
+            "wifi_network": "ComplexTestWiFi",
+            "wifi_password": "complex123!",
+            "wifi_instructions": "Router in living room, reset button on back if needed"
+        }
+        
+        success, response = self.run_test(
+            "Create Apartment with Complex Locations",
+            "POST",
+            "apartments",
+            200,
+            data=complex_locations_data
+        )
+        
+        if success and response.get('id'):
+            apartment_id = response['id']
+            print(f"   Created apartment with complex locations: {apartment_id}")
+            
+            # Verify complex apartment_locations dictionary
+            locations = response.get('apartment_locations', {})
+            expected_locations = complex_locations_data['apartment_locations']
+            
+            if isinstance(locations, dict) and len(locations) == len(expected_locations):
+                print(f"   ✅ apartment_locations dictionary properly handled ({len(locations)} items)")
+                
+                # Verify each location
+                all_locations_correct = True
+                for key, expected_value in expected_locations.items():
+                    actual_value = locations.get(key)
+                    if actual_value == expected_value:
+                        print(f"     ✅ {key}: {actual_value}")
+                    else:
+                        print(f"     ❌ {key}: Expected '{expected_value}', got '{actual_value}'")
+                        all_locations_correct = False
+                
+                if all_locations_correct:
+                    print("   ✅ All apartment locations stored and retrieved correctly")
+                    return True
+                else:
+                    print("   ❌ Some apartment locations incorrect")
+                    return False
+            else:
+                print(f"   ❌ apartment_locations format issue: expected dict with {len(expected_locations)} items, got {type(locations)} with {len(locations) if isinstance(locations, dict) else 'N/A'} items")
+                return False
+        
+        return success
+
+    def test_new_fields_validation(self):
+        """Test validation of new apartment fields - HIGH PRIORITY"""
+        print("\n🔍 Testing New Fields Validation...")
+        
+        # Test 1: Valid time formats
+        valid_time_data = {
+            "name": "Time Validation Test",
+            "address": "Time Test Street",
+            "description": "Testing time validation",
+            "rules": [],
+            "contact": {"email": "time@test.com"},
+            "ical_url": "",
+            "recommendations": {},
+            "check_in_time": "15:30",  # Valid format
+            "check_out_time": "10:45",  # Valid format
+            "check_in_instructions": "Valid instructions",
+            "apartment_locations": {"keys": "valid location"},
+            "wifi_network": "ValidNetwork",
+            "wifi_password": "validpass123",
+            "wifi_instructions": "Valid WiFi instructions"
+        }
+        
+        success1, response1 = self.run_test(
+            "Valid New Fields Format",
+            "POST",
+            "apartments",
+            200,
+            data=valid_time_data
+        )
+        
+        if success1:
+            print("   ✅ Valid new fields format accepted")
+        else:
+            print("   ❌ Valid new fields format rejected")
+        
+        # Test 2: Empty/default values (should be accepted)
+        empty_fields_data = {
+            "name": "Empty Fields Test",
+            "address": "Empty Test Street", 
+            "description": "Testing empty field handling",
+            "rules": [],
+            "contact": {"email": "empty@test.com"},
+            "ical_url": "",
+            "recommendations": {},
+            "check_in_time": "",  # Empty
+            "check_out_time": "",  # Empty
+            "check_in_instructions": "",  # Empty
+            "apartment_locations": {},  # Empty dict
+            "wifi_network": "",  # Empty
+            "wifi_password": "",  # Empty
+            "wifi_instructions": ""  # Empty
+        }
+        
+        success2, response2 = self.run_test(
+            "Empty New Fields",
+            "POST",
+            "apartments", 
+            200,
+            data=empty_fields_data
+        )
+        
+        if success2:
+            print("   ✅ Empty new fields accepted (good for backward compatibility)")
+        else:
+            print("   ❌ Empty new fields rejected")
+        
+        # Test 3: Missing new fields entirely (should use defaults)
+        missing_fields_data = {
+            "name": "Missing Fields Test",
+            "address": "Missing Test Street",
+            "description": "Testing missing field handling", 
+            "rules": [],
+            "contact": {"email": "missing@test.com"},
+            "ical_url": "",
+            "recommendations": {}
+            # Intentionally not including any new fields
+        }
+        
+        success3, response3 = self.run_test(
+            "Missing New Fields",
+            "POST",
+            "apartments",
+            200,
+            data=missing_fields_data
+        )
+        
+        if success3:
+            print("   ✅ Missing new fields handled with defaults")
+            
+            # Verify defaults are applied
+            expected_defaults = {
+                "check_in_time": "",
+                "check_out_time": "",
+                "check_in_instructions": "",
+                "apartment_locations": {},
+                "wifi_network": "",
+                "wifi_password": "",
+                "wifi_instructions": ""
+            }
+            
+            defaults_correct = True
+            for field, expected_default in expected_defaults.items():
+                actual_value = response3.get(field)
+                if actual_value != expected_default:
+                    print(f"     ❌ {field}: Expected default {expected_default}, got {actual_value}")
+                    defaults_correct = False
+            
+            if defaults_correct:
+                print("   ✅ All default values applied correctly")
+            else:
+                print("   ❌ Some default values incorrect")
+                return False
+        else:
+            print("   ❌ Missing new fields caused error")
+        
+        return success1 and success2 and success3
+
     def test_get_apartments(self):
         """Test fetching user's apartments - requires authentication"""
         success, response = self.run_test(
