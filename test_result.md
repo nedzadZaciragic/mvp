@@ -457,17 +457,17 @@ frontend:
         agent: "main"
         comment: "✅ NEW APARTMENT FIELDS IMPLEMENTED: Added comprehensive new fields to host apartment form: Check-in/Check-out times and instructions, WiFi network/password/instructions, Apartment item locations (keys, towels, kitchen utensils, cleaning supplies, first aid, other items). All fields integrated in both backend models (Apartment, ApartmentCreate, ApartmentUpdate) and frontend form with proper validation and UI. Backend tested successfully with 100% success rate."
 
-  - task: "Location Fields in Recommendations"
+  - task: "Address Autocomplete for Recommendations"
     implemented: true
     working: true
-    file: "/app/frontend/src/App.js, /app/backend/server.py"
+    file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "✅ LOCATION FIELDS IMPLEMENTED: Added location field to both restaurants and hidden_gems recommendations. Restaurants now have {name, type, location, tip} and hidden_gems have {name, location, tip}. Updated both host dashboard form and admin edit modal. Backend tested with 100% success rate (8/8 tests passed). Location fields properly stored in MongoDB, retrieved via all endpoints, backward compatible with existing data."
+        comment: "✅ ADDRESS AUTOCOMPLETE INTEGRATED: Replaced all location Input fields with AddressAutocomplete component for restaurants and hidden gems. Uses OpenStreetMap Nominatim API (free, no API key required) with 300ms debounce, 5 suggestions limit, and automatic lat/lon coordinates. Implemented in both host dashboard form and admin edit modal. Users can now search and select real addresses for all location fields instead of manual typing."
 
 metadata:
   created_by: "main_agent"
