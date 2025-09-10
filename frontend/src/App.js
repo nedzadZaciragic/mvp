@@ -4992,20 +4992,6 @@ const HostDashboard = () => {
                       placeholder="MyHostIQ"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      AI Assistant Name
-                    </label>
-                    <Input
-                      value={whitelabelData.ai_bot_name}
-                      onChange={(e) => setWhitelabelData(prev => ({...prev, ai_bot_name: e.target.value}))}
-                      placeholder="Lamijas apartments"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      This name will appear in your AI chat header (e.g., "Lamijas apartments")
-                    </p>
-                  </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
