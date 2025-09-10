@@ -152,6 +152,7 @@ class User(BaseModel):
     brand_primary_color: str = "#2563eb"
     brand_secondary_color: str = "#1d4ed8"
     ai_tone: str = "professional"  # professional, friendly, casual
+    ai_assistant_name: str = "AI Assistant"  # Custom AI assistant name
     custom_domain: str = ""
     chat_background: str = "default"
     chat_font: str = "Inter"
