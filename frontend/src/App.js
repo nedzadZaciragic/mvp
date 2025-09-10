@@ -2011,7 +2011,7 @@ const GuestChat = ({ apartmentId }) => {
           transition: pullDistance === 0 ? 'transform 0.3s ease' : 'none',
           WebkitOverflowScrolling: 'touch',
           paddingBottom: '20px',
-          marginBottom: '100px' // More space for raised input
+          marginBottom: '140px' // More space for raised input and suggestions
         }}
       >
         {/* Pull-to-refresh indicator - MATCHES WHITE BACKGROUND */}
