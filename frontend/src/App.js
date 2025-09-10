@@ -5611,10 +5611,10 @@ const HostDashboard = () => {
                         value={newRestaurant.type}
                         onChange={(e) => setNewRestaurant(prev => ({...prev, type: e.target.value}))}
                       />
-                      <Input
-                        placeholder="Location/Address"
+                      <AddressAutocomplete
+                        placeholder="Restaurant location/address"
                         value={newRestaurant.location}
-                        onChange={(e) => setNewRestaurant(prev => ({...prev, location: e.target.value}))}
+                        onChange={(value) => setNewRestaurant(prev => ({...prev, location: value}))}
                       />
                       <div className="flex space-x-2">
                         <Input
