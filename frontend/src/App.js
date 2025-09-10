@@ -1714,143 +1714,147 @@ const GuestChat = ({ apartmentId }) => {
   const primaryColor = branding.brand_primary_color || BRAND_COLORS.primary;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Chat Container - Full screen mobile design */}
-      <div className="h-screen flex flex-col">
-        <div className="bg-white shadow-lg flex-1 flex flex-col overflow-hidden">
-          {/* Header - Blue gradient like in image */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white flex-shrink-0">
-            <div className="flex items-center space-x-3">
-              <div className="bg-white/20 p-2 rounded-lg">
-                <Bot className="h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold">{branding.ai_bot_name || `${apartmentInfo.name} AI Assistant`}</h1>
-                <p className="text-blue-100 text-sm">Your personal concierge for this stay</p>
-              </div>
-            </div>
+    <div className="h-screen bg-gray-100 flex flex-col overflow-hidden">
+      {/* Header - Blue gradient like in image */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white flex-shrink-0">
+        <div className="flex items-center space-x-3">
+          <div className="bg-white/20 p-2 rounded-lg">
+            <Bot className="h-6 w-6" />
           </div>
-
-          {/* Messages with enhanced styling and pull-to-refresh */}
-          <div 
-            ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            style={{ 
-              transform: `translateY(${pullDistance * 0.5}px)`,
-              transition: pullDistance === 0 ? 'transform 0.3s ease' : 'none'
-            }}
-          >
-            {/* Pull-to-refresh indicator */}
-            {pullDistance > 0 && (
-              <div 
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center justify-center text-blue-600 z-10 bg-gray-100"
-                style={{ 
-                  top: `-${Math.min(60, pullDistance)}px`,
-                  width: '100%',
-                  height: `${Math.min(60, pullDistance)}px`
-                }}
-              >
-                <div className={`rounded-full p-2 bg-white shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
-                  {isRefreshing ? (
-                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full" 
-                         style={{ transform: `rotate(${pullDistance * 3}deg)` }}>
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs mt-1 text-blue-600 font-medium">
-                  {pullDistance > 60 ? 'Release to refresh' : 'Pull to refresh'}
-                </p>
-              </div>
-            )}
-            {messages.map((message, index) => (
-              <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] sm:max-w-[80%] ${message.type === 'user' ? 'ml-12' : 'mr-12'}`}>
-                  {message.type === 'ai' && (
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div className="bg-gray-100 p-1.5 rounded-full">
-                        <Bot className="h-4 w-4 text-gray-600" />
-                      </div>
-                      <span className="text-sm text-gray-600 font-medium">AI Assistant</span>
-                    </div>
-                  )}
-                  <div className={`p-3 sm:p-4 rounded-2xl ${
-                    message.type === 'user' 
-                      ? 'bg-blue-500 text-white rounded-br-md' 
-                      : 'bg-gray-100 text-gray-900 rounded-bl-md'
-                  }`}>
-                    <div className="text-sm leading-relaxed whitespace-pre-line break-words">{message.content}</div>
-                    <p className={`text-xs mt-2 ${message.type === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {loading && (
-              <div className="flex justify-start">
-                <div className="max-w-[85%] sm:max-w-[80%] mr-12">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="bg-gray-100 p-1.5 rounded-full">
-                      <Bot className="h-4 w-4 text-gray-600" />
-                    </div>
-                    <span className="text-sm text-gray-600 font-medium">AI Assistant</span>
-                  </div>
-                  <div className="bg-gray-100 p-3 sm:p-4 rounded-2xl rounded-bl-md">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Enhanced input with suggestions - Fixed at bottom */}
-          <div className="border-t p-4 sm:p-6 bg-gray-50 flex-shrink-0">
-            <div className="mb-3 hidden sm:block">
-              <div className="flex flex-wrap gap-2">
-                {['Check-in instructions', 'WiFi password', 'Local restaurants', 'Emergency contacts'].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => setInputMessage(suggestion)}
-                    className="text-xs px-3 py-1 bg-white border rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex space-x-2 sm:space-x-4">
-              <Input
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask about check-in, restaurants, rules, or anything else..."
-                className="flex-1"
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                disabled={loading}
-              />
-              <Button 
-                onClick={sendMessage} 
-                disabled={loading || !inputMessage.trim()}
-                style={{ backgroundColor: primaryColor }}
-                className="hover:opacity-90"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              Need urgent help? Contact your host directly via your booking confirmation
-            </p>
+          <div>
+            <h1 className="text-lg font-semibold">{branding.ai_bot_name || `${apartmentInfo.name} AI Assistant`}</h1>
+            <p className="text-blue-100 text-sm">Your personal concierge for this stay</p>
           </div>
         </div>
+      </div>
+
+      {/* Messages Container - Scrollable middle section */}
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4 relative bg-white"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ 
+          transform: `translateY(${pullDistance * 0.5}px)`,
+          transition: pullDistance === 0 ? 'transform 0.3s ease' : 'none',
+          paddingBottom: '120px' // Extra space to prevent last message being hidden
+        }}
+      >
+        {/* Pull-to-refresh indicator */}
+        {pullDistance > 0 && (
+          <div 
+            className="absolute top-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center justify-center text-blue-600 z-10 bg-white"
+            style={{ 
+              top: `-${Math.min(60, pullDistance)}px`,
+              width: '100%',
+              height: `${Math.min(60, pullDistance)}px`
+            }}
+          >
+            <div className={`rounded-full p-2 bg-white shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
+              {isRefreshing ? (
+                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full" 
+                     style={{ transform: `rotate(${pullDistance * 3}deg)` }}>
+                </div>
+              )}
+            </div>
+            <p className="text-xs mt-1 text-blue-600 font-medium">
+              {pullDistance > 60 ? 'Release to refresh' : 'Pull to refresh'}
+            </p>
+          </div>
+        )}
+
+        {messages.map((message, index) => (
+          <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] sm:max-w-[80%] ${message.type === 'user' ? 'ml-12' : 'mr-12'}`}>
+              {message.type === 'ai' && (
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className="bg-gray-100 p-1.5 rounded-full">
+                    <Bot className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <span className="text-sm text-gray-600 font-medium">AI Assistant</span>
+                </div>
+              )}
+              <div className={`p-3 sm:p-4 rounded-2xl ${
+                message.type === 'user' 
+                  ? 'bg-blue-500 text-white rounded-br-md' 
+                  : 'bg-gray-100 text-gray-900 rounded-bl-md'
+              }`}>
+                <div className="text-sm leading-relaxed whitespace-pre-line break-words">{message.content}</div>
+                <p className={`text-xs mt-2 ${message.type === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
+                  {new Date(message.timestamp).toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {loading && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] sm:max-w-[80%] mr-12">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="bg-gray-100 p-1.5 rounded-full">
+                  <Bot className="h-4 w-4 text-gray-600" />
+                </div>
+                <span className="text-sm text-gray-600 font-medium">AI Assistant</span>
+              </div>
+              <div className="bg-gray-100 p-3 sm:p-4 rounded-2xl rounded-bl-md">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Fixed Input at Bottom - Like ChatGPT Mobile */}
+      <div className="bg-white border-t border-gray-200 p-4 flex-shrink-0 safe-area-bottom">
+        {/* Suggestions - Only on larger screens */}
+        <div className="mb-3 hidden sm:block">
+          <div className="flex flex-wrap gap-2">
+            {['Check-in instructions', 'WiFi password', 'Local restaurants', 'Emergency contacts'].map((suggestion) => (
+              <button
+                key={suggestion}
+                onClick={() => setInputMessage(suggestion)}
+                className="text-xs px-3 py-1 bg-gray-50 border rounded-full hover:bg-gray-100 transition-colors"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* Message Input */}
+        <div className="flex space-x-3 items-end">
+          <div className="flex-1 relative">
+            <Input
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Ask about check-in, restaurants, rules..."
+              className="pr-4 py-3 rounded-2xl border-gray-300 resize-none"
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+              disabled={loading}
+              style={{ minHeight: '44px' }} // iOS friendly touch target
+            />
+          </div>
+          <Button 
+            onClick={sendMessage} 
+            disabled={loading || !inputMessage.trim()}
+            className="bg-blue-500 hover:bg-blue-600 rounded-full w-11 h-11 p-0 flex-shrink-0"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
+        </div>
+        
+        {/* Help text */}
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          Need urgent help? Contact your host directly via your booking confirmation
+        </p>
       </div>
     </div>
   );
