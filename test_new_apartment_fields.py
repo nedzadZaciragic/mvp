@@ -12,7 +12,7 @@ import json
 import sys
 
 class NewApartmentFieldsTester:
-    def __init__(self, base_url="https://smart-host-ai.preview.emergentagent.com"):
+    def __init__(self, base_url="https://guestiq-helper.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
