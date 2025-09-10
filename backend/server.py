@@ -261,6 +261,16 @@ class ApartmentUpdate(BaseModel):
     ical_url: str = ""
     ai_tone: str = "professional"
     recommendations: Dict[str, Any] = {}
+    # Check-in/Check-out information
+    check_in_time: str = ""
+    check_out_time: str = ""
+    check_in_instructions: str = ""
+    # Apartment items locations
+    apartment_locations: Dict[str, str] = {}
+    # WiFi information
+    wifi_network: str = ""
+    wifi_password: str = ""
+    wifi_instructions: str = ""
 
 class BookingNotification(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
