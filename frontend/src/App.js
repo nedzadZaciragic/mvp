@@ -1620,46 +1620,9 @@ const GuestChat = ({ apartmentId }) => {
       document.body.classList.add('chat-active');
     }
     
-    // Keyboard detection for mobile
-    const handleResize = () => {
-      if (window.innerWidth <= 768) {
-        const currentHeight = window.innerHeight;
-        const initialHeight = window.screen.height;
-        
-        // If viewport height decreased significantly, keyboard is likely open
-        if (currentHeight < initialHeight * 0.75) {
-          setKeyboardOpen(true);
-        } else {
-          setKeyboardOpen(false);
-        }
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // iOS specific viewport change detection
-    const handleViewportChange = () => {
-      if (window.visualViewport) {
-        const viewport = window.visualViewport;
-        if (viewport.height < window.innerHeight * 0.75) {
-          setKeyboardOpen(true);
-        } else {
-          setKeyboardOpen(false);
-        }
-      }
-    };
-    
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportChange);
-    }
-    
     // Cleanup on unmount
     return () => {
       document.body.classList.remove('chat-active');
-      window.removeEventListener('resize', handleResize);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange);
-      }
     };
   }, [apartmentId]);
 
