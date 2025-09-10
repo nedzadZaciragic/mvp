@@ -1068,14 +1068,16 @@ PROPERTY INFORMATION:
             if restaurants:
                 base_prompt += "Restaurants:\n"
                 for rest in restaurants:
-                    base_prompt += f"- {rest.get('name', 'Unknown')} ({rest.get('type', 'Restaurant')}) - {rest.get('tip', 'No additional info')}\n"
+                    location_info = f" (Location: {rest.get('location', 'Not specified')})" if rest.get('location') else ""
+                    base_prompt += f"- {rest.get('name', 'Unknown')} ({rest.get('type', 'Restaurant')}){location_info} - {rest.get('tip', 'No additional info')}\n"
         
         if recommendations.get('hidden_gems'):
             gems = recommendations['hidden_gems']
             if gems:
                 base_prompt += "Hidden Gems & Attractions:\n"
                 for gem in gems:
-                    base_prompt += f"- {gem.get('name', 'Unknown')} - {gem.get('tip', 'No additional info')}\n"
+                    location_info = f" (Location: {gem.get('location', 'Not specified')})" if gem.get('location') else ""
+                    base_prompt += f"- {gem.get('name', 'Unknown')}{location_info} - {gem.get('tip', 'No additional info')}\n"
         
         if recommendations.get('transport'):
             base_prompt += f"Transportation: {recommendations['transport']}\n"
