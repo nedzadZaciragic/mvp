@@ -421,8 +421,7 @@ metadata:
 test_plan:
   current_focus:
     - "Admin Dashboard Access"
-  stuck_tasks:
-    - "Admin Dashboard Access"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
