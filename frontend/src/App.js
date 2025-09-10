@@ -645,8 +645,19 @@ const AddressAutocomplete = ({ value, onChange, onCoordinatesChange, placeholder
       // For manual entry, keep the original query text without quotes
       const cleanText = suggestion.display_name.replace(/^"|" \(manual entry\)$/g, '');
       onChange(cleanText);
+      // No coordinates for manual entry
+      if (onCoordinatesChange) {
+        onCoordinatesChange(null);
+      }
     } else {
       onChange(suggestion.display_name);
+      // Pass coordinates if callback provided
+      if (onCoordinatesChange && suggestion.lat && suggestion.lon) {
+        onCoordinatesChange({
+          lat: parseFloat(suggestion.lat),
+          lon: parseFloat(suggestion.lon)
+        });
+      }
     }
     setSuggestions([]);
     setShowSuggestions(false);
