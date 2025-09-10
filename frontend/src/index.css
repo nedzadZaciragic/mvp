@@ -11,6 +11,36 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Mobile Chat Optimizations */
+.safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* iOS and Android keyboard handling */
+@supports (-webkit-appearance: none) {
+    .chat-input-container {
+        padding-bottom: max(env(safe-area-inset-bottom), 16px);
+    }
+}
+
+/* Prevent zoom on input focus for iOS */
+input[type="text"], input[type="email"], input[type="password"], textarea {
+    font-size: 16px;
+}
+
+/* Mobile viewport handling */
+@media screen and (max-width: 768px) {
+    html, body {
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .mobile-chat-container {
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height for modern browsers */
+    }
+}
+
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
         monospace;
