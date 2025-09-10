@@ -2787,36 +2787,22 @@ const AdminPage = () => {
     );
   }
 
-  // Admin Dashboard - Once logged in
-  return (
-    <div className="min-h-screen bg-gray-50 admin-dashboard">
-      {/* Admin Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="bg-red-100 p-2 rounded-full">
-                <Shield className="h-6 w-6 text-red-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-gray-600">MyHomeIQ Platform Management</p>
-              </div>
-            </div>
-            <Button onClick={handleAdminLogout} variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
+  // Show loading if login is successful (redirecting)
+  if (isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardContent className="p-8">
+            <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold mb-2">Redirecting to Dashboard...</h3>
+            <p className="text-gray-600">Please wait while we load your admin dashboard.</p>
+          </CardContent>
+        </Card>
       </div>
+    );
+  }
 
-      {/* Admin Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <AdminDashboard adminToken={adminToken} />
-      </div>
-    </div>
-  );
+  return null;
 };
 
 // Update AdminDashboard to accept adminToken prop - SIMPLE APARTMENTS ONLY
