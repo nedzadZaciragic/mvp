@@ -1904,27 +1904,37 @@ async def import_property_from_url(
         # Scrape the listing data
         if 'airbnb.com' in url.lower():
             scraped_data = await scrape_airbnb_listing(url)
-            
-            # Return only the fields you need: name, address, description, rules
-            filtered_data = {
-                'name': scraped_data.get('name', ''),
-                'address': scraped_data.get('address', ''),
-                'description': scraped_data.get('description', ''),
-                'rules': scraped_data.get('rules', []),
-                # Keep empty structures for frontend compatibility
-                'contact': {'phone': '', 'email': '', 'whatsapp': ''},
-                'recommendations': {
-                    'restaurants': [],
-                    'hidden_gems': [],
-                    'transport': ''
-                }
+        elif 'booking.com' in url.lower():
+            scraped_data = await scrape_booking_listing(url)
+        else:
+            # For other platforms, return generic structure
+            scraped_data = {
+                'name': 'Imported Property',
+                'address': 'Address not found - please enter manually',
+                'description': 'Property description not found - please add your own description',
+                'rules': ['Check-in instructions will be provided', 'Check-out before 11:00 AM', 'No smoking', 'No parties or events']
             }
             
-            return {
-                "success": True,
-                "data": filtered_data,
-                "message": f"Property data imported successfully from {url}!"
+        # Return only the fields you need: name, address, description, rules
+        filtered_data = {
+            'name': scraped_data.get('name', ''),
+            'address': scraped_data.get('address', ''),
+            'description': scraped_data.get('description', ''),
+            'rules': scraped_data.get('rules', []),
+            # Keep empty structures for frontend compatibility
+            'contact': {'phone': '', 'email': '', 'whatsapp': ''},
+            'recommendations': {
+                'restaurants': [],
+                'hidden_gems': [],
+                'transport': ''
             }
+        }
+        
+        return {
+            "success": True,
+            "data": filtered_data,
+            "message": f"Property data imported successfully from {url}!"
+        }
         
     except HTTPException:
         raise
