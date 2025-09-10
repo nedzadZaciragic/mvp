@@ -11,6 +11,64 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Scroll Background Colors for Landing Page */
+.landing-page {
+    background: linear-gradient(to bottom, #EEF4FF 0%, #ffffff 20%, #ffffff 80%, #0D6EFD 100%);
+    overscroll-behavior: auto;
+    -webkit-overscroll-behavior: auto;
+}
+
+.landing-page::before {
+    content: '';
+    position: fixed;
+    top: -100vh;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    background: #EEF4FF;
+    z-index: -1;
+}
+
+.landing-page::after {
+    content: '';
+    position: fixed;
+    bottom: -100vh;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    background: #0D6EFD;
+    z-index: -1;
+}
+
+/* Host Dashboard Background Colors */
+.host-dashboard {
+    background: linear-gradient(to bottom, #EEF4FF 0%, #f8fafc 20%, #f8fafc 80%, #EEF4FF 100%);
+    overscroll-behavior: auto;
+    -webkit-overscroll-behavior: auto;
+}
+
+.host-dashboard::before {
+    content: '';
+    position: fixed;
+    top: -100vh;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    background: #EEF4FF;
+    z-index: -1;
+}
+
+.host-dashboard::after {
+    content: '';
+    position: fixed;
+    bottom: -100vh;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    background: #EEF4FF;
+    z-index: -1;
+}
+
 /* Mobile Chat Optimizations */
 .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
