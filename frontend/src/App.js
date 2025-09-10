@@ -1858,6 +1858,7 @@ const GuestChat = ({ apartmentId }) => {
   const [currentY, setCurrentY] = useState(0);
   const [pullDistance, setPullDistance] = useState(0);
   const messagesContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     fetchApartmentInfo();
