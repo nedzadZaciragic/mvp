@@ -4468,7 +4468,7 @@ const HostDashboard = () => {
           hidden_gems: [...prev.recommendations.hidden_gems, newGem]
         }
       }));
-      setNewGem({ name: "", tip: "" });
+      setNewGem({ name: "", location: "", tip: "" });
     }
   };
 
