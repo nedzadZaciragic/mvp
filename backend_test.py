@@ -1581,6 +1581,647 @@ class MyHostIQAPITester:
         
         return all_passed
 
+    # NEW CHATBOT AND PROPERTY IMPORT TESTS - HIGH PRIORITY (from review request)
+    def test_public_apartment_full_data_access(self):
+        """Test that public apartment endpoint returns FULL apartment data for AI bot - HIGH PRIORITY"""
+        if not self.created_apartment_id:
+            print("❌ Skipping - No apartment ID available")
+            return False
+        
+        print(f"\n🔍 Testing Public Apartment Full Data Access for apartment {self.created_apartment_id}...")
+        
+        success, response = self.run_test(
+            "Public Apartment Full Data Access",
+            "GET",
+            f"public/apartments/{self.created_apartment_id}",
+            200,
+            use_auth=False  # Public endpoint
+        )
+        
+        if success:
+            print("   ✅ Public apartment endpoint accessible")
+            
+            # Verify FULL apartment data is returned (not limited fields)
+            required_fields = [
+                'id', 'name', 'address', 'description', 'rules',
+                'check_in_time', 'check_out_time', 'check_in_instructions',
+                'wifi_network', 'wifi_password', 'wifi_instructions',
+                'apartment_locations', 'branding'
+            ]
+            
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if not missing_fields:
+                print("   ✅ Response contains ALL required fields for AI bot")
+                
+                # Check specific new fields
+                if response.get('check_in_time'):
+                    print(f"   ✅ Check-in time: {response['check_in_time']}")
+                if response.get('check_out_time'):
+                    print(f"   ✅ Check-out time: {response['check_out_time']}")
+                if response.get('check_in_instructions'):
+                    print(f"   ✅ Check-in instructions: {response['check_in_instructions'][:50]}...")
+                
+                # Check WiFi fields
+                if response.get('wifi_network'):
+                    print(f"   ✅ WiFi network: {response['wifi_network']}")
+                if response.get('wifi_password'):
+                    print(f"   ✅ WiFi password: {response['wifi_password']}")
+                if response.get('wifi_instructions'):
+                    print(f"   ✅ WiFi instructions: {response['wifi_instructions'][:50]}...")
+                
+                # Check apartment locations
+                apartment_locations = response.get('apartment_locations', {})
+                if apartment_locations and isinstance(apartment_locations, dict):
+                    print(f"   ✅ Apartment locations: {len(apartment_locations)} items")
+                    for item, location in list(apartment_locations.items())[:3]:  # Show first 3
+                        print(f"      - {item}: {location}")
+                else:
+                    print("   ⚠️  No apartment locations data")
+                
+                # Check branding data with ai_assistant_name
+                branding = response.get('branding', {})
+                if branding and isinstance(branding, dict):
+                    print(f"   ✅ Branding data included")
+                    ai_assistant_name = branding.get('ai_assistant_name')
+                    if ai_assistant_name:
+                        print(f"   ✅ AI assistant name: {ai_assistant_name}")
+                    else:
+                        print("   ⚠️  AI assistant name not found in branding")
+                        return False
+                else:
+                    print("   ❌ Branding data missing")
+                    return False
+                
+            else:
+                print(f"   ❌ Missing required fields for AI bot: {missing_fields}")
+                return False
+        
+        return success
+
+    def test_ai_system_prompt_comprehensive_data(self):
+        """Test that AI chat endpoint receives comprehensive property information - HIGH PRIORITY"""
+        if not self.created_apartment_id:
+            print("❌ Skipping - No apartment ID available")
+            return False
+        
+        print(f"\n🔍 Testing AI System Prompt with Comprehensive Data for apartment {self.created_apartment_id}...")
+        
+        # Test chat endpoint to verify AI receives full property information
+        chat_data = {
+            "apartment_id": self.created_apartment_id,
+            "message": "What are the check-in instructions and WiFi details?",
+            "session_id": "test-session-123"
+        }
+        
+        success, response = self.run_test(
+            "AI Chat with Comprehensive Data",
+            "POST",
+            "chat",
+            200,
+            data=chat_data,
+            use_auth=False,  # Chat endpoint is public
+            timeout=60  # AI processing can take longer
+        )
+        
+        if success:
+            ai_response = response.get('response', '').lower()
+            print(f"   ✅ AI response received: {len(ai_response)} characters")
+            
+            # Check if AI response includes information from new fields
+            check_indicators = [
+                ('check-in', 'Check-in information'),
+                ('wifi', 'WiFi information'),
+                ('password', 'WiFi password'),
+                ('network', 'WiFi network'),
+                ('instructions', 'Instructions'),
+                ('location', 'Item locations')
+            ]
+            
+            found_indicators = []
+            for indicator, description in check_indicators:
+                if indicator in ai_response:
+                    found_indicators.append(description)
+                    print(f"   ✅ AI has access to: {description}")
+            
+            if len(found_indicators) >= 3:
+                print(f"   ✅ AI system prompt includes comprehensive property information ({len(found_indicators)}/6 indicators)")
+                return True
+            else:
+                print(f"   ⚠️  AI may not have access to all property information ({len(found_indicators)}/6 indicators)")
+                print(f"   AI Response: {ai_response[:200]}...")
+                return False
+        
+        return success
+
+    def test_custom_ai_assistant_name_integration(self):
+        """Test custom AI assistant name field integration - HIGH PRIORITY"""
+        print("\n🔍 Testing Custom AI Assistant Name Integration...")
+        
+        # Test 1: Update whitelabel settings with custom AI assistant name
+        custom_whitelabel = {
+            "brand_name": "Luxury Stays",
+            "brand_logo_url": "https://example.com/logo.png",
+            "brand_primary_color": "#e11d48",
+            "brand_secondary_color": "#f59e0b",
+            "ai_assistant_name": "Sofia - Your Personal Concierge"
+        }
+        
+        success1, response1 = self.run_test(
+            "Update Whitelabel with Custom AI Name",
+            "PUT",
+            "auth/whitelabel",
+            200,
+            data=custom_whitelabel
+        )
+        
+        if success1:
+            print(f"   ✅ Custom AI assistant name set: {custom_whitelabel['ai_assistant_name']}")
+        
+        # Test 2: Verify user profile endpoint returns ai_assistant_name
+        success2, response2 = self.run_test(
+            "Get User Profile with AI Assistant Name",
+            "GET",
+            "auth/me",
+            200
+        )
+        
+        if success2:
+            ai_assistant_name = response2.get('ai_assistant_name')
+            if ai_assistant_name == custom_whitelabel['ai_assistant_name']:
+                print(f"   ✅ User profile returns correct AI assistant name: {ai_assistant_name}")
+            else:
+                print(f"   ❌ AI assistant name mismatch: expected '{custom_whitelabel['ai_assistant_name']}', got '{ai_assistant_name}'")
+                return False
+        
+        # Test 3: Verify public apartment endpoint includes ai_assistant_name in branding
+        if self.created_apartment_id:
+            success3, response3 = self.run_test(
+                "Public Apartment with AI Assistant Name",
+                "GET",
+                f"public/apartments/{self.created_apartment_id}",
+                200,
+                use_auth=False
+            )
+            
+            if success3:
+                branding = response3.get('branding', {})
+                branding_ai_name = branding.get('ai_assistant_name')
+                if branding_ai_name == custom_whitelabel['ai_assistant_name']:
+                    print(f"   ✅ Public apartment branding includes AI assistant name: {branding_ai_name}")
+                else:
+                    print(f"   ❌ Branding AI assistant name mismatch: expected '{custom_whitelabel['ai_assistant_name']}', got '{branding_ai_name}'")
+                    return False
+        else:
+            print("   ⚠️  Cannot test public apartment endpoint - no apartment ID")
+            success3 = True
+        
+        return success1 and success2 and success3
+
+    def test_booking_com_property_import(self):
+        """Test Booking.com property import functionality - HIGH PRIORITY"""
+        print("\n🔍 Testing Booking.com Property Import...")
+        
+        # Test with various Booking.com URL formats
+        booking_urls = [
+            {
+                "name": "Standard Booking.com URL",
+                "url": "https://www.booking.com/hotel/us/example-property.html",
+                "should_work": True
+            },
+            {
+                "name": "Booking.com with parameters",
+                "url": "https://www.booking.com/hotel/fr/paris-example.html?aid=123&label=test",
+                "should_work": True
+            },
+            {
+                "name": "Short Booking.com URL",
+                "url": "https://booking.com/hotel/it/rome-test.html",
+                "should_work": True
+            }
+        ]
+        
+        all_passed = True
+        
+        for url_test in booking_urls:
+            print(f"\n   Testing {url_test['name']}: {url_test['url']}")
+            
+            import_data = {"url": url_test["url"]}
+            
+            success, response = self.run_test(
+                f"Booking.com Import - {url_test['name']}",
+                "POST",
+                "apartments/import-from-url",
+                200 if url_test['should_work'] else 400,
+                data=import_data,
+                timeout=60  # Scraping can take longer
+            )
+            
+            if success and url_test['should_work']:
+                data = response.get('data', {})
+                print(f"   ✅ Success: {response.get('success', False)}")
+                print(f"   Property name: {data.get('name', 'None')}")
+                print(f"   Address: {data.get('address', 'None')}")
+                print(f"   Description length: {len(data.get('description', ''))}")
+                print(f"   Rules count: {len(data.get('rules', []))}")
+                
+                # Check for Booking.com specific fallback behavior
+                property_name = data.get('name', '')
+                if 'booking.com property' in property_name.lower():
+                    print("   ✅ Booking.com fallback name generated")
+                elif property_name and len(property_name) > 5:
+                    print("   ✅ Property name extracted or meaningful fallback")
+                
+                # Check address fallback
+                address = data.get('address', '')
+                if 'please enter manually' in address.lower() or 'not found' in address.lower():
+                    print("   ✅ Meaningful address fallback when scraping blocked")
+                elif address and len(address) > 10:
+                    print("   ✅ Address extracted or meaningful fallback")
+                
+                # Check description fallback
+                description = data.get('description', '')
+                if 'please add your own' in description.lower() or 'not found' in description.lower():
+                    print("   ✅ Meaningful description fallback when scraping blocked")
+                elif description and len(description) > 20:
+                    print("   ✅ Description extracted")
+                
+                # Check rules (should have default Booking.com rules)
+                rules = data.get('rules', [])
+                if len(rules) >= 3:
+                    print(f"   ✅ Rules extracted/generated: {len(rules)} rules")
+                    # Check for typical Booking.com rules
+                    rules_text = ' '.join(rules).lower()
+                    if 'check-in' in rules_text and 'check-out' in rules_text:
+                        print("   ✅ Booking.com specific rules included")
+                else:
+                    print("   ⚠️  Few or no rules extracted")
+                
+            elif not success and not url_test['should_work']:
+                print(f"   ✅ Properly rejected invalid Booking.com URL")
+            else:
+                all_passed = False
+                print(f"   ❌ Unexpected result for {url_test['name']}")
+        
+        return all_passed
+
+    def test_booking_com_vs_airbnb_import(self):
+        """Test both Booking.com and Airbnb import functionality - HIGH PRIORITY"""
+        print("\n🔍 Testing Booking.com vs Airbnb Import Comparison...")
+        
+        test_urls = [
+            {
+                "platform": "Airbnb",
+                "url": "https://www.airbnb.com/rooms/44732428",
+                "expected_indicators": ["airbnb", "property"]
+            },
+            {
+                "platform": "Booking.com",
+                "url": "https://www.booking.com/hotel/us/test-property.html",
+                "expected_indicators": ["booking", "property"]
+            }
+        ]
+        
+        results = []
+        all_passed = True
+        
+        for test_case in test_urls:
+            print(f"\n   Testing {test_case['platform']} import...")
+            
+            import_data = {"url": test_case["url"]}
+            
+            success, response = self.run_test(
+                f"{test_case['platform']} Import Test",
+                "POST",
+                "apartments/import-from-url",
+                200,
+                data=import_data,
+                timeout=60
+            )
+            
+            if success:
+                data = response.get('data', {})
+                result = {
+                    'platform': test_case['platform'],
+                    'success': True,
+                    'name': data.get('name', ''),
+                    'address': data.get('address', ''),
+                    'description': data.get('description', ''),
+                    'rules': data.get('rules', [])
+                }
+                results.append(result)
+                
+                print(f"   ✅ {test_case['platform']} import successful")
+                print(f"      Name: {result['name']}")
+                print(f"      Rules: {len(result['rules'])} rules")
+                
+            else:
+                all_passed = False
+                print(f"   ❌ {test_case['platform']} import failed")
+                results.append({
+                    'platform': test_case['platform'],
+                    'success': False
+                })
+            
+            # Wait between requests
+            time.sleep(3)
+        
+        # Compare results
+        if len(results) == 2 and all(r['success'] for r in results):
+            print("\n   🔍 Comparing import results...")
+            
+            airbnb_result = next(r for r in results if r['platform'] == 'Airbnb')
+            booking_result = next(r for r in results if r['platform'] == 'Booking.com')
+            
+            # Both should have different names (no shared caching)
+            if airbnb_result['name'] != booking_result['name']:
+                print("   ✅ Different property names - no cross-platform caching")
+            else:
+                print("   ⚠️  Same property names - possible shared fallback")
+            
+            # Both should have rules
+            if len(airbnb_result['rules']) > 0 and len(booking_result['rules']) > 0:
+                print("   ✅ Both platforms generate rules")
+            else:
+                print("   ⚠️  One or both platforms missing rules")
+            
+            # Check platform-specific indicators
+            airbnb_name_lower = airbnb_result['name'].lower()
+            booking_name_lower = booking_result['name'].lower()
+            
+            if any(indicator in airbnb_name_lower for indicator in ['airbnb', 'property', '44732428']):
+                print("   ✅ Airbnb result contains platform-specific indicators")
+            
+            if any(indicator in booking_name_lower for indicator in ['booking', 'property']):
+                print("   ✅ Booking.com result contains platform-specific indicators")
+        
+        return all_passed
+
+    def test_property_import_fallback_mechanisms(self):
+        """Test property import fallback mechanisms when scraping fails - HIGH PRIORITY"""
+        print("\n🔍 Testing Property Import Fallback Mechanisms...")
+        
+        # Test with URLs that are likely to be blocked or fail
+        test_cases = [
+            {
+                "name": "Blocked Airbnb URL",
+                "url": "https://www.airbnb.com/rooms/999999999",
+                "platform": "airbnb"
+            },
+            {
+                "name": "Blocked Booking.com URL", 
+                "url": "https://www.booking.com/hotel/xx/nonexistent-property.html",
+                "platform": "booking"
+            }
+        ]
+        
+        all_passed = True
+        
+        for test_case in test_cases:
+            print(f"\n   Testing {test_case['name']}...")
+            
+            import_data = {"url": test_case["url"]}
+            
+            success, response = self.run_test(
+                f"Fallback Test - {test_case['name']}",
+                "POST",
+                "apartments/import-from-url",
+                200,  # Should still return 200 with fallback data
+                data=import_data,
+                timeout=60
+            )
+            
+            if success:
+                data = response.get('data', {})
+                
+                # Check for meaningful fallback data
+                name = data.get('name', '')
+                address = data.get('address', '')
+                description = data.get('description', '')
+                rules = data.get('rules', [])
+                
+                print(f"   Property name: {name}")
+                print(f"   Address: {address}")
+                print(f"   Description: {description[:100]}...")
+                print(f"   Rules: {len(rules)} rules")
+                
+                # Verify fallback quality
+                fallback_checks = []
+                
+                # Name should be meaningful
+                if name and len(name) > 5 and test_case['platform'] in name.lower():
+                    fallback_checks.append("✅ Meaningful fallback name")
+                else:
+                    fallback_checks.append("❌ Poor fallback name")
+                
+                # Address should indicate manual entry needed
+                if 'please enter manually' in address.lower() or 'not found' in address.lower():
+                    fallback_checks.append("✅ Helpful address fallback message")
+                elif address and len(address) > 10:
+                    fallback_checks.append("✅ Address extracted or meaningful fallback")
+                else:
+                    fallback_checks.append("❌ Poor address fallback")
+                
+                # Description should indicate manual entry needed
+                if 'please add your own' in description.lower() or 'not found' in description.lower():
+                    fallback_checks.append("✅ Helpful description fallback message")
+                elif description and len(description) > 50:
+                    fallback_checks.append("✅ Description extracted")
+                else:
+                    fallback_checks.append("❌ Poor description fallback")
+                
+                # Should have default rules
+                if len(rules) >= 3:
+                    fallback_checks.append("✅ Default rules provided")
+                else:
+                    fallback_checks.append("❌ No default rules")
+                
+                for check in fallback_checks:
+                    print(f"      {check}")
+                
+                # Count successful fallbacks
+                successful_fallbacks = sum(1 for check in fallback_checks if check.startswith("✅"))
+                if successful_fallbacks >= 3:
+                    print(f"   ✅ Good fallback mechanisms ({successful_fallbacks}/4)")
+                else:
+                    print(f"   ⚠️  Fallback mechanisms need improvement ({successful_fallbacks}/4)")
+                    all_passed = False
+            else:
+                all_passed = False
+                print(f"   ❌ Fallback test failed for {test_case['name']}")
+        
+        return all_passed
+
+    def test_backward_compatibility_apartment_data(self):
+        """Test backward compatibility with existing apartments without new fields - HIGH PRIORITY"""
+        print("\n🔍 Testing Backward Compatibility with Existing Apartment Data...")
+        
+        # Create apartment with old structure (without new fields)
+        old_apartment_data = {
+            "name": "Legacy Test Apartment",
+            "address": "123 Legacy Street",
+            "description": "This apartment was created with the old data structure",
+            "rules": ["No smoking", "No pets"],
+            "contact": {"email": "legacy@example.com", "phone": "+1234567890"},
+            "ical_url": "",
+            "recommendations": {
+                "restaurants": [{"name": "Old Restaurant", "type": "Italian", "tip": "Great pasta"}],
+                "hidden_gems": [{"name": "Old Museum", "tip": "Historic artifacts"}]
+            }
+            # Note: Missing new fields like check_in_time, wifi_network, apartment_locations
+        }
+        
+        success1, response1 = self.run_test(
+            "Create Legacy Apartment",
+            "POST",
+            "apartments",
+            200,
+            data=old_apartment_data
+        )
+        
+        if success1 and response1.get('id'):
+            legacy_apartment_id = response1['id']
+            print(f"   ✅ Created legacy apartment: {legacy_apartment_id}")
+            
+            # Test 1: GET apartment should work with defaults for missing fields
+            success2, response2 = self.run_test(
+                "Get Legacy Apartment",
+                "GET",
+                f"apartments/{legacy_apartment_id}",
+                200
+            )
+            
+            if success2:
+                print("   ✅ Legacy apartment retrieval works")
+                
+                # Check that new fields have proper defaults
+                new_fields_defaults = {
+                    'check_in_time': '',
+                    'check_out_time': '',
+                    'check_in_instructions': '',
+                    'wifi_network': '',
+                    'wifi_password': '',
+                    'wifi_instructions': '',
+                    'apartment_locations': {}
+                }
+                
+                all_defaults_correct = True
+                for field, expected_default in new_fields_defaults.items():
+                    actual_value = response2.get(field)
+                    if actual_value == expected_default:
+                        print(f"   ✅ {field}: proper default value")
+                    else:
+                        print(f"   ❌ {field}: expected '{expected_default}', got '{actual_value}'")
+                        all_defaults_correct = False
+                
+                if all_defaults_correct:
+                    print("   ✅ All new fields have proper default values")
+                
+            # Test 2: Public apartment endpoint should work
+            success3, response3 = self.run_test(
+                "Public Legacy Apartment",
+                "GET",
+                f"public/apartments/{legacy_apartment_id}",
+                200,
+                use_auth=False
+            )
+            
+            if success3:
+                print("   ✅ Public endpoint works with legacy apartment")
+                
+                # Should include branding even for legacy apartments
+                branding = response3.get('branding', {})
+                if branding:
+                    print("   ✅ Branding data included for legacy apartment")
+                    if 'ai_assistant_name' in branding:
+                        print(f"   ✅ AI assistant name in branding: {branding['ai_assistant_name']}")
+                else:
+                    print("   ❌ Branding data missing for legacy apartment")
+                    return False
+            
+            # Test 3: Chat should work with legacy apartment
+            chat_data = {
+                "apartment_id": legacy_apartment_id,
+                "message": "What are the house rules?",
+                "session_id": "legacy-test-session"
+            }
+            
+            success4, response4 = self.run_test(
+                "Chat with Legacy Apartment",
+                "POST",
+                "chat",
+                200,
+                data=chat_data,
+                use_auth=False,
+                timeout=60
+            )
+            
+            if success4:
+                ai_response = response4.get('response', '')
+                if ai_response and len(ai_response) > 10:
+                    print("   ✅ AI chat works with legacy apartment")
+                    # Should mention the rules from legacy apartment
+                    if 'smoking' in ai_response.lower() or 'pets' in ai_response.lower():
+                        print("   ✅ AI has access to legacy apartment rules")
+                else:
+                    print("   ❌ AI chat not working properly with legacy apartment")
+                    return False
+            
+            # Test 4: Update legacy apartment with new fields
+            update_data = {
+                "name": old_apartment_data["name"],
+                "address": old_apartment_data["address"],
+                "description": old_apartment_data["description"],
+                "rules": old_apartment_data["rules"],
+                "contact": old_apartment_data["contact"],
+                "ical_url": old_apartment_data["ical_url"],
+                "recommendations": old_apartment_data["recommendations"],
+                # Add new fields
+                "check_in_time": "15:00",
+                "check_out_time": "11:00",
+                "check_in_instructions": "Keys are under the mat",
+                "wifi_network": "LegacyWiFi",
+                "wifi_password": "legacy123",
+                "wifi_instructions": "Connect to LegacyWiFi network",
+                "apartment_locations": {
+                    "keys": "under the doormat",
+                    "towels": "bathroom closet",
+                    "kitchen_utensils": "kitchen drawer"
+                }
+            }
+            
+            success5, response5 = self.run_test(
+                "Update Legacy Apartment with New Fields",
+                "PUT",
+                f"apartments/{legacy_apartment_id}",
+                200,
+                data=update_data
+            )
+            
+            if success5:
+                print("   ✅ Legacy apartment updated with new fields")
+                
+                # Verify new fields are saved
+                success6, response6 = self.run_test(
+                    "Verify Updated Legacy Apartment",
+                    "GET",
+                    f"apartments/{legacy_apartment_id}",
+                    200
+                )
+                
+                if success6:
+                    if (response6.get('check_in_time') == "15:00" and
+                        response6.get('wifi_network') == "LegacyWiFi" and
+                        response6.get('apartment_locations', {}).get('keys') == "under the doormat"):
+                        print("   ✅ New fields properly saved to legacy apartment")
+                    else:
+                        print("   ❌ New fields not properly saved")
+                        return False
+            
+            return success1 and success2 and success3 and success4 and success5 and success6
+        
+        return False
+
     def test_property_import_scraping_verification(self):
         """Test property import scraping behavior and fallbacks - HIGH PRIORITY"""
         print("\n🔍 Testing Scraping Behavior and Fallback Mechanisms...")
