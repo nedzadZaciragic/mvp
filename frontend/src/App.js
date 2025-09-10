@@ -5136,6 +5136,20 @@ const HostDashboard = () => {
                     </p>
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      AI Assistant Name
+                    </label>
+                    <Input
+                      value={whitelabelData.ai_assistant_name}
+                      onChange={(e) => setWhitelabelData(prev => ({...prev, ai_assistant_name: e.target.value}))}
+                      placeholder="AI Assistant"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Custom name for your AI assistant (e.g., "Emma", "Support Bot", "Concierge Assistant")
+                    </p>
+                  </div>
+
                   <Button onClick={updateWhitelabelSettings} className="w-full">
                     Update Brand Settings
                   </Button>
