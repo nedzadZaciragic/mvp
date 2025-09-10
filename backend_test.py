@@ -2231,6 +2231,255 @@ class MyHostIQAPITester:
         
         return success
 
+    def test_create_apartment_with_new_fields(self):
+        """Test creating apartment with new check-in/WiFi fields - HIGH PRIORITY"""
+        apartment_data = {
+            "name": "Modern Apartment with New Fields",
+            "address": "456 New Field Street, Test City",
+            "description": "Test apartment with all new fields",
+            "rules": ["No smoking", "Check-in instructions provided"],
+            "contact": {
+                "phone": "+1234567890",
+                "email": "host@example.com"
+            },
+            "ical_url": "",
+            "recommendations": {},
+            # NEW FIELDS BEING TESTED
+            "check_in_time": "15:00",
+            "check_out_time": "11:00",
+            "check_in_instructions": "Keys are under the blue mat",
+            "apartment_locations": {
+                "keys": "under the mat",
+                "towels": "bathroom closet",
+                "kitchen_utensils": "drawer"
+            },
+            "wifi_network": "TestWiFi123",
+            "wifi_password": "password123",
+            "wifi_instructions": "Router is in living room"
+        }
+        
+        success, response = self.run_test(
+            "Create Apartment with New Fields",
+            "POST",
+            "apartments",
+            200,
+            data=apartment_data
+        )
+        
+        if success and response.get('id'):
+            apartment_id = response['id']
+            print(f"   Created apartment with new fields ID: {apartment_id}")
+            
+            # Verify all new fields are present in response
+            new_fields_check = {
+                "check_in_time": "15:00",
+                "check_out_time": "11:00", 
+                "check_in_instructions": "Keys are under the blue mat",
+                "apartment_locations": {"keys": "under the mat", "towels": "bathroom closet", "kitchen_utensils": "drawer"},
+                "wifi_network": "TestWiFi123",
+                "wifi_password": "password123",
+                "wifi_instructions": "Router is in living room"
+            }
+            
+            all_fields_present = True
+            for field, expected_value in new_fields_check.items():
+                actual_value = response.get(field)
+                if actual_value == expected_value:
+                    print(f"   ✅ {field}: {actual_value}")
+                else:
+                    print(f"   ❌ {field}: Expected {expected_value}, got {actual_value}")
+                    all_fields_present = False
+            
+            if all_fields_present:
+                print("   ✅ All new apartment fields properly stored and returned")
+                # Store this apartment ID for further testing
+                self.new_fields_apartment_id = apartment_id
+                return True
+            else:
+                print("   ❌ Some new fields missing or incorrect")
+                return False
+        
+        return success
+
+    def test_get_apartment_with_new_fields(self):
+        """Test retrieving apartment with new fields - HIGH PRIORITY"""
+        if not hasattr(self, 'new_fields_apartment_id') or not self.new_fields_apartment_id:
+            print("❌ Skipping - No apartment with new fields available")
+            return False
+        
+        success, response = self.run_test(
+            "Get Apartment with New Fields",
+            "GET",
+            f"apartments/{self.new_fields_apartment_id}",
+            200
+        )
+        
+        if success:
+            # Verify all new fields are retrieved correctly
+            expected_fields = {
+                "check_in_time": "15:00",
+                "check_out_time": "11:00",
+                "check_in_instructions": "Keys are under the blue mat",
+                "apartment_locations": {"keys": "under the mat", "towels": "bathroom closet", "kitchen_utensils": "drawer"},
+                "wifi_network": "TestWiFi123", 
+                "wifi_password": "password123",
+                "wifi_instructions": "Router is in living room"
+            }
+            
+            all_fields_correct = True
+            for field, expected_value in expected_fields.items():
+                actual_value = response.get(field)
+                if actual_value == expected_value:
+                    print(f"   ✅ Retrieved {field}: {actual_value}")
+                else:
+                    print(f"   ❌ {field}: Expected {expected_value}, got {actual_value}")
+                    all_fields_correct = False
+            
+            if all_fields_correct:
+                print("   ✅ All new fields retrieved correctly from database")
+                return True
+            else:
+                print("   ❌ Some new fields not retrieved correctly")
+                return False
+        
+        return success
+
+    def test_update_apartment_with_new_fields(self):
+        """Test updating apartment with new fields - HIGH PRIORITY"""
+        if not hasattr(self, 'new_fields_apartment_id') or not self.new_fields_apartment_id:
+            print("❌ Skipping - No apartment with new fields available")
+            return False
+        
+        updated_data = {
+            "name": "Updated Modern Apartment",
+            "address": "456 Updated Street, Test City",
+            "description": "Updated test apartment with modified new fields",
+            "rules": ["No smoking", "Updated check-in instructions"],
+            "contact": {
+                "phone": "+1234567890",
+                "email": "updated@example.com"
+            },
+            "ical_url": "",
+            "recommendations": {},
+            # UPDATED NEW FIELDS
+            "check_in_time": "16:00",  # Changed from 15:00
+            "check_out_time": "10:00",  # Changed from 11:00
+            "check_in_instructions": "Updated: Keys are in lockbox, code 1234",  # Updated
+            "apartment_locations": {
+                "keys": "in lockbox by door",  # Updated
+                "towels": "linen closet",  # Updated
+                "kitchen_utensils": "kitchen drawer",  # Updated
+                "coffee_machine": "kitchen counter"  # Added new location
+            },
+            "wifi_network": "UpdatedWiFi456",  # Updated
+            "wifi_password": "newpassword456",  # Updated
+            "wifi_instructions": "Router is in bedroom, restart if needed"  # Updated
+        }
+        
+        success, response = self.run_test(
+            "Update Apartment with New Fields",
+            "PUT",
+            f"apartments/{self.new_fields_apartment_id}",
+            200,
+            data=updated_data
+        )
+        
+        if success:
+            # Verify all updated fields are correct
+            expected_updates = {
+                "check_in_time": "16:00",
+                "check_out_time": "10:00",
+                "check_in_instructions": "Updated: Keys are in lockbox, code 1234",
+                "apartment_locations": {
+                    "keys": "in lockbox by door",
+                    "towels": "linen closet", 
+                    "kitchen_utensils": "kitchen drawer",
+                    "coffee_machine": "kitchen counter"
+                },
+                "wifi_network": "UpdatedWiFi456",
+                "wifi_password": "newpassword456",
+                "wifi_instructions": "Router is in bedroom, restart if needed"
+            }
+            
+            all_updates_correct = True
+            for field, expected_value in expected_updates.items():
+                actual_value = response.get(field)
+                if actual_value == expected_value:
+                    print(f"   ✅ Updated {field}: {actual_value}")
+                else:
+                    print(f"   ❌ {field}: Expected {expected_value}, got {actual_value}")
+                    all_updates_correct = False
+            
+            if all_updates_correct:
+                print("   ✅ All new fields updated correctly")
+                return True
+            else:
+                print("   ❌ Some new fields not updated correctly")
+                return False
+        
+        return success
+
+    def test_backward_compatibility_apartment_creation(self):
+        """Test creating apartment without new fields (backward compatibility) - HIGH PRIORITY"""
+        # Create apartment with only old fields (no new fields)
+        old_format_data = {
+            "name": "Backward Compatible Apartment",
+            "address": "789 Old Format Street, Test City",
+            "description": "Test apartment without new fields for backward compatibility",
+            "rules": ["No smoking", "Standard rules"],
+            "contact": {
+                "phone": "+1234567890",
+                "email": "oldformat@example.com"
+            },
+            "ical_url": "",
+            "recommendations": {
+                "restaurants": [{"name": "Old Restaurant", "type": "Traditional", "tip": "Classic dishes"}]
+            }
+            # Intentionally NOT including new fields
+        }
+        
+        success, response = self.run_test(
+            "Create Apartment - Backward Compatibility",
+            "POST",
+            "apartments",
+            200,
+            data=old_format_data
+        )
+        
+        if success and response.get('id'):
+            apartment_id = response['id']
+            print(f"   Created backward compatible apartment ID: {apartment_id}")
+            
+            # Verify new fields have default values
+            expected_defaults = {
+                "check_in_time": "",
+                "check_out_time": "",
+                "check_in_instructions": "",
+                "apartment_locations": {},
+                "wifi_network": "",
+                "wifi_password": "",
+                "wifi_instructions": ""
+            }
+            
+            all_defaults_correct = True
+            for field, expected_default in expected_defaults.items():
+                actual_value = response.get(field)
+                if actual_value == expected_default:
+                    print(f"   ✅ {field} has correct default: {actual_value}")
+                else:
+                    print(f"   ❌ {field}: Expected default {expected_default}, got {actual_value}")
+                    all_defaults_correct = False
+            
+            if all_defaults_correct:
+                print("   ✅ Backward compatibility maintained - new fields have proper defaults")
+                self.backward_compatible_apartment_id = apartment_id
+                return True
+            else:
+                print("   ❌ Backward compatibility issue - incorrect default values")
+                return False
+        
+        return success
+
     def test_get_apartments(self):
         """Test fetching user's apartments - requires authentication"""
         success, response = self.run_test(
