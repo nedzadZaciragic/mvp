@@ -5956,14 +5956,6 @@ const HostDashboard = () => {
                             <strong>{gem.name}</strong>
                             {gem.location && <div className="text-gray-600">📍 {gem.location}</div>}
                             <div className="text-gray-700">{gem.tip}</div>
-                            {/* Walking Distance */}
-                            {gem.location && formData.coordinates && (
-                              <WalkingDistance 
-                                fromCoords={formData.coordinates}
-                                toCoords={gem.coordinates}
-                                location={gem.location}
-                              />
-                            )}
                           </div>
                           <Button 
                             type="button" 
