@@ -525,6 +525,191 @@ async def scrape_airbnb_listing(url: str) -> dict:
         logger.error(f"Error scraping {url}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to parse listing data: {str(e)}")
 
+async def scrape_booking_listing(url: str) -> dict:
+    """Scrape Booking.com listing data"""
+    try:
+        import time
+        import random
+        
+        # Headers to mimic real browser for Booking.com
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Referer': 'https://www.booking.com/',
+            'Origin': 'https://www.booking.com',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0'
+        }
+        
+        logger.info(f"Booking.com scraping attempt for: {url}")
+        
+        # Initialize result
+        scraped_data = {
+            'name': '',
+            'address': '',
+            'description': '',
+            'rules': []
+        }
+        
+        # Create session
+        session = requests.Session()
+        session.headers.update(headers)
+        
+        # Add random delay
+        await asyncio.sleep(random.uniform(1, 3))
+        
+        # Make request
+        response = session.get(url, timeout=20, allow_redirects=True)
+        response.raise_for_status()
+        
+        html_content = response.text
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        logger.info(f"Booking.com page loaded: {len(html_content)} chars, status: {response.status_code}")
+        
+        # Method 1: Extract from page title
+        title_tag = soup.find('title')
+        if title_tag:
+            full_title = title_tag.get_text().strip()
+            logger.info(f"Booking.com page title: {full_title}")
+            
+            # Clean up Booking.com title
+            if 'booking.com' in full_title.lower():
+                # Booking.com titles often follow pattern: "Property Name, Location - Booking.com"
+                if ' - ' in full_title:
+                    potential_name = full_title.split(' - ')[0].strip()
+                    if ',' in potential_name:
+                        # Split name and location
+                        name_part = potential_name.split(',')[0].strip()
+                        if len(name_part) > 5:
+                            scraped_data['name'] = name_part
+                            logger.info(f"Extracted name from title: {name_part}")
+        
+        # Method 2: Look for property name in specific Booking.com selectors
+        name_selectors = [
+            'h2[data-testid="property-name"]',
+            '.hp__hotel-name',
+            'h1.pp-header__title',
+            '.property-name',
+            'h1'
+        ]
+        
+        for selector in name_selectors:
+            name_elem = soup.select_one(selector)
+            if name_elem and not scraped_data['name']:
+                name_text = name_elem.get_text().strip()
+                if len(name_text) > 5 and len(name_text) < 100:
+                    scraped_data['name'] = name_text
+                    logger.info(f"Found name with selector {selector}: {name_text}")
+                    break
+        
+        # Method 3: Look for address
+        address_selectors = [
+            '[data-testid="property-address"]',
+            '.hp__hotel-location',
+            '.property-address',
+            '.address'
+        ]
+        
+        for selector in address_selectors:
+            addr_elem = soup.select_one(selector)
+            if addr_elem:
+                addr_text = addr_elem.get_text().strip()
+                if len(addr_text) > 10:
+                    scraped_data['address'] = addr_text
+                    logger.info(f"Found address: {addr_text}")
+                    break
+        
+        # Method 4: Look for description
+        desc_selectors = [
+            '[data-testid="property-description"]',
+            '.property-description',
+            '.hotel-description',
+            '.summary'
+        ]
+        
+        for selector in desc_selectors:
+            desc_elem = soup.select_one(selector)
+            if desc_elem:
+                desc_text = desc_elem.get_text().strip()
+                if len(desc_text) > 50:
+                    scraped_data['description'] = desc_text[:500]  # Limit length
+                    logger.info(f"Found description: {desc_text[:100]}...")
+                    break
+        
+        # Method 5: Look for house rules/policies
+        rules_selectors = [
+            '.hotel-policies',
+            '.house-rules',
+            '.property-policies',
+            '[data-testid="policies-section"]'
+        ]
+        
+        rules_found = []
+        for selector in rules_selectors:
+            rules_section = soup.select_one(selector)
+            if rules_section:
+                # Extract rule items
+                rule_items = rules_section.find_all(['li', 'p', 'div'])
+                for item in rule_items:
+                    rule_text = item.get_text().strip()
+                    if len(rule_text) > 10 and len(rule_text) < 100:
+                        rules_found.append(rule_text)
+                        if len(rules_found) >= 5:  # Limit to 5 rules
+                            break
+                if rules_found:
+                    break
+        
+        if rules_found:
+            scraped_data['rules'] = rules_found[:5]
+        else:
+            # Default rules for Booking.com properties
+            scraped_data['rules'] = [
+                'Check-in from 15:00',
+                'Check-out until 11:00',
+                'No smoking',
+                'No pets allowed',
+                'No parties or events'
+            ]
+        
+        # Method 6: Meta tags fallback
+        if not scraped_data['name']:
+            meta_title = soup.find('meta', property='og:title')
+            if meta_title and meta_title.get('content'):
+                content = meta_title.get('content').strip()
+                if 'booking.com' not in content.lower() and len(content) > 5:
+                    scraped_data['name'] = content
+        
+        if not scraped_data['description']:
+            meta_desc = soup.find('meta', property='og:description')
+            if meta_desc and meta_desc.get('content'):
+                content = meta_desc.get('content').strip()
+                if len(content) > 20:
+                    scraped_data['description'] = content[:300]
+        
+        logger.info(f"Booking.com scraping results: name='{scraped_data['name']}', rules={len(scraped_data['rules'])}")
+        
+        return scraped_data
+        
+    except Exception as e:
+        logger.error(f"Booking.com scraping error: {str(e)}")
+        # Return fallback data
+        property_id = url.split('/')[-1].split('.')[0] if '/' in url else 'unknown'
+        return {
+            'name': f'Booking.com Property ({property_id})',
+            'address': 'Address not found - please enter manually',
+            'description': 'Property description not found - please add your own description',
+            'rules': ['Check-in from 15:00', 'Check-out until 11:00', 'No smoking', 'No pets allowed', 'No parties or events']
+        }
+
 class PropertyImportRequest(BaseModel):
     url: str
 
