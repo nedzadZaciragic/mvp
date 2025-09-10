@@ -3,7 +3,7 @@ import json
 
 def test_location_fields():
     """Simple test for location fields in recommendations"""
-    base_url = "https://smart-host-ai.preview.emergentagent.com/api"
+    base_url = "http://localhost:8001/api"
     
     # Test user data
     user_data = {
