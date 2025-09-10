@@ -5868,6 +5868,14 @@ const HostDashboard = () => {
                             <strong>{rest.name}</strong> ({rest.type})
                             {rest.location && <div className="text-gray-600">📍 {rest.location}</div>}
                             <div className="text-gray-700">{rest.tip}</div>
+                            {/* Walking Distance */}
+                            {rest.location && formData.coordinates && (
+                              <WalkingDistance 
+                                fromCoords={formData.coordinates}
+                                toCoords={rest.coordinates}
+                                location={rest.location}
+                              />
+                            )}
                           </div>
                           <Button 
                             type="button" 
