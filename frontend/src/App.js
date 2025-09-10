@@ -1738,7 +1738,7 @@ const GuestChat = ({ apartmentId }) => {
         </div>
       </div>
 
-      {/* Messages Container - BACK TO NORMAL */}
+      {/* Messages Container - MORE SPACE FOR RAISED INPUT */}
       <div 
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4 bg-white chat-messages relative"
@@ -1750,7 +1750,7 @@ const GuestChat = ({ apartmentId }) => {
           transition: pullDistance === 0 ? 'transform 0.3s ease' : 'none',
           WebkitOverflowScrolling: 'touch',
           paddingBottom: '20px',
-          marginBottom: '80px' // Space for fixed input
+          marginBottom: '100px' // More space for raised input
         }}
       >
         {/* Pull-to-refresh indicator - MATCHES WHITE BACKGROUND */}
