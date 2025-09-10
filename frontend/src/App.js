@@ -516,7 +516,14 @@ const AddressAutocomplete = ({ value, onChange, placeholder = "Enter address..."
   };
 
   const handleSuggestionClick = (suggestion) => {
-    onChange(suggestion.display_name);
+    // Handle manual entry differently
+    if (suggestion.manual) {
+      // For manual entry, keep the original query text without quotes
+      const cleanText = suggestion.display_name.replace(/^"|" \(manual entry\)$/g, '');
+      onChange(cleanText);
+    } else {
+      onChange(suggestion.display_name);
+    }
     setSuggestions([]);
     setShowSuggestions(false);
     inputRef.current?.blur();
