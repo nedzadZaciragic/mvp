@@ -1743,16 +1743,18 @@ const GuestChat = ({ apartmentId }) => {
           marginBottom: '80px' // Space for fixed input
         }}
       >
-        {/* Pull-to-refresh indicator */}
+        {/* Pull-to-refresh indicator - MATCHES WHITE BACKGROUND */}
         {pullDistance > 0 && (
           <div 
-            className="absolute top-0 left-0 right-0 flex flex-col items-center justify-center text-blue-600 z-10 bg-white"
+            className="absolute top-0 left-0 right-0 flex flex-col items-center justify-center text-blue-600 z-20 bg-white"
             style={{ 
               top: `-${Math.min(60, pullDistance)}px`,
-              height: `${Math.min(60, pullDistance)}px`
+              height: `${Math.min(60, pullDistance)}px`,
+              borderBottomLeftRadius: '0px',
+              borderBottomRightRadius: '0px'
             }}
           >
-            <div className={`rounded-full p-2 bg-white shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
+            <div className={`rounded-full p-2 bg-blue-50 shadow-sm ${isRefreshing ? 'animate-spin' : ''}`}>
               {isRefreshing ? (
                 <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
               ) : (
