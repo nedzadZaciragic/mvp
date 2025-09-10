@@ -1892,7 +1892,7 @@ const GuestChat = ({ apartmentId }) => {
             <Bot className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold">{branding.ai_assistant_name || `${apartmentInfo.name} AI Assistant`}</h1>
+            <h1 className="text-lg font-semibold">{branding.brand_name || 'MyHostIQ'}</h1>
             <p className="text-blue-100 text-sm">Your personal concierge for this stay</p>
           </div>
         </div>
