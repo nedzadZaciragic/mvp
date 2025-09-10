@@ -486,7 +486,7 @@ const ResetPasswordPage = () => {
 };
 
 // Address Autocomplete Component using OpenStreetMap
-const AddressAutocomplete = ({ value, onChange, placeholder = "Enter address..." }) => {
+const AddressAutocomplete = ({ value, onChange, onCoordinatesChange, placeholder = "Enter address..." }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
