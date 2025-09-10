@@ -1825,11 +1825,12 @@ const GuestChat = ({ apartmentId }) => {
         )}
       </div>
 
-      {/* Fixed Input at Bottom - BACK TO PREVIOUS DYNAMIC STATE */}
+      {/* Fixed Input at Bottom - RAISED HIGHER FOR MOBILE */}
       <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-20" 
            style={{ 
-             paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
-             boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+             paddingBottom: 'max(env(safe-area-inset-bottom), 20px)',
+             boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+             bottom: '10px' // Raise input 10px higher
            }}>
         <div className="p-4">
           {/* Suggestions - Only on larger screens */}
