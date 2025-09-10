@@ -5659,10 +5659,10 @@ const HostDashboard = () => {
                         value={newGem.name}
                         onChange={(e) => setNewGem(prev => ({...prev, name: e.target.value}))}
                       />
-                      <Input
-                        placeholder="Location/Address"
+                      <AddressAutocomplete
+                        placeholder="Attraction location/address"
                         value={newGem.location}
-                        onChange={(e) => setNewGem(prev => ({...prev, location: e.target.value}))}
+                        onChange={(value) => setNewGem(prev => ({...prev, location: value}))}
                       />
                       <div className="flex space-x-2">
                         <Input
