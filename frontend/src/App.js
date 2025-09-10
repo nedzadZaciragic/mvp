@@ -5919,6 +5919,7 @@ const HostDashboard = () => {
                         placeholder="Attraction location/address"
                         value={newGem.location}
                         onChange={(value) => setNewGem(prev => ({...prev, location: value}))}
+                        onCoordinatesChange={(coords) => setNewGem(prev => ({...prev, coordinates: coords}))}
                       />
                       <div className="flex space-x-2">
                         <Input
