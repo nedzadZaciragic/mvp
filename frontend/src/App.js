@@ -2590,6 +2590,75 @@ const AIInsightsDashboard = ({ apartments }) => {
   );
 };
 
+// Separate Admin Dashboard Page Component
+const AdminDashboardPage = () => {
+  const [adminToken, setAdminToken] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if admin is logged in
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      setAdminToken(token);
+      // Set default axios header
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      // Redirect to admin login if no token
+      window.location.href = '/admin';
+    }
+    setLoading(false);
+  }, []);
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('adminToken');
+    delete axios.defaults.headers.common['Authorization'];
+    window.location.href = '/admin';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+        <span className="ml-2">Loading admin dashboard...</span>
+      </div>
+    );
+  }
+
+  if (!adminToken) {
+    return null; // Will redirect to /admin
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 admin-dashboard">
+      {/* Admin Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <div className="bg-red-100 p-2 rounded-full">
+                <Shield className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p className="text-gray-600">MyHomeIQ Platform Management</p>
+              </div>
+            </div>
+            <Button onClick={handleAdminLogout} variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Admin Dashboard Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <AdminDashboard adminToken={adminToken} />
+      </div>
+    </div>
+  );
+};
+
 // Separate Admin Page Component - Independent of regular auth
 const AdminPage = () => {
   const [adminCredentials, setAdminCredentials] = useState({ username: '', password: '' });
