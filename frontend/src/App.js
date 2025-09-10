@@ -4445,7 +4445,7 @@ const HostDashboard = () => {
           restaurants: [...prev.recommendations.restaurants, newRestaurant]
         }
       }));
-      setNewRestaurant({ name: "", type: "", tip: "" });
+      setNewRestaurant({ name: "", type: "", location: "", tip: "" });
     }
   };
 
