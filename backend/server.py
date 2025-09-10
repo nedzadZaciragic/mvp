@@ -303,30 +303,7 @@ class ChatRequest(BaseModel):
     message: str
     session_id: str = ""
 
-class Apartment(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    user_id: str
-    name: str
-    address: str
-    description: str
-    rules: List[str] = []
-    contact: Dict[str, str] = {}
-    ical_url: str = ""  # iCal calendar URL
-    recommendations: Dict[str, Any] = {}
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    # Analytics data
-    total_chats: int = 0
-    total_sessions: int = 0
-    last_chat: Optional[datetime] = None
-
-class ApartmentCreate(BaseModel):
-    name: str
-    address: str
-    description: str
-    rules: List[str] = []
-    contact: Dict[str, str] = {}
-    ical_url: str = ""  # iCal calendar URL
-    recommendations: Dict[str, Any] = {}
+# Duplicate model definitions removed - using the complete models above with new fields
 
 class AnalyticsData(BaseModel):
     apartment_id: str
