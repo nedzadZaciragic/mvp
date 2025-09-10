@@ -4954,6 +4954,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="/admin" element={<AdminPage />} />
             <Route path="/guest/:apartmentId" element={<GuestChatWrapper />} />
           </Routes>
         </BrowserRouter>
