@@ -1866,54 +1866,58 @@ const GuestChat = ({ apartmentId }) => {
         )}
       </div>
 
-      {/* Fixed Input at Bottom - RESPONSIVE TO KEYBOARD */}
-      <div className={`chat-input-fixed ${keyboardOpen ? 'keyboard-open' : ''}`}>
-        {/* Suggestions - Only on larger screens */}
-        <div className="mb-3 hidden sm:block">
-          <div className="flex flex-wrap gap-2">
-            {['Check-in instructions', 'WiFi password', 'Local restaurants', 'Emergency contacts'].map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => setInputMessage(suggestion)}
-                className="text-xs px-3 py-1 bg-gray-50 border rounded-full hover:bg-gray-100 transition-colors"
-              >
-                {suggestion}
-              </button>
-            ))}
+      {/* Fixed Input at Bottom - BACK TO PREVIOUS DYNAMIC STATE */}
+      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-20" 
+           style={{ 
+             paddingBottom: 'max(env(safe-area-inset-bottom), 16px)',
+             boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+           }}>
+        <div className="p-4">
+          {/* Suggestions - Only on larger screens */}
+          <div className="mb-3 hidden sm:block">
+            <div className="flex flex-wrap gap-2">
+              {['Check-in instructions', 'WiFi password', 'Local restaurants', 'Emergency contacts'].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => setInputMessage(suggestion)}
+                  className="text-xs px-3 py-1 bg-gray-50 border rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-        
-        {/* Message Input - ALWAYS VISIBLE AND RESPONSIVE */}
-        <div className="flex space-x-3 items-end">
-          <div className="flex-1 relative">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onFocus={() => setInputFocused(true)}
-              onBlur={() => setInputFocused(false)}
-              placeholder="Ask about check-in, restaurants, rules..."
-              className="pr-4 py-3 rounded-2xl border-gray-300 resize-none text-base"
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-              disabled={loading}
-              style={{ 
-                minHeight: '44px',
-                fontSize: '16px' // Prevents zoom on iOS
-              }}
-            />
+          
+          {/* Message Input - BACK TO NORMAL */}
+          <div className="flex space-x-3 items-end">
+            <div className="flex-1 relative">
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Ask about check-in, restaurants, rules..."
+                className="pr-4 py-3 rounded-2xl border-gray-300 resize-none text-base"
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                disabled={loading}
+                style={{ 
+                  minHeight: '44px',
+                  fontSize: '16px' // Prevents zoom on iOS
+                }}
+              />
+            </div>
+            <Button 
+              onClick={sendMessage} 
+              disabled={loading || !inputMessage.trim()}
+              className="bg-blue-500 hover:bg-blue-600 rounded-full w-11 h-11 p-0 flex-shrink-0"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
           </div>
-          <Button 
-            onClick={sendMessage} 
-            disabled={loading || !inputMessage.trim()}
-            className="bg-blue-500 hover:bg-blue-600 rounded-full w-11 h-11 p-0 flex-shrink-0"
-          >
-            <Send className="h-5 w-5" />
-          </Button>
+          
+          {/* Help text */}
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            Need urgent help? Contact your host directly via your booking confirmation
+          </p>
         </div>
-        
-        {/* Help text */}
-        <p className="text-xs text-gray-500 mt-2 text-center">
-          Need urgent help? Contact your host directly via your booking confirmation
-        </p>
       </div>
     </div>
   );
