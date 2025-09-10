@@ -3080,9 +3080,20 @@ def main():
         
         # APARTMENT AND ICAL TESTS
         ("🏠 Create Apartment", tester.test_create_apartment),
+        ("🏠 Create Apartment with New Fields", tester.test_create_apartment_with_new_fields),
+        ("🏠 Get Apartment with New Fields", tester.test_get_apartment_with_new_fields),
+        ("🏠 Update Apartment with New Fields", tester.test_update_apartment_with_new_fields),
+        ("🏠 Backward Compatibility - Apartment Creation", tester.test_backward_compatibility_apartment_creation),
+        ("🏠 New Fields Validation", tester.test_new_fields_validation),
+        ("🏠 Apartment Locations Dictionary Handling", tester.test_apartment_locations_dictionary_handling),
+        ("🏠 MongoDB Storage Verification", tester.test_mongodb_storage_verification),
         ("🏠 Get User's Apartments", tester.test_get_apartments),
         ("🏠 Get Specific Apartment", tester.test_get_specific_apartment),
         ("🌐 Public Apartment Access", tester.test_public_apartment_access),
+        
+        # ADMIN APARTMENT TESTS WITH NEW FIELDS
+        ("🔐 Admin Get Apartments with New Fields", tester.test_admin_get_apartments_with_new_fields),
+        ("🔐 Admin Apartment Field Visibility", tester.test_admin_apartment_field_visibility),
         
         # ICAL INTEGRATION TESTS - HIGH PRIORITY
         ("📅 Test iCal Sync", tester.test_ical_sync),
