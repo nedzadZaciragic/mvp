@@ -3372,11 +3372,11 @@ const AdminDashboard = ({ adminToken }) => {
                             }}
                             placeholder="Cuisine type"
                           />
-                          <Input
+                          <AddressAutocomplete
                             value={restaurant.location || ""}
-                            onChange={(e) => {
+                            onChange={(value) => {
                               const newRestaurants = [...(formData.recommendations?.restaurants || [])];
-                              newRestaurants[index] = {...newRestaurants[index], location: e.target.value};
+                              newRestaurants[index] = {...newRestaurants[index], location: value};
                               setFormData(prev => ({
                                 ...prev, 
                                 recommendations: {
@@ -3385,7 +3385,7 @@ const AdminDashboard = ({ adminToken }) => {
                                 }
                               }));
                             }}
-                            placeholder="Location/Address"
+                            placeholder="Restaurant location/address"
                           />
                           <div className="flex space-x-2">
                             <Input
