@@ -4515,6 +4515,7 @@ const HostDashboard = () => {
   const [formData, setFormData] = useState({
     name: "",
     address: "",
+    coordinates: null, // Apartment coordinates for distance calculation
     description: "",
     rules: [],
     contact: { phone: "", email: "", whatsapp: "" },
