@@ -2084,6 +2084,9 @@ const GuestChat = ({ apartmentId }) => {
             </div>
           </div>
         )}
+        
+        {/* Invisible scroll anchor */}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Fixed Input at Bottom - RAISED HIGHER FOR MOBILE */}
