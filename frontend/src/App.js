@@ -2747,299 +2747,281 @@ const AdminPage = () => {
   );
 };
 
-// Update AdminDashboard to accept adminToken prop
+// Update AdminDashboard to accept adminToken prop - SIMPLE APARTMENTS ONLY
 const AdminDashboard = ({ adminToken }) => {
-  const [users, setUsers] = useState([]);
   const [apartments, setApartments] = useState([]);
-  const [allStats, setAllStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState('overview');
   const [editingApartment, setEditingApartment] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    description: '',
+    rules: [],
+    amenities: [],
+    check_in: '',
+    check_out: '',
+    recommendations: {
+      restaurants: [],
+      hidden_gems: []
+    },
+    contact: { phone: '', email: '', whatsapp: '' },
+    ical_url: ''
+  });
 
   useEffect(() => {
-    fetchAdminData();
+    fetchAllApartments();
   }, []);
 
-  const fetchAdminData = async () => {
+  const fetchAllApartments = async () => {
     try {
-      // Set admin token for requests
       const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
-      
-      const [usersResponse, apartmentsResponse, statsResponse] = await Promise.all([
-        axios.get(`${API}/admin/users`, { headers }),
-        axios.get(`${API}/admin/apartments`, { headers }),
-        axios.get(`${API}/admin/stats`, { headers })
-      ]);
-      
-      setUsers(usersResponse.data);
-      setApartments(apartmentsResponse.data);
-      setAllStats(statsResponse.data);
+      const response = await axios.get(`${API}/admin/apartments`, { headers });
+      setApartments(response.data);
     } catch (error) {
-      console.error('Error fetching admin data:', error);
+      console.error('Error fetching apartments:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEditApartment = (apartment) => {
+  const handleEdit = (apartment) => {
     setEditingApartment(apartment);
+    setFormData({
+      name: apartment.name || '',
+      address: apartment.address || '',
+      description: apartment.description || '',
+      rules: apartment.rules || [],
+      amenities: apartment.amenities || [],
+      check_in: apartment.check_in_time || '',
+      check_out: apartment.check_out_time || '',
+      recommendations: apartment.recommendations || { restaurants: [], hidden_gems: [] },
+      contact: apartment.emergency_contact || { phone: '', email: '', whatsapp: '' },
+      ical_url: apartment.ical_url || ''
+    });
   };
 
-  const handleSaveApartment = async (apartmentData) => {
+  const handleSave = async () => {
     try {
-      await axios.put(`${API}/admin/apartments/${editingApartment.id}`, apartmentData);
+      const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
+      await axios.put(`${API}/admin/apartments/${editingApartment.id}`, formData, { headers });
+      
+      // Refresh apartments list
+      await fetchAllApartments();
       setEditingApartment(null);
-      fetchAdminData(); // Refresh data
       alert('Apartment updated successfully!');
     } catch (error) {
       console.error('Error updating apartment:', error);
-      alert('Failed to update apartment');
+      alert('Error updating apartment');
     }
   };
 
-  const handleDeleteApartment = async (apartmentId) => {
-    if (!window.confirm('Are you sure you want to delete this apartment?')) return;
-    
-    try {
-      await axios.delete(`${API}/admin/apartments/${apartmentId}`);
-      fetchAdminData(); // Refresh data
-      alert('Apartment deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting apartment:', error);
-      alert('Failed to delete apartment');
+  const handleDelete = async (apartmentId) => {
+    if (window.confirm('Are you sure you want to delete this apartment?')) {
+      try {
+        const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
+        await axios.delete(`${API}/admin/apartments/${apartmentId}`, { headers });
+        
+        // Refresh apartments list
+        await fetchAllApartments();
+        alert('Apartment deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting apartment:', error);
+        alert('Error deleting apartment');
+      }
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+        <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+        <span className="ml-2">Loading apartments...</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Admin Navigation */}
-      <div className="flex space-x-4 border-b">
-        <button
-          onClick={() => setActiveView('overview')}
-          className={`pb-2 px-1 border-b-2 ${activeView === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
-        >
-          Overview
-        </button>
-        <button
-          onClick={() => setActiveView('users')}
-          className={`pb-2 px-1 border-b-2 ${activeView === 'users' ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
-        >
-          Users ({users.length})
-        </button>
-        <button
-          onClick={() => setActiveView('apartments')}
-          className={`pb-2 px-1 border-b-2 ${activeView === 'apartments' ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
-        >
-          All Apartments ({apartments.length})
-        </button>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">All Apartments ({apartments.length})</h2>
+        <p className="text-gray-600">Manage all properties in the system</p>
       </div>
 
-      {/* Overview Tab */}
-      {activeView === 'overview' && allStats && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{allStats.totals.users}</div>
-                <p className="text-xs text-muted-foreground">
-                  +{allStats.recent_activity.new_users_24h} in last 24h
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Apartments</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{allStats.totals.apartments}</div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
-                <MessageCircle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{allStats.totals.messages}</div>
-                <p className="text-xs text-muted-foreground">
-                  +{allStats.recent_activity.messages_24h} in last 24h
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Email Configs</CardTitle>
-                <Mail className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{allStats.totals.email_credentials}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Most Active Apartments */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Most Active Apartments</CardTitle>
-              <CardDescription>Apartments with most guest interactions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {allStats.most_active_apartments.map((apt, index) => (
-                  <div key={apt._id} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Badge variant="outline">{index + 1}</Badge>
-                      <span className="font-medium">Apartment ID: {apt._id}</span>
-                    </div>
-                    <Badge>{apt.message_count} messages</Badge>
-                  </div>
-                ))}
+      {/* Edit Modal */}
+      {editingApartment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Edit Apartment</h3>
+                <Button 
+                  onClick={() => setEditingApartment(null)}
+                  variant="ghost"
+                  className="text-gray-500"
+                >
+                  ✕
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
-      {/* Users Tab */}
-      {activeView === 'users' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Shield className="h-5 w-5 mr-2" />
-              User Management
-            </CardTitle>
-            <CardDescription>Manage all users and their properties</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {users.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-blue-100 p-2 rounded-full">
-                      <User className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{user.full_name}</p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
-                      <p className="text-xs text-gray-400">
-                        Created: {new Date(user.created_at).toLocaleDateString()}
-                      </p>
-                      {user.brand_name && (
-                        <p className="text-xs text-purple-600">Brand: {user.brand_name}</p>
-                      )}
-                    </div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Name</label>
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
+                      placeholder="Apartment name"
+                    />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant={user.email_verified ? "default" : "secondary"}>
-                      {user.email_verified ? "Verified" : "Unverified"}
-                    </Badge>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Address</label>
+                    <Input
+                      value={formData.address}
+                      onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
+                      placeholder="Full address"
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Apartments Tab */}
-      {activeView === 'apartments' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Building2 className="h-5 w-5 mr-2" />
-              All Apartments Management
-            </CardTitle>
-            <CardDescription>View and edit all apartments across all users</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {apartments.map((apartment) => {
-                const owner = users.find(u => u.id === apartment.user_id);
-                return (
-                  <div key={apartment.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="font-semibold text-lg">{apartment.name}</h3>
-                        <p className="text-sm text-gray-600">{apartment.address}</p>
-                        <p className="text-xs text-purple-600">
-                          Owner: {owner?.full_name} ({owner?.email})
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline">
-                          {apartment.total_chats || 0} chats
-                        </Badge>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditApartment(apartment)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteApartment(apartment.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p><strong>Description:</strong></p>
-                        <p className="text-gray-600 text-xs">{apartment.description?.substring(0, 100)}...</p>
-                      </div>
-                      <div>
-                        <p><strong>Rules:</strong> {apartment.rules?.length || 0}</p>
-                        <p><strong>iCal URL:</strong> {apartment.ical_url ? '✅ Set' : '❌ Not set'}</p>
-                        <p><strong>Created:</strong> {new Date(apartment.created_at).toLocaleDateString()}</p>
-                      </div>
-                    </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    rows="3"
+                    placeholder="Property description"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Check-in Time</label>
+                    <Input
+                      value={formData.check_in}
+                      onChange={(e) => setFormData(prev => ({...prev, check_in: e.target.value}))}
+                      placeholder="e.g., 3:00 PM"
+                    />
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Check-out Time</label>
+                    <Input
+                      value={formData.check_out}
+                      onChange={(e) => setFormData(prev => ({...prev, check_out: e.target.value}))}
+                      placeholder="e.g., 11:00 AM"
+                    />
+                  </div>
+                </div>
 
-      {/* Edit Apartment Modal */}
-      {editingApartment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle>Edit Apartment: {editingApartment.name}</CardTitle>
-              <CardDescription>Make changes to apartment details</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AdminApartmentEditForm
-                apartment={editingApartment}
-                onSave={handleSaveApartment}
-                onCancel={() => setEditingApartment(null)}
-              />
-            </CardContent>
-          </Card>
+                <div>
+                  <label className="block text-sm font-medium mb-2">iCal URL</label>
+                  <Input
+                    value={formData.ical_url}
+                    onChange={(e) => setFormData(prev => ({...prev, ical_url: e.target.value}))}
+                    placeholder="Calendar sync URL"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <Button 
+                    onClick={() => setEditingApartment(null)}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Apartments List */}
+      <div className="space-y-4">
+        {apartments.map((apartment) => (
+          <Card key={apartment.id} className="p-6">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <div className="flex items-center space-x-3 mb-3">
+                  <Building2 className="h-6 w-6 text-blue-600" />
+                  <h3 className="text-xl font-semibold text-gray-900">{apartment.name}</h3>
+                  <Badge variant="outline" className="text-xs">
+                    ID: {apartment.id.slice(0, 8)}...
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">Address:</span>
+                    <p className="text-gray-600">{apartment.address || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Owner:</span>
+                    <p className="text-gray-600">{apartment.user_email || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Check-in/out:</span>
+                    <p className="text-gray-600">
+                      {apartment.check_in_time || 'N/A'} / {apartment.check_out_time || 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">iCal:</span>
+                    <p className="text-gray-600">
+                      {apartment.ical_url ? '✅ Connected' : '❌ Not connected'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Rules:</span>
+                    <p className="text-gray-600">{apartment.rules?.length || 0} rules</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Amenities:</span>
+                    <p className="text-gray-600">{apartment.amenities?.length || 0} amenities</p>
+                  </div>
+                </div>
+
+                {apartment.description && (
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <span className="font-medium text-gray-700">Description: </span>
+                    <span className="text-gray-600">{apartment.description}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col space-y-2 ml-4">
+                <Button
+                  onClick={() => handleEdit(apartment)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  size="sm"
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
+                </Button>
+                <Button
+                  onClick={() => handleDelete(apartment.id)}
+                  variant="destructive"
+                  size="sm"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+
+        {apartments.length === 0 && (
+          <Card className="p-12 text-center">
+            <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Apartments Found</h3>
+            <p className="text-gray-600">There are no apartments in the system yet.</p>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
