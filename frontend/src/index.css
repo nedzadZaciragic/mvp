@@ -30,14 +30,15 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
 
 /* Mobile viewport handling */
 @media screen and (max-width: 768px) {
-    html, body {
-        height: 100%;
-        overflow: hidden;
-    }
-    
     .mobile-chat-container {
         height: 100vh;
         height: 100dvh; /* Dynamic viewport height for modern browsers */
+    }
+    
+    /* Ensure scrolling works on mobile */
+    .chat-messages {
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
     }
 }
 
