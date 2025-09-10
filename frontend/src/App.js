@@ -1605,12 +1605,16 @@ const GuestChat = ({ apartmentId }) => {
   const [branding, setBranding] = useState(null);
   const [sessionId] = useState(`guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   
-  // Pull-to-refresh states
+  // Pull-to-refresh states 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [startY, setStartY] = useState(0);
   const [currentY, setCurrentY] = useState(0);
   const [pullDistance, setPullDistance] = useState(0);
   const messagesContainerRef = useRef(null);
+  
+  // Keyboard handling states
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
 
   useEffect(() => {
     fetchApartmentInfo();
