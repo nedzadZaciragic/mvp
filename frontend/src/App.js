@@ -1764,8 +1764,38 @@ const GuestChat = ({ apartmentId }) => {
             </div>
           </div>
 
-          {/* Messages with enhanced styling - Only this scrolls */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          {/* Messages with enhanced styling and pull-to-refresh */}
+          <div 
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 relative"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{ 
+              transform: `translateY(${pullDistance * 0.5}px)`,
+              transition: pullDistance === 0 ? 'transform 0.3s ease' : 'none'
+            }}
+          >
+            {/* Pull-to-refresh indicator */}
+            {pullDistance > 0 && (
+              <div 
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center justify-center text-blue-600 z-10"
+                style={{ top: `-${Math.min(60, pullDistance)}px` }}
+              >
+                <div className={`rounded-full p-2 bg-white shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
+                  {isRefreshing ? (
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full" 
+                         style={{ transform: `rotate(${pullDistance * 3}deg)` }}>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs mt-1 text-blue-600 font-medium">
+                  {pullDistance > 60 ? 'Release to refresh' : 'Pull to refresh'}
+                </p>
+              </div>
+            )}
             {messages.map((message, index) => (
               <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`flex items-start space-x-2 sm:space-x-3 max-w-[85%] sm:max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
