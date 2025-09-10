@@ -5434,6 +5434,7 @@ const HostDashboard = () => {
                         placeholder="Full Address"
                         value={formData.address}
                         onChange={(value) => setFormData(prev => ({...prev, address: value}))}
+                        onCoordinatesChange={(coords) => setFormData(prev => ({...prev, coordinates: coords}))}
                       />
                     </div>
                     
