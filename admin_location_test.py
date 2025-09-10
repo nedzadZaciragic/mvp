@@ -121,8 +121,7 @@ def test_admin_location_fields():
         print(f"   Status: {response.status_code}")
         
         if response.status_code == 200:
-            data = response.json()
-            apartments = data.get('apartments', [])
+            apartments = response.json()  # Direct list, not wrapped in object
             print(f"   ✅ Retrieved {len(apartments)} apartments")
             
             # Find our test apartment
