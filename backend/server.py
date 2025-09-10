@@ -1339,6 +1339,7 @@ async def update_whitelabel_settings(
                 "brand_primary_color": settings.brand_primary_color,
                 "brand_secondary_color": settings.brand_secondary_color,
                 "ai_tone": settings.ai_tone,
+                "ai_assistant_name": settings.ai_assistant_name,
                 "custom_domain": settings.custom_domain,
                 "chat_background": settings.chat_background,
                 "chat_font": settings.chat_font
