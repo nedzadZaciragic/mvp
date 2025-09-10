@@ -105,6 +105,24 @@
 user_problem_statement: "Implement real email functionality for MyHostIQ platform where hosts can configure their email credentials to send automated welcome emails to guests from their own email addresses. Also implement payment simulation for subscription plans."
 
 backend:
+  - task: "New Apartment Fields Implementation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented new apartment fields: check_in_time, check_out_time, check_in_instructions, apartment_locations (dictionary), wifi_network, wifi_password, wifi_instructions. Added to Apartment, ApartmentCreate, and ApartmentUpdate models."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE FOUND: Duplicate Apartment model definitions in server.py. Second definition (line 306) was overriding first definition (line 207) that contained new fields. This caused new fields to not be returned in API responses despite being stored in database."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED AND TESTED SUCCESSFULLY: Removed duplicate Apartment model definition. All new apartment fields now working perfectly. COMPREHENSIVE TESTING COMPLETED: 1) CREATE: Successfully created apartments with all new fields (check_in_time: '15:00', check_out_time: '11:00', check_in_instructions: 'Keys are under the blue mat', apartment_locations: {'keys': 'under the mat', 'towels': 'bathroom closet', 'kitchen_utensils': 'drawer'}, wifi_network: 'TestWiFi123', wifi_password: 'password123', wifi_instructions: 'Router is in living room'). 2) READ: All new fields properly retrieved via GET /api/apartments/{id}. 3) UPDATE: Successfully updated all new fields via PUT /api/apartments/{id}. 4) ADMIN ACCESS: Admin endpoints (GET /api/admin/apartments) can see and access all new fields. 5) BACKWARD COMPATIBILITY: Apartments created without new fields work properly with correct default values (empty strings for text fields, empty dict for apartment_locations). 6) MONGODB STORAGE: All new fields properly stored and retrieved from MongoDB. 7) VALIDATION: apartment_locations dictionary field handles complex nested data correctly. SUCCESS RATE: 100% (7/7 tests passed). All new apartment fields ready for production use."
+
   - task: "Email Credentials CRUD API"
     implemented: true
     working: true
