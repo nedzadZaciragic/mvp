@@ -3956,7 +3956,17 @@ const HostDashboard = () => {
         restaurants: [],
         hidden_gems: [],
         transport: ""
-      }
+      },
+      // Check-in/Check-out information
+      check_in_time: apartment.check_in_time || "",
+      check_out_time: apartment.check_out_time || "",
+      check_in_instructions: apartment.check_in_instructions || "",
+      // Apartment items locations
+      apartment_locations: apartment.apartment_locations || {},
+      // WiFi information
+      wifi_network: apartment.wifi_network || "",
+      wifi_password: apartment.wifi_password || "",
+      wifi_instructions: apartment.wifi_instructions || ""
     });
     setShowForm(true);
   };
