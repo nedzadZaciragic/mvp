@@ -2228,8 +2228,12 @@ async def get_public_apartment(apartment_id: str):
             "brand_secondary_color": user.get('brand_secondary_color', '#10b981')
         }
         
+        # Remove MongoDB ObjectId fields that can't be serialized
+        if '_id' in apartment:
+            del apartment['_id']
+        
         return {
-            "apartment": apartment,  # Return FULL apartment data
+            **apartment,  # Return FULL apartment data as top-level fields
             "branding": branding
         }
     except Exception as e:
