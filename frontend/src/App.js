@@ -2695,6 +2695,9 @@ const AdminPage = () => {
         
         // Set axios default header for admin requests
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        // Redirect to admin dashboard
+        window.location.href = '/admin/dashboard';
       }
     } catch (error) {
       console.error('Admin login error:', error);
