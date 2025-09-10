@@ -5600,7 +5600,7 @@ const HostDashboard = () => {
                       <Coffee className="h-5 w-5 mr-2" />
                       Restaurant & Dining Recommendations
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                       <Input
                         placeholder="Restaurant name"
                         value={newRestaurant.name}
@@ -5610,6 +5610,11 @@ const HostDashboard = () => {
                         placeholder="Cuisine type"
                         value={newRestaurant.type}
                         onChange={(e) => setNewRestaurant(prev => ({...prev, type: e.target.value}))}
+                      />
+                      <Input
+                        placeholder="Location/Address"
+                        value={newRestaurant.location}
+                        onChange={(e) => setNewRestaurant(prev => ({...prev, location: e.target.value}))}
                       />
                       <div className="flex space-x-2">
                         <Input
@@ -5624,7 +5629,9 @@ const HostDashboard = () => {
                       {formData.recommendations.restaurants.map((rest, index) => (
                         <div key={index} className="bg-green-50 p-3 rounded-lg text-sm flex justify-between items-start">
                           <div>
-                            <strong>{rest.name}</strong> ({rest.type}) - {rest.tip}
+                            <strong>{rest.name}</strong> ({rest.type})
+                            {rest.location && <div className="text-gray-600">📍 {rest.location}</div>}
+                            <div className="text-gray-700">{rest.tip}</div>
                           </div>
                           <Button 
                             type="button" 
