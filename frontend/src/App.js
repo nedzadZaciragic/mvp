@@ -4941,6 +4941,7 @@ function App() {
               } 
             />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/guest/:apartmentId" element={<GuestChatWrapper />} />
           </Routes>
         </BrowserRouter>
