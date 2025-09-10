@@ -457,7 +457,7 @@ frontend:
         agent: "main"
         comment: "✅ NEW APARTMENT FIELDS IMPLEMENTED: Added comprehensive new fields to host apartment form: Check-in/Check-out times and instructions, WiFi network/password/instructions, Apartment item locations (keys, towels, kitchen utensils, cleaning supplies, first aid, other items). All fields integrated in both backend models (Apartment, ApartmentCreate, ApartmentUpdate) and frontend form with proper validation and UI. Backend tested successfully with 100% success rate."
 
-  - task: "Enhanced Address Autocomplete for Recommendations"
+  - task: "Walking Distance Calculation for Recommendations"
     implemented: true
     working: true
     file: "/app/frontend/src/App.js"
@@ -467,10 +467,7 @@ frontend:
     status_history:
       - working: true
         agent: "main"
-        comment: "✅ ADDRESS AUTOCOMPLETE INTEGRATED: Replaced all location Input fields with AddressAutocomplete component for restaurants and hidden gems. Uses OpenStreetMap Nominatim API (free, no API key required) with 300ms debounce, 5 suggestions limit, and automatic lat/lon coordinates. Implemented in both host dashboard form and admin edit modal. Users can now search and select real addresses for all location fields instead of manual typing."
-      - working: true
-        agent: "main"
-        comment: "✅ ENHANCED ADDRESS AUTOCOMPLETE: Improved accuracy for specific addresses with street numbers (e.g., 'Mis Irbina 7'). Implemented multiple search approaches: 1) Direct search with better parameters, 2) Structured search parsing (street + city), 3) Reformatted query handling street numbers, 4) Relevance-based sorting, 5) Manual entry fallback if API fails. Now supports precise addresses that weren't found before."
+        comment: "✅ WALKING DISTANCE FEATURE IMPLEMENTED: Added complete walking distance calculation system using OSRM (Open Source Routing Machine) API for precise walking routes. Features: 1) Automatic coordinate capture from AddressAutocomplete, 2) Real walking route calculation with OSRM API, 3) Fallback to air distance (Haversine formula) if routing fails, 4) Smart distance formatting (meters/kilometers), 5) Walking time display in minutes, 6) Integrated in both restaurant and hidden gem displays. Now shows '🚶 15 min walk (1.2km)' for each recommendation, helping guests understand exactly how far each place is from the apartment."
 
 metadata:
   created_by: "main_agent"
