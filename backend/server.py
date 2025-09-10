@@ -241,6 +241,16 @@ class ApartmentCreate(BaseModel):
     ical_url: str = ""
     ai_tone: str = "professional"
     recommendations: Dict[str, Any] = {}
+    # Check-in/Check-out information
+    check_in_time: str = ""
+    check_out_time: str = ""
+    check_in_instructions: str = ""
+    # Apartment items locations
+    apartment_locations: Dict[str, str] = {}
+    # WiFi information
+    wifi_network: str = ""
+    wifi_password: str = ""
+    wifi_instructions: str = ""
 
 class ApartmentUpdate(BaseModel):
     name: str
