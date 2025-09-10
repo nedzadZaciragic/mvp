@@ -2659,20 +2659,20 @@ const AdminDashboardPage = () => {
   );
 };
 
-// Separate Admin Page Component - Independent of regular auth
+// SIMPLE ADMIN PAGE - SHOWS ALL APARTMENTS FROM ALL USERS
 const AdminPage = () => {
   const [adminCredentials, setAdminCredentials] = useState({ username: '', password: '' });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [adminToken, setAdminToken] = useState(null);
+  const [allApartments, setAllApartments] = useState([]);
   const [error, setError] = useState('');
 
   // Check if admin is already logged in
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     if (token) {
-      setAdminToken(token);
       setIsLoggedIn(true);
+      fetchAllApartments(token);
     }
   }, []);
 
@@ -2690,14 +2690,10 @@ const AdminPage = () => {
       if (response.data.access_token) {
         const token = response.data.access_token;
         localStorage.setItem('adminToken', token);
-        setAdminToken(token);
         setIsLoggedIn(true);
         
-        // Set axios default header for admin requests
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        // Redirect to admin dashboard
-        window.location.href = '/admin/dashboard';
+        // Fetch all apartments immediately
+        await fetchAllApartments(token);
       }
     } catch (error) {
       console.error('Admin login error:', error);
@@ -2707,22 +2703,71 @@ const AdminPage = () => {
     }
   };
 
+  const fetchAllApartments = async (token) => {
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      // Get apartments and users to match emails
+      const [apartmentsResponse, usersResponse] = await Promise.all([
+        axios.get(`${API}/admin/apartments`, { headers }),
+        axios.get(`${API}/admin/users`, { headers })
+      ]);
+      
+      const apartments = apartmentsResponse.data;
+      const users = usersResponse.data;
+      
+      // Create user lookup map
+      const userMap = {};
+      users.forEach(user => {
+        userMap[user.id] = user.email;
+      });
+      
+      // Enrich apartments with user emails
+      const enrichedApartments = apartments.map(apartment => ({
+        ...apartment,
+        user_email: apartment.user_id ? userMap[apartment.user_id] : 'Unknown'
+      }));
+      
+      setAllApartments(enrichedApartments);
+      console.log(`✅ Loaded ${enrichedApartments.length} apartments from ALL USERS`);
+    } catch (error) {
+      console.error('Error fetching apartments:', error);
+      setError('Failed to load apartments');
+    }
+  };
+
   const handleAdminLogout = () => {
     localStorage.removeItem('adminToken');
-    delete axios.defaults.headers.common['Authorization'];
-    setAdminToken(null);
     setIsLoggedIn(false);
+    setAllApartments([]);
     setAdminCredentials({ username: '', password: '' });
   };
 
-  // Admin Login Form
+  const handleDeleteApartment = async (apartmentId) => {
+    if (window.confirm('Are you sure you want to delete this apartment?')) {
+      try {
+        const token = localStorage.getItem('adminToken');
+        const headers = { Authorization: `Bearer ${token}` };
+        await axios.delete(`${API}/admin/apartments/${apartmentId}`, { headers });
+        
+        // Refresh apartments list
+        await fetchAllApartments(token);
+        alert('Apartment deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting apartment:', error);
+        alert('Error deleting apartment');
+      }
+    }
+  };
+
+  // ADMIN LOGIN FORM
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">Admin Login</CardTitle>
-            <CardDescription>Access the MyHomeIQ Admin Dashboard</CardDescription>
+            <CardTitle className="text-2xl font-bold text-gray-900">Admin Access</CardTitle>
+            <CardDescription>View ALL apartments from ALL users</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAdminLogin} className="space-y-4">
@@ -2733,76 +2778,164 @@ const AdminPage = () => {
               )}
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Username
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                 <Input
                   type="text"
                   value={adminCredentials.username}
                   onChange={(e) => setAdminCredentials(prev => ({...prev, username: e.target.value}))}
-                  placeholder="Enter admin username"
+                  placeholder="myhomeiq_admin"
                   required
                   disabled={loading}
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
                 <Input
                   type="password"
                   value={adminCredentials.password}
                   onChange={(e) => setAdminCredentials(prev => ({...prev, password: e.target.value}))}
-                  placeholder="Enter admin password"
+                  placeholder="Admin123!MyHomeIQ"
                   required
                   disabled={loading}
                 />
               </div>
               
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Signing in...</span>
-                  </div>
-                ) : (
-                  'Sign In'
-                )}
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                {loading ? 'Signing in...' : 'Admin Sign In'}
               </Button>
             </form>
-            
-            <div className="mt-4 text-center">
-              <p className="text-xs text-gray-500">
-                Admin credentials: myhomeiq_admin / Admin123!MyHomeIQ
-              </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ADMIN DASHBOARD - ALL APARTMENTS FROM ALL USERS
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <div className="bg-red-100 p-2 rounded-full">
+                <Shield className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p className="text-gray-600">ALL APARTMENTS FROM ALL USERS ({allApartments.length} total)</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            <Button onClick={handleAdminLogout} variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </div>
       </div>
-    );
-  }
 
-  // Show loading if login is successful (redirecting)
-  if (isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="p-8">
+      {/* ALL APARTMENTS LIST */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {loading && (
+          <div className="text-center py-8">
             <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <h3 className="text-lg font-semibold mb-2">Redirecting to Dashboard...</h3>
-            <p className="text-gray-600">Please wait while we load your admin dashboard.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+            <p>Loading all apartments from all users...</p>
+          </div>
+        )}
 
-  return null;
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {allApartments.map((apartment, index) => (
+            <Card key={apartment.id} className="p-6">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="bg-blue-100 p-2 rounded-full">
+                      <Building2 className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900">#{index + 1}. {apartment.name}</h3>
+                    <Badge variant="outline" className="text-xs">ID: {apartment.id.slice(0, 8)}...</Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm mb-4">
+                    <div>
+                      <span className="font-medium text-gray-700">👤 Owner Email:</span>
+                      <p className="text-blue-600 font-medium">{apartment.user_email || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">📍 Address:</span>
+                      <p className="text-gray-600">{apartment.address || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">📅 Created:</span>
+                      <p className="text-gray-600">
+                        {apartment.created_at ? new Date(apartment.created_at).toLocaleDateString() : 'Unknown'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">💬 Total Chats:</span>
+                      <p className="text-gray-600">{apartment.total_chats || 0}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">🔗 iCal:</span>
+                      <p className="text-gray-600">
+                        {apartment.ical_url ? '✅ Connected' : '❌ Not connected'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">📋 Rules:</span>
+                      <p className="text-gray-600">{apartment.rules?.length || 0} rules</p>
+                    </div>
+                  </div>
+
+                  {apartment.description && (
+                    <div className="bg-gray-50 p-3 rounded-lg mb-3">
+                      <span className="font-medium text-gray-700">📝 Description: </span>
+                      <span className="text-gray-600">{apartment.description}</span>
+                    </div>
+                  )}
+
+                  {apartment.contact && (
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <span className="font-medium text-blue-700">📞 Contact: </span>
+                      <span className="text-blue-600">
+                        {apartment.contact.phone} | {apartment.contact.email}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="ml-4">
+                  <Button
+                    onClick={() => handleDeleteApartment(apartment.id)}
+                    variant="destructive"
+                    size="sm"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+
+          {allApartments.length === 0 && !loading && (
+            <Card className="p-12 text-center">
+              <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Apartments Found</h3>
+              <p className="text-gray-600">No apartments from any users in the system.</p>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // Update AdminDashboard to accept adminToken prop - SIMPLE APARTMENTS ONLY
