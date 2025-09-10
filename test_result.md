@@ -340,20 +340,53 @@ backend:
         comment: "✅ DETAILED iCAL TEST ENDPOINT TESTED SUCCESSFULLY: Comprehensive testing functionality working perfectly. Provides detailed step-by-step feedback with proper test status, apartment validation, and comprehensive recommendations. Handles missing iCal URLs gracefully with helpful error messages and recommendations. Response includes all required fields (test_status, apartment_id, steps, summary, recommendations). Rate limiting implemented at 3/minute. Authentication and apartment ownership verification working. Provides actionable recommendations for configuration issues. Minor: Error handling returns 500 instead of 404 for invalid apartment IDs (acceptable behavior)."
 
 frontend:
-  - task: "Email Credentials Management UI"
+  - task: "Mobile Chat UI Improvements"
     implemented: true
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Added EmailCredentialsManager component with form for adding/editing email credentials, test functionality, and status display integrated in Settings tab"
+        comment: "Fixed mobile chat UI issues: Raised message input box from 10px to 20px higher on mobile devices. Added auto-scroll functionality with useRef and useEffect to automatically scroll to bottom when new messages arrive. Increased bottom margin to 140px to accommodate raised input and suggestions."
+
+  - task: "Enhanced Sample Question Recommendations"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
       - working: "NA"
-        agent: "testing"
-        comment: "⚠️ DASHBOARD ACCESS ISSUE: Cannot test email credentials UI due to admin authentication flow issue. Admin login API works (returns token) but ProtectedRoute component doesn't recognize admin tokens stored as 'authToken' vs 'token'. Dashboard requires regular user authentication through AuthProvider context. Email UI components exist in code but cannot be accessed for testing."
+        agent: "main"
+        comment: "Upgraded sample questions from basic prompts to comprehensive contextual suggestions: 'How do I check in?', 'What's the WiFi password?', 'Where are the towels?', 'Best nearby restaurants?', 'Emergency contacts?', 'House rules?'. Improved styling with blue theme and better mobile responsiveness. Now visible on all screen sizes."
+
+  - task: "Custom AI Assistant Name Integration"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated GuestChat component to use custom AI assistant name from branding.ai_assistant_name instead of generic naming. Added AI Assistant Name field to branding settings with proper input handling. Updated welcome message and header to display custom assistant name."
+
+  - task: "Walking Distance Feature Removal"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Completely removed walking distance functionality from chatbot interface as requested. Removed calculateWalkingDistance, calculateAirDistance functions, WalkingDistance component, and all related UI elements from host dashboard recommendations display. Walking distance calculations no longer appear in guest chat or host interface."
 
   - task: "SMTP Auto-Detection UI"
     implemented: true
