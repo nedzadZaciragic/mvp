@@ -2761,10 +2761,13 @@ const AdminDashboard = ({ adminToken }) => {
 
   const fetchAdminData = async () => {
     try {
+      // Set admin token for requests
+      const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
+      
       const [usersResponse, apartmentsResponse, statsResponse] = await Promise.all([
-        axios.get(`${API}/admin/users`),
-        axios.get(`${API}/admin/apartments`),
-        axios.get(`${API}/admin/stats`)
+        axios.get(`${API}/admin/users`, { headers }),
+        axios.get(`${API}/admin/apartments`, { headers }),
+        axios.get(`${API}/admin/stats`, { headers })
       ]);
       
       setUsers(usersResponse.data);
