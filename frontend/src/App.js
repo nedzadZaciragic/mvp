@@ -1614,6 +1614,16 @@ const GuestChat = ({ apartmentId }) => {
 
   useEffect(() => {
     fetchApartmentInfo();
+    
+    // Lock page scroll when chat is active (mobile)
+    if (window.innerWidth <= 768) {
+      document.body.classList.add('chat-active');
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('chat-active');
+    };
   }, [apartmentId]);
 
   // Pull-to-refresh handlers
