@@ -3740,6 +3740,15 @@ def main():
         ("📅 Test iCal Sync", tester.test_ical_sync),
         ("📬 Get Booking Notifications", tester.test_get_notifications),
         
+        # NEW CHATBOT AND PROPERTY IMPORT TESTS - HIGH PRIORITY (from review request)
+        ("🤖 Public Apartment Full Data Access", tester.test_public_apartment_full_data_access),
+        ("🤖 AI System Prompt Comprehensive Data", tester.test_ai_system_prompt_comprehensive_data),
+        ("🎨 Custom AI Assistant Name Integration", tester.test_custom_ai_assistant_name_integration),
+        ("🏨 Booking.com Property Import", tester.test_booking_com_property_import),
+        ("🏨 Booking.com vs Airbnb Import", tester.test_booking_com_vs_airbnb_import),
+        ("🔄 Property Import Fallback Mechanisms", tester.test_property_import_fallback_mechanisms),
+        ("🔄 Backward Compatibility Apartment Data", tester.test_backward_compatibility_apartment_data),
+        
         # NEW AI-POWERED ENDPOINTS TESTS - HIGH PRIORITY
         ("🤖 AI Insights Endpoint", tester.test_ai_insights_endpoint),
         ("🤖 AI Insights Rate Limiting", tester.test_ai_insights_rate_limiting),
