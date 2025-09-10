@@ -1889,7 +1889,19 @@ const GuestChat = ({ apartmentId }) => {
       <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white flex-shrink-0 z-10">
         <div className="flex items-center space-x-3">
           <div className="bg-white/20 p-2 rounded-lg">
-            <Bot className="h-6 w-6" />
+            {branding.brand_logo_url ? (
+              <img 
+                src={branding.brand_logo_url} 
+                alt="Brand Logo" 
+                className="h-6 w-6 object-contain"
+                onError={(e) => {
+                  // Fallback to Bot icon if image fails to load
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+            ) : null}
+            <Bot className={`h-6 w-6 ${branding.brand_logo_url ? 'hidden' : 'block'}`} />
           </div>
           <div>
             <h1 className="text-lg font-semibold">{branding.brand_name || 'MyHostIQ'}</h1>
