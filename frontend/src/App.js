@@ -2833,8 +2833,29 @@ const AdminDashboard = ({ adminToken }) => {
   const fetchAllApartments = async () => {
     try {
       const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
-      const response = await axios.get(`${API}/admin/apartments`, { headers });
-      setApartments(response.data);
+      
+      // Get apartments and users to match emails
+      const [apartmentsResponse, usersResponse] = await Promise.all([
+        axios.get(`${API}/admin/apartments`, { headers }),
+        axios.get(`${API}/admin/users`, { headers })
+      ]);
+      
+      const apartments = apartmentsResponse.data;
+      const users = usersResponse.data;
+      
+      // Create user lookup map
+      const userMap = {};
+      users.forEach(user => {
+        userMap[user.id] = user.email;
+      });
+      
+      // Enrich apartments with user emails
+      const enrichedApartments = apartments.map(apartment => ({
+        ...apartment,
+        user_email: apartment.user_id ? userMap[apartment.user_id] : 'Unknown'
+      }));
+      
+      setApartments(enrichedApartments);
     } catch (error) {
       console.error('Error fetching apartments:', error);
     } finally {
