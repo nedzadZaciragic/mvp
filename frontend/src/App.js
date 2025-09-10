@@ -1714,9 +1714,9 @@ const GuestChat = ({ apartmentId }) => {
   const primaryColor = branding.brand_primary_color || BRAND_COLORS.primary;
 
   return (
-    <div className="h-screen bg-gray-100 flex flex-col">
+    <div className="h-screen bg-white flex flex-col fixed inset-0 overflow-hidden">
       {/* Header - Blue gradient like in image */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white flex-shrink-0">
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white flex-shrink-0 z-10">
         <div className="flex items-center space-x-3">
           <div className="bg-white/20 p-2 rounded-lg">
             <Bot className="h-6 w-6" />
@@ -1728,18 +1728,19 @@ const GuestChat = ({ apartmentId }) => {
         </div>
       </div>
 
-      {/* Messages Container - SCROLLABLE */}
+      {/* Messages Container - ONLY CHAT SCROLLS */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 bg-white chat-messages"
+        className="flex-1 overflow-y-auto p-4 space-y-4 bg-white chat-messages relative"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{ 
           transform: `translateY(${pullDistance * 0.5}px)`,
           transition: pullDistance === 0 ? 'transform 0.3s ease' : 'none',
-          WebkitOverflowScrolling: 'touch', // iOS smooth scrolling
-          paddingBottom: '20px' // Space above input
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '20px',
+          marginBottom: '80px' // Space for fixed input
         }}
       >
         {/* Pull-to-refresh indicator */}
