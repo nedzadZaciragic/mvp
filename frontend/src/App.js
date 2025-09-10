@@ -1779,10 +1779,10 @@ const GuestChat = ({ apartmentId }) => {
         </div>
       </div>
 
-      {/* Messages Container - ONLY CHAT SCROLLS */}
+      {/* Messages Container - RESPONSIVE TO KEYBOARD */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 bg-white chat-messages relative"
+        className={`flex-1 overflow-y-auto p-4 space-y-4 bg-white chat-messages relative ${keyboardOpen ? 'keyboard-active' : ''}`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -1790,8 +1790,8 @@ const GuestChat = ({ apartmentId }) => {
           transform: `translateY(${pullDistance * 0.5}px)`,
           transition: pullDistance === 0 ? 'transform 0.3s ease' : 'none',
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '20px',
-          marginBottom: '80px' // Space for fixed input
+          paddingBottom: keyboardOpen ? '140px' : '100px', // Extra space when keyboard is open
+          marginBottom: '0px' // Remove margin to work with fixed input
         }}
       >
         {/* Pull-to-refresh indicator - MATCHES WHITE BACKGROUND */}
