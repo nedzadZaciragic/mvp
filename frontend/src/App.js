@@ -1611,10 +1611,6 @@ const GuestChat = ({ apartmentId }) => {
   const [currentY, setCurrentY] = useState(0);
   const [pullDistance, setPullDistance] = useState(0);
   const messagesContainerRef = useRef(null);
-  
-  // Keyboard handling states
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [inputFocused, setInputFocused] = useState(false);
 
   useEffect(() => {
     fetchApartmentInfo();
