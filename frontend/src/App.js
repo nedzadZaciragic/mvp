@@ -5862,6 +5862,7 @@ const HostDashboard = () => {
                         placeholder="Restaurant location/address"
                         value={newRestaurant.location}
                         onChange={(value) => setNewRestaurant(prev => ({...prev, location: value}))}
+                        onCoordinatesChange={(coords) => setNewRestaurant(prev => ({...prev, coordinates: coords}))}
                       />
                       <div className="flex space-x-2">
                         <Input
