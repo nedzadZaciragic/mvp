@@ -85,6 +85,72 @@ const calculateAirDistance = (lat1, lon1, lat2, lon2) => {
   };
 };
 
+// Walking Distance Component
+const WalkingDistance = ({ fromCoords, toCoords, location }) => {
+  const [distance, setDistance] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const calculateDistance = async () => {
+    if (!fromCoords || !toCoords || (!fromCoords.lat || !fromCoords.lon || !toCoords.lat || !toCoords.lon)) {
+      setError(true);
+      return;
+    }
+
+    setLoading(true);
+    setError(false);
+
+    try {
+      const result = await calculateWalkingDistance(
+        fromCoords.lat, fromCoords.lon,
+        toCoords.lat, toCoords.lon
+      );
+      setDistance(result);
+    } catch (err) {
+      console.error('Distance calculation failed:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (fromCoords && toCoords) {
+      calculateDistance();
+    }
+  }, [fromCoords, toCoords]);
+
+  if (loading) {
+    return (
+      <span className="text-xs text-gray-500 italic">
+        📍 Calculating...
+      </span>
+    );
+  }
+
+  if (error || !distance) {
+    return (
+      <span className="text-xs text-gray-400">
+        📍 Distance unavailable
+      </span>
+    );
+  }
+
+  const formatDistance = (meters) => {
+    if (meters < 1000) return `${meters}m`;
+    return `${(meters / 1000).toFixed(1)}km`;
+  };
+
+  return (
+    <div className="text-xs text-blue-600 flex items-center space-x-1">
+      <span>🚶</span>
+      <span>{distance.walkingTime} min walk</span>
+      <span className="text-gray-500">({formatDistance(distance.distance)})</span>
+      {distance.airDistance && <span className="text-orange-500" title="Air distance estimate">~</span>}
+    </div>
+  );
+};
+
 // Updated brand colors - much lighter blue tones
 const BRAND_COLORS = {
   primary: "#93c5fd", // Much lighter blue
