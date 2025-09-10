@@ -1745,10 +1745,9 @@ const GuestChat = ({ apartmentId }) => {
         {/* Pull-to-refresh indicator */}
         {pullDistance > 0 && (
           <div 
-            className="absolute top-0 left-1/2 transform -translate-x-1/2 flex flex-col items-center justify-center text-blue-600 z-10 bg-white"
+            className="absolute top-0 left-0 right-0 flex flex-col items-center justify-center text-blue-600 z-10 bg-white"
             style={{ 
               top: `-${Math.min(60, pullDistance)}px`,
-              width: '100%',
               height: `${Math.min(60, pullDistance)}px`
             }}
           >
