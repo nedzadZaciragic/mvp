@@ -1765,30 +1765,22 @@ const GuestChat = ({ apartmentId }) => {
             )}
             {messages.map((message, index) => (
               <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`flex items-start space-x-2 sm:space-x-3 max-w-[85%] sm:max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                  <div 
-                    className={`p-1.5 sm:p-2 rounded-full flex-shrink-0 ${
-                      message.type === 'user' 
-                        ? `text-white` 
-                        : 'bg-gray-100'
-                    }`}
-                    style={message.type === 'user' ? { backgroundColor: primaryColor } : {}}
-                  >
-                    {message.type === 'user' ? (
-                      <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                    ) : (
-                      <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                    )}
-                  </div>
+                <div className={`max-w-[85%] sm:max-w-[80%] ${message.type === 'user' ? 'ml-12' : 'mr-12'}`}>
+                  {message.type === 'ai' && (
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="bg-gray-100 p-1.5 rounded-full">
+                        <Bot className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <span className="text-sm text-gray-600 font-medium">AI Assistant</span>
+                    </div>
+                  )}
                   <div className={`p-3 sm:p-4 rounded-2xl ${
                     message.type === 'user' 
-                      ? 'text-white rounded-br-sm' 
-                      : 'bg-gray-100 text-gray-900 rounded-bl-sm'
-                  }`}
-                  style={message.type === 'user' ? { backgroundColor: primaryColor } : {}}
-                  >
+                      ? 'bg-blue-500 text-white rounded-br-md' 
+                      : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                  }`}>
                     <div className="text-sm leading-relaxed whitespace-pre-line break-words">{message.content}</div>
-                    <p className={`text-xs mt-2 ${message.type === 'user' ? 'text-white/70' : 'text-gray-500'}`}>
+                    <p className={`text-xs mt-2 ${message.type === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
                       {new Date(message.timestamp).toLocaleTimeString()}
                     </p>
                   </div>
@@ -1798,11 +1790,14 @@ const GuestChat = ({ apartmentId }) => {
             
             {loading && (
               <div className="flex justify-start">
-                <div className="flex items-start space-x-2 sm:space-x-3">
-                  <div className="p-1.5 sm:p-2 rounded-full bg-gray-100">
-                    <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                <div className="max-w-[85%] sm:max-w-[80%] mr-12">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="bg-gray-100 p-1.5 rounded-full">
+                      <Bot className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <span className="text-sm text-gray-600 font-medium">AI Assistant</span>
                   </div>
-                  <div className="bg-gray-100 p-3 sm:p-4 rounded-2xl rounded-bl-sm">
+                  <div className="bg-gray-100 p-3 sm:p-4 rounded-2xl rounded-bl-md">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
