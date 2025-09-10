@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implement real email functionality for MyHostIQ platform where hosts can configure their email credentials to send automated welcome emails to guests from their own email addresses. Also implement payment simulation for subscription plans."
+user_problem_statement: "Fix multiple issues with MyHostIQ chatbot and property import: 1) AI bot not receiving host information (check-in, WiFi, item locations) during guest conversations, 2) Mobile chat UI fixes (message input positioning and auto-scroll), 3) Add sample question recommendations for guests, 4) Fix bot header name to use custom AI assistant name from branding, 5) Remove walking distance from chatbot, 6) Add Booking.com link parser support alongside existing Airbnb support."
 
 backend:
   - task: "New Apartment Fields Implementation"
