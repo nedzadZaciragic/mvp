@@ -477,7 +477,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Dashboard Access"
+    - "Location Fields in Recommendations"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
