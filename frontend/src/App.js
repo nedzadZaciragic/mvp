@@ -1915,7 +1915,7 @@ const GuestChat = ({ apartmentId }) => {
       // Add welcome message with custom AI bot name
       setMessages([{
         type: 'ai',
-        content: `Welcome to ${response.data.apartment.name}! 🏠 I'm your personal ${response.data.branding.ai_bot_name || `${response.data.apartment.name} assistant`}. I can help you with check-in instructions, apartment rules, local recommendations, and emergency contacts. What would you like to know?`,
+        content: `Welcome to ${response.data.apartment.name}! 🏠 I'm ${response.data.branding.ai_assistant_name || 'your AI assistant'}. I can help you with check-in instructions, apartment rules, local recommendations, WiFi details, and emergency contacts. What would you like to know?`,
         timestamp: new Date().toISOString()
       }]);
     } catch (error) {
