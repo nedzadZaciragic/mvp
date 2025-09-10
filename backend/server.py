@@ -1317,6 +1317,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "brand_primary_color": current_user.brand_primary_color,
         "brand_secondary_color": current_user.brand_secondary_color,
         "ai_tone": current_user.ai_tone,
+        "ai_assistant_name": current_user.ai_assistant_name,
         "custom_domain": current_user.custom_domain,
         "chat_background": current_user.chat_background,
         "chat_font": current_user.chat_font,
