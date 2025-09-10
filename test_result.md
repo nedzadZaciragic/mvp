@@ -375,15 +375,18 @@ frontend:
 
   - task: "Admin Dashboard Access"
     implemented: true
-    working: false
+    working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL ISSUE: Admin login API works but dashboard access fails. Problem: AdminLogin component stores token as 'authToken' but AuthProvider/ProtectedRoute expects 'token'. Admin login doesn't update AuthProvider state, so ProtectedRoute redirects to /login. Dashboard route requires AuthProvider context user state. Need to either: 1) Fix AdminLogin to use AuthProvider, or 2) Create separate admin route that bypasses ProtectedRoute, or 3) Update token storage consistency."
+      - working: "NA"
+        agent: "main"
+        comment: "FIXED: Updated AdminLogin component to store token as 'adminToken' (consistent with AdminDashboardPage) and navigate to '/admin/dashboard' instead of '/dashboard'. This should resolve the token storage mismatch and routing issues."
 
   - task: "Chat Interface"
     implemented: true
