@@ -2667,7 +2667,7 @@ const AdminPage = () => {
                   type="text"
                   value={adminCredentials.username}
                   onChange={(e) => setAdminCredentials(prev => ({...prev, username: e.target.value}))}
-                  placeholder="myhomeiq_admin"
+                  placeholder="Enter admin username"
                   required
                   disabled={loading}
                 />
