@@ -3462,11 +3462,11 @@ const AdminDashboard = ({ adminToken }) => {
                             }}
                             placeholder="Place or attraction name"
                           />
-                          <Input
+                          <AddressAutocomplete
                             value={gem.location || ""}
-                            onChange={(e) => {
+                            onChange={(value) => {
                               const newGems = [...(formData.recommendations?.hidden_gems || [])];
-                              newGems[index] = {...newGems[index], location: e.target.value};
+                              newGems[index] = {...newGems[index], location: value};
                               setFormData(prev => ({
                                 ...prev, 
                                 recommendations: {
