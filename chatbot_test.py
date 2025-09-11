@@ -110,7 +110,7 @@ class MyHostIQChatbotTester:
         """Set up test environment with user and apartment"""
         print("🔧 Setting up test environment...")
         
-        # Register test user
+        # Try to register test user, if fails try login
         success, response = self.run_test(
             "User Registration for Chatbot Testing",
             "POST",
@@ -125,8 +125,29 @@ class MyHostIQChatbotTester:
             self.user_id = response['user']['id']
             print(f"   ✅ User registered: {self.user_id}")
         else:
-            print("   ❌ Failed to register user")
-            return False
+            print("   ⚠️ Registration failed, trying login...")
+            # Try login instead
+            login_data = {
+                "email": self.test_user["email"],
+                "password": self.test_user["password"]
+            }
+            
+            success, response = self.run_test(
+                "User Login for Chatbot Testing",
+                "POST",
+                "auth/login",
+                200,
+                data=login_data,
+                use_auth=False
+            )
+            
+            if success and response.get('access_token'):
+                self.token = response['access_token']
+                self.user_id = response['user']['id']
+                print(f"   ✅ User logged in: {self.user_id}")
+            else:
+                print("   ❌ Failed to login user")
+                return False
         
         # Create test apartment with comprehensive data
         success, response = self.run_test(
