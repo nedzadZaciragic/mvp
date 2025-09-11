@@ -2322,6 +2322,299 @@ class MyHostIQAPITester:
             print("   ❌ Failed to test scraping verification")
             return False
 
+    def test_sarajevo_city_extraction_and_chatbot(self):
+        """Test Sarajevo city extraction and chatbot functionality - CRITICAL TEST"""
+        print("\n🔍 CRITICAL TEST: Sarajevo City Extraction and Chatbot Functionality")
+        print("="*80)
+        
+        # First, create a test apartment with Sarajevo address
+        sarajevo_apartment_data = {
+            "name": "Beautiful Sarajevo Apartment",
+            "address": "Mis Irbina 7, Sarajevo, Bosnia and Herzegovina",
+            "description": "Modern apartment in the heart of Sarajevo with great views",
+            "rules": ["No smoking", "Quiet hours 22:00-08:00", "No parties"],
+            "contact": {"phone": "+387 61 123 456", "email": "host@example.com"},
+            "ical_url": "",
+            "ai_tone": "professional",
+            "recommendations": {
+                "restaurants": [
+                    {"name": "Cevabdzinica Zeljo", "type": "Traditional", "location": "Kundurdžiluk 19", "tip": "Best cevapi in town"},
+                    {"name": "Dveri", "type": "Fine Dining", "location": "Prote Bakovica 12", "tip": "Excellent local cuisine"}
+                ],
+                "hidden_gems": [
+                    {"name": "Yellow Fortress", "location": "Jekovac", "tip": "Best sunset views in Sarajevo"},
+                    {"name": "Tunnel Museum", "location": "Tuneli 1", "tip": "Historical war tunnel"}
+                ],
+                "transport": "Use trams and buses for city transport. Crveni Taxi is reliable."
+            },
+            "check_in_time": "15:00",
+            "check_out_time": "11:00", 
+            "check_in_instructions": "Use lockbox with code 1234. Main door is on the left, apartment 5.",
+            "apartment_locations": {
+                "keys": "lockbox by main entrance",
+                "towels": "bathroom closet, top shelf",
+                "kitchen_utensils": "kitchen drawer next to sink",
+                "cleaning_supplies": "under kitchen sink",
+                "first_aid": "bathroom cabinet"
+            },
+            "wifi_network": "SarajevoWiFi",
+            "wifi_password": "Welcome2024!",
+            "wifi_instructions": "Connect to SarajevoWiFi network with password Welcome2024!"
+        }
+        
+        print("\n1. Creating Sarajevo test apartment...")
+        success, response = self.run_test(
+            "Create Sarajevo Test Apartment",
+            "POST",
+            "apartments",
+            200,
+            data=sarajevo_apartment_data
+        )
+        
+        if not success or not response.get('id'):
+            print("❌ Failed to create Sarajevo test apartment")
+            return False
+            
+        sarajevo_apartment_id = response['id']
+        print(f"✅ Created Sarajevo apartment: {sarajevo_apartment_id}")
+        
+        # Test city extraction by checking public apartment data
+        print("\n2. Testing city extraction from address...")
+        success, response = self.run_test(
+            "Get Public Sarajevo Apartment Data",
+            "GET",
+            f"public/apartments/{sarajevo_apartment_id}",
+            200,
+            use_auth=False
+        )
+        
+        if not success:
+            print("❌ Failed to get public apartment data")
+            return False
+            
+        apartment_data = response
+        address = apartment_data.get('address', '')
+        print(f"   Address: {address}")
+        
+        if 'Sarajevo' in address:
+            print("✅ Address contains Sarajevo - city extraction should work")
+        else:
+            print("❌ Address missing Sarajevo - city extraction will fail")
+            return False
+        
+        # Test critical chatbot scenarios
+        print("\n3. Testing CRITICAL chatbot scenarios...")
+        
+        test_scenarios = [
+            # CRITICAL: City extraction verification
+            {
+                "category": "City Extraction Test",
+                "message": "What city is this apartment in?",
+                "expected_keywords": ["sarajevo"],
+                "should_not_contain": ["specifically designed", "other cities"],
+                "critical": True
+            },
+            
+            # CRITICAL: Local city questions should work
+            {
+                "category": "Local City Questions - Restaurants",
+                "message": "Best restaurants in Sarajevo?",
+                "expected_keywords": ["cevabdzinica", "zeljo", "dveri", "restaurant"],
+                "should_not_contain": ["specifically designed", "other cities", "tourism websites"],
+                "critical": True
+            },
+            {
+                "category": "Local City Questions - Activities", 
+                "message": "What to do in Sarajevo?",
+                "expected_keywords": ["yellow fortress", "tunnel museum", "sarajevo"],
+                "should_not_contain": ["specifically designed", "other cities", "tourism websites"],
+                "critical": True
+            },
+            {
+                "category": "Local City Questions - Nightlife",
+                "message": "Sarajevo nightlife?",
+                "expected_keywords": ["sarajevo"],
+                "should_not_contain": ["specifically designed", "other cities", "tourism websites"],
+                "critical": True
+            },
+            
+            # Out-of-scope should still trigger fallbacks
+            {
+                "category": "Out-of-Scope - Zagreb",
+                "message": "Best restaurants in Zagreb?",
+                "expected_keywords": ["specifically designed", "sarajevo"],
+                "should_not_contain": ["zagreb", "restaurant recommendations"],
+                "critical": True
+            },
+            {
+                "category": "Out-of-Scope - Belgrade",
+                "message": "What to do in Belgrade?",
+                "expected_keywords": ["specifically designed", "sarajevo"],
+                "should_not_contain": ["belgrade", "activities"],
+                "critical": True
+            },
+            {
+                "category": "Out-of-Scope - Vienna",
+                "message": "Vienna attractions?",
+                "expected_keywords": ["specifically designed", "sarajevo"],
+                "should_not_contain": ["vienna", "attractions"],
+                "critical": True
+            },
+            
+            # Multilingual fallbacks
+            {
+                "category": "Multilingual Fallback - Spanish",
+                "message": "¿Mejores restaurantes en Madrid?",
+                "expected_keywords": ["específicamente diseñado", "sarajevo"],
+                "should_not_contain": ["madrid", "restaurantes"],
+                "critical": True
+            },
+            {
+                "category": "Multilingual Fallback - French",
+                "message": "Meilleurs restaurants à Paris?",
+                "expected_keywords": ["spécialement conçu", "sarajevo"],
+                "should_not_contain": ["paris", "restaurants"],
+                "critical": True
+            },
+            {
+                "category": "Multilingual Fallback - German",
+                "message": "Beste Restaurants in Berlin?",
+                "expected_keywords": ["speziell entwickelt", "sarajevo"],
+                "should_not_contain": ["berlin", "restaurants"],
+                "critical": True
+            },
+            
+            # Apartment questions should still work
+            {
+                "category": "Apartment Questions - WiFi",
+                "message": "What's the WiFi password?",
+                "expected_keywords": ["welcome2024", "sarajevowifi"],
+                "should_not_contain": ["specifically designed"],
+                "critical": False
+            },
+            {
+                "category": "Apartment Questions - Check-in",
+                "message": "When is check-in?",
+                "expected_keywords": ["15:00", "lockbox", "1234"],
+                "should_not_contain": ["specifically designed"],
+                "critical": False
+            },
+            {
+                "category": "Apartment Questions - Towels",
+                "message": "Where are the towels?",
+                "expected_keywords": ["bathroom", "closet", "shelf"],
+                "should_not_contain": ["specifically designed"],
+                "critical": False
+            },
+            
+            # Context tracking
+            {
+                "category": "Context Tracking - Follow-up",
+                "message": "How?",  # This should be asked after check-in question
+                "expected_keywords": ["lockbox", "1234", "main door", "apartment 5"],
+                "should_not_contain": ["specifically designed"],
+                "critical": False,
+                "requires_context": True
+            }
+        ]
+        
+        passed_tests = 0
+        critical_passed = 0
+        critical_total = 0
+        
+        # Track context for follow-up questions
+        previous_message = None
+        
+        for i, scenario in enumerate(test_scenarios):
+            print(f"\n   Testing {scenario['category']}: '{scenario['message']}'")
+            
+            # Skip context-dependent tests if no previous context
+            if scenario.get('requires_context') and not previous_message:
+                print("   ⚠️  Skipping context-dependent test (no previous context)")
+                continue
+            
+            chat_data = {
+                "apartment_id": sarajevo_apartment_id,
+                "message": scenario['message'],
+                "session_id": "test_session_sarajevo"
+            }
+            
+            success, response = self.run_test(
+                f"Chat Test - {scenario['category']}",
+                "POST",
+                "chat",
+                200,
+                data=chat_data,
+                use_auth=False,
+                timeout=30
+            )
+            
+            if success and response.get('response'):
+                ai_response = response['response'].lower()
+                print(f"   AI Response: {ai_response[:100]}...")
+                
+                # Check expected keywords
+                has_expected = any(keyword.lower() in ai_response for keyword in scenario['expected_keywords'])
+                
+                # Check should not contain
+                has_forbidden = any(forbidden.lower() in ai_response for forbidden in scenario['should_not_contain'])
+                
+                if has_expected and not has_forbidden:
+                    print(f"   ✅ PASSED - Contains expected content, no forbidden content")
+                    passed_tests += 1
+                    if scenario['critical']:
+                        critical_passed += 1
+                elif has_expected and has_forbidden:
+                    print(f"   ❌ PARTIAL - Has expected content but also forbidden content")
+                    if scenario['critical']:
+                        print(f"   🚨 CRITICAL FAILURE: {scenario['category']}")
+                elif not has_expected and not has_forbidden:
+                    print(f"   ❌ FAILED - Missing expected content")
+                    if scenario['critical']:
+                        print(f"   🚨 CRITICAL FAILURE: {scenario['category']}")
+                else:
+                    print(f"   ❌ FAILED - Has forbidden content")
+                    if scenario['critical']:
+                        print(f"   🚨 CRITICAL FAILURE: {scenario['category']}")
+                
+                # Store for context tracking
+                previous_message = scenario['message']
+                
+            else:
+                print(f"   ❌ FAILED - No response from AI")
+                if scenario['critical']:
+                    print(f"   🚨 CRITICAL FAILURE: {scenario['category']}")
+            
+            if scenario['critical']:
+                critical_total += 1
+            
+            # Small delay between requests
+            time.sleep(1)
+        
+        # Calculate results
+        total_tests = len([s for s in test_scenarios if not s.get('requires_context') or previous_message])
+        success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+        critical_success_rate = (critical_passed / critical_total * 100) if critical_total > 0 else 0
+        
+        print(f"\n" + "="*80)
+        print("🏁 SARAJEVO CHATBOT TEST RESULTS")
+        print("="*80)
+        print(f"📊 Total Tests: {total_tests}")
+        print(f"✅ Tests Passed: {passed_tests}")
+        print(f"❌ Tests Failed: {total_tests - passed_tests}")
+        print(f"📈 Overall Success Rate: {success_rate:.1f}%")
+        print(f"🚨 Critical Tests: {critical_total}")
+        print(f"✅ Critical Passed: {critical_passed}")
+        print(f"📈 Critical Success Rate: {critical_success_rate:.1f}%")
+        
+        # Determine overall result
+        if critical_success_rate >= 80:
+            print("🎉 CRITICAL TESTS MOSTLY PASSED - City extraction and local questions working!")
+            return True
+        else:
+            print("❌ CRITICAL TESTS FAILED - City extraction or local questions not working properly")
+            return False
+
     def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30, use_auth=True):
         """Run a single API test"""
         url = f"{self.api_url}/{endpoint}" if endpoint else f"{self.api_url}/"
