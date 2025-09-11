@@ -1172,40 +1172,36 @@ def create_ai_system_prompt(apartment_data: dict, user_branding: dict) -> str:
         address_parts = [part.strip() for part in apartment_address.split(',')]
         
         # Common patterns for city extraction
-        for i, part in enumerate(address_parts):
-            part_lower = part.lower()
-            
-            # Skip street addresses (contain numbers at start)
-            if part and part[0].isdigit():
+        for i, part in enumerate(address_parts):            
+            # Skip street addresses (contain numbers followed by letters)
+            if any(c.isdigit() for c in part[:10]):  # Check first 10 chars for numbers
                 continue
                 
             # Skip postal codes (short sequences with numbers)
             if len(part) <= 8 and any(c.isdigit() for c in part) and len([c for c in part if c.isdigit()]) >= 2:
                 continue
                 
-            # Skip country names (usually last part)
+            # Skip country names (usually last part and longer)
             if i == len(address_parts) - 1 and len(address_parts) > 2:
                 continue
                 
-            # Look for city-like patterns
-            if len(part) >= 3 and not part.isdigit():
-                # Check if it's a known city pattern or just use the first valid non-street part
+            # Look for city-like patterns (no numbers, reasonable length)
+            if len(part) >= 3 and not any(c.isdigit() for c in part):
                 apartment_city = part
                 break
         
         # Fallback: if no city found, use second-to-last part (common pattern)
         if not apartment_city and len(address_parts) >= 2:
             potential_city = address_parts[-2].strip()
-            # Make sure it's not a postal code
-            if not (len(potential_city) <= 8 and any(c.isdigit() for c in potential_city)):
+            # Make sure it's not a postal code or street
+            if not any(c.isdigit() for c in potential_city):
                 apartment_city = potential_city
         
-        # Final fallback: use first non-street part
+        # Final fallback: manually handle known patterns
         if not apartment_city:
-            for part in address_parts:
-                if not (part and part[0].isdigit()):
-                    apartment_city = part.strip()
-                    break
+            # For addresses like "Street Number, City, Country" - take middle part
+            if len(address_parts) == 3:
+                apartment_city = address_parts[1].strip()
     
     # Default to "this area" if no city detected
     if not apartment_city:
