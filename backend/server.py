@@ -1165,25 +1165,47 @@ def create_ai_system_prompt(apartment_data: dict, user_branding: dict) -> str:
     brand_name = user_branding.get('brand_name', 'My Host IQ')
     apartment_address = apartment_data.get('address', '')
     
-    # Improved city extraction from address - avoid postal codes
+    # Improved city extraction from address - more robust approach
     apartment_city = ""
     if apartment_address:
-        # Split address by comma and try to find the city
+        # Split address by comma and process each part
         address_parts = [part.strip() for part in apartment_address.split(',')]
         
-        # Try to find a part that looks like a city (not a postal code or street)
-        for part in address_parts:
-            # Skip if it looks like a postal code (contains only numbers/codes)
-            if not part.isdigit() and not (len(part) < 6 and any(c.isdigit() for c in part)):
-                # Skip if it's likely a street address (contains numbers at start)
-                if not part[0].isdigit():
-                    # Take the first valid city-like part
-                    apartment_city = part
-                    break
+        # Common patterns for city extraction
+        for i, part in enumerate(address_parts):
+            part_lower = part.lower()
+            
+            # Skip street addresses (contain numbers at start)
+            if part and part[0].isdigit():
+                continue
+                
+            # Skip postal codes (short sequences with numbers)
+            if len(part) <= 8 and any(c.isdigit() for c in part) and len([c for c in part if c.isdigit()]) >= 2:
+                continue
+                
+            # Skip country names (usually last part)
+            if i == len(address_parts) - 1 and len(address_parts) > 2:
+                continue
+                
+            # Look for city-like patterns
+            if len(part) >= 3 and not part.isdigit():
+                # Check if it's a known city pattern or just use the first valid non-street part
+                apartment_city = part
+                break
         
-        # If no good city found, use the second-to-last part (common format)
+        # Fallback: if no city found, use second-to-last part (common pattern)
         if not apartment_city and len(address_parts) >= 2:
-            apartment_city = address_parts[-2]
+            potential_city = address_parts[-2].strip()
+            # Make sure it's not a postal code
+            if not (len(potential_city) <= 8 and any(c.isdigit() for c in potential_city)):
+                apartment_city = potential_city
+        
+        # Final fallback: use first non-street part
+        if not apartment_city:
+            for part in address_parts:
+                if not (part and part[0].isdigit()):
+                    apartment_city = part.strip()
+                    break
     
     # Default to "this area" if no city detected
     if not apartment_city:
