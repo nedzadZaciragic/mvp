@@ -1922,7 +1922,7 @@ const GuestChat = ({ apartmentId }) => {
           transition: pullDistance === 0 ? 'transform 0.3s ease' : 'none',
           WebkitOverflowScrolling: 'touch',
           paddingBottom: '20px',
-          marginBottom: '180px' // Increased space for raised input and suggestions
+          marginBottom: '220px' // Much more space for full AI responses to be visible above suggestions
         }}
       >
         {/* Pull-to-refresh indicator - MATCHES WHITE BACKGROUND */}
