@@ -1435,6 +1435,78 @@ async def register_user(request: Request, user_data: UserCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# City PDF Info Routes
+@api_router.post("/city-pdfs")
+async def create_city_pdf(
+    pdf_data: CityPDFCreate, 
+    current_user: User = Depends(get_current_user)
+):
+    """Upload city PDF information"""
+    try:
+        # Extract PDF content
+        pdf_content = await extract_pdf_content(pdf_data.pdf_url)
+        
+        # Create city PDF record
+        city_pdf = CityPDFInfo(
+            user_id=current_user.id,
+            city_name=pdf_data.city_name,
+            pdf_url=pdf_data.pdf_url,
+            pdf_content=pdf_content
+        )
+        
+        city_pdf_dict = prepare_for_mongo(city_pdf.dict())
+        await db.city_pdfs.insert_one(city_pdf_dict)
+        
+        return {
+            "success": True,
+            "message": f"City PDF for {pdf_data.city_name} uploaded successfully",
+            "id": city_pdf.id,
+            "content_length": len(pdf_content)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/city-pdfs")
+async def get_user_city_pdfs(current_user: User = Depends(get_current_user)):
+    """Get all city PDFs for current user"""
+    try:
+        city_pdfs = await db.city_pdfs.find({"user_id": current_user.id}).to_list(length=None)
+        
+        # Parse from mongo and hide content for list view
+        parsed_pdfs = []
+        for pdf in city_pdfs:
+            parsed_pdf = parse_from_mongo(pdf)
+            # Don't return full content in list view
+            parsed_pdf['content_preview'] = parsed_pdf.get('pdf_content', '')[:200] + "..."
+            parsed_pdf.pop('pdf_content', None)
+            parsed_pdfs.append(parsed_pdf)
+            
+        return parsed_pdfs
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/city-pdfs/{pdf_id}")
+async def delete_city_pdf(
+    pdf_id: str, 
+    current_user: User = Depends(get_current_user)
+):
+    """Delete city PDF"""
+    try:
+        result = await db.city_pdfs.delete_one({
+            "id": pdf_id, 
+            "user_id": current_user.id
+        })
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="City PDF not found")
+            
+        return {"success": True, "message": "City PDF deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/auth/login", response_model=Token)
 @limiter.limit("10/minute")  # Limit login attempts 
 async def login(request: Request, user_data: UserLogin):
