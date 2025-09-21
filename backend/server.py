@@ -188,6 +188,19 @@ class EmailCredentialsCreate(BaseModel):
     smtp_server: str = ""
     smtp_port: int = 587
 
+class CityPDFInfo(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    city_name: str
+    pdf_url: str  # URL where PDF is stored
+    pdf_content: str = ""  # Extracted text content from PDF
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CityPDFCreate(BaseModel):
+    city_name: str
+    pdf_url: str
+
 class EmailCredentialsResponse(BaseModel):
     id: str
     email: str
