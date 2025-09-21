@@ -725,6 +725,32 @@ async def scrape_booking_listing(url: str) -> dict:
             'rules': ['Check-in from 15:00', 'Check-out until 11:00', 'No smoking', 'No pets allowed', 'No parties or events']
         }
 
+async def extract_pdf_content(pdf_url: str) -> str:
+    """Extract text content from PDF URL"""
+    try:
+        logger.info(f"Extracting PDF content from: {pdf_url}")
+        
+        # Download PDF
+        response = requests.get(pdf_url, timeout=30)
+        response.raise_for_status()
+        
+        # Extract text from PDF
+        pdf_reader = PyPDF2.PdfReader(BytesIO(response.content))
+        text_content = ""
+        
+        for page in pdf_reader.pages:
+            text_content += page.extract_text() + "\n"
+        
+        # Basic text cleaning
+        text_content = re.sub(r'\s+', ' ', text_content).strip()
+        
+        logger.info(f"Extracted {len(text_content)} characters from PDF")
+        return text_content
+        
+    except Exception as e:
+        logger.error(f"PDF extraction error: {str(e)}")
+        return ""
+
 class PropertyImportRequest(BaseModel):
     url: str
 
