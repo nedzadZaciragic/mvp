@@ -4711,6 +4711,42 @@ const HostDashboard = () => {
     }
   };
 
+  // City PDF Management Functions
+  const fetchCityPdfs = async () => {
+    try {
+      const response = await axios.get(`${API}/city-pdfs`);
+      setCityPdfs(response.data);
+    } catch (error) {
+      console.error("Error fetching city PDFs:", error);
+    }
+  };
+
+  const handlePdfUpload = async () => {
+    try {
+      await axios.post(`${API}/city-pdfs`, newPdfData);
+      setNewPdfData({ city_name: '', pdf_url: '' });
+      setShowPdfForm(false);
+      fetchCityPdfs();
+      alert("City PDF uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      alert("Error uploading PDF");
+    }
+  };
+
+  const deleteCityPdf = async (pdfId) => {
+    if (window.confirm("Are you sure you want to delete this city PDF?")) {
+      try {
+        await axios.delete(`${API}/city-pdfs/${pdfId}`);
+        fetchCityPdfs();
+        alert("City PDF deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting PDF:", error);
+        alert("Error deleting PDF");
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 host-dashboard">
       {/* Enhanced Header */}
