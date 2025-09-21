@@ -35,6 +35,8 @@ import base64
 import requests
 from bs4 import BeautifulSoup
 import json
+import PyPDF2
+from io import BytesIO
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
