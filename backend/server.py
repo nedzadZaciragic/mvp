@@ -1159,6 +1159,17 @@ def prepare_for_mongo(data):
                 data[key] = value.isoformat()
     return data
 
+def parse_from_mongo(data):
+    """Parse data from MongoDB storage"""
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if isinstance(value, str) and key.endswith('_at'):
+                try:
+                    data[key] = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                except:
+                    pass
+    return data
+
 def hash_password(password: str) -> str:
     """Hash password using bcrypt"""
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
