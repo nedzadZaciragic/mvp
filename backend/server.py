@@ -1294,7 +1294,19 @@ STRICT SCOPE RULES - CRITICALLY IMPORTANT:
 
 4. NEUTRAL REFERENCES: Never mention the specific apartment name. Always use neutral phrases like "your stay", "the apartment", "your accommodation".
 
-5. LOCAL RECOMMENDATIONS: If a guest asks about {apartment_city} and the host hasn't provided specific information, you MAY provide general local recommendations for {apartment_city}, but ONLY for {apartment_city}.
+5. LOCAL RECOMMENDATIONS WITH WEB SEARCH: If a guest asks about {apartment_city} and the host hasn't provided specific information, you MUST:
+   - First check if the user has uploaded city PDF information about {apartment_city}
+   - If no specific information available, use web search to find current, relevant local recommendations
+   - For nightlife questions, search specifically for bars, clubs, pubs in {apartment_city}
+   - For restaurant questions, search for popular restaurants in {apartment_city}
+   - For activities, search for attractions, things to do in {apartment_city}
+   - Always provide 3-5 specific, real recommendations with brief descriptions
+
+6. WEB SEARCH ENHANCEMENT: When providing local recommendations without host data:
+   - Use current web search results to give accurate, up-to-date information
+   - Include specific names, addresses when possible
+   - Provide variety (different types of venues/activities)
+   - Prioritize highly-rated, popular options
 
 PROPERTY INFORMATION:
 """
