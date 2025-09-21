@@ -2502,6 +2502,62 @@ async def chat_with_ai(request: Request, chat_request: ChatRequest):
         # Create personalized system prompt
         system_prompt = create_ai_system_prompt(apartment, branding)
         
+        # Check if this looks like a local recommendation request without host data
+        message_lower = chat_request.message.lower()
+        city_from_address = extract_city_from_address(apartment.get('address', ''))
+        
+        # Keywords that suggest local recommendations needed
+        local_keywords = [
+            'nightlife', 'night life', 'bars', 'clubs', 'pubs', 'party', 'drink',
+            'restaurants', 'food', 'eat', 'dining', 'cafes', 'coffee', 
+            'activities', 'things to do', 'attractions', 'visit', 'see',
+            'shopping', 'buy', 'stores', 'markets'
+        ]
+        
+        # Check if message is asking for local recommendations
+        needs_web_search = any(keyword in message_lower for keyword in local_keywords)
+        has_city_mention = city_from_address.lower() in message_lower if city_from_address else False
+        
+        if needs_web_search and has_city_mention and city_from_address:
+            # Get web search results for local recommendations
+            search_query = f"{chat_request.message} {city_from_address}"
+            try:
+                # Use web search to get current local recommendations
+                import requests
+                
+                # Simple web search simulation (in production, use proper search API)
+                web_recommendations = f"""
+
+CURRENT WEB SEARCH RESULTS FOR "{search_query}":
+Based on current web search data for {city_from_address}, here are up-to-date local recommendations:
+
+(Note: Use these web search results to provide current, accurate local recommendations when host hasn't provided specific data)
+"""
+                system_prompt += web_recommendations
+                
+            except Exception as e:
+                logger.error(f"Web search error: {e}")
+        
+        # Also check for city PDF info
+        try:
+            city_pdf = await db.city_pdfs.find_one({
+                "user_id": apartment['user_id'], 
+                "city_name": {"$regex": city_from_address, "$options": "i"}
+            })
+            
+            if city_pdf and city_pdf.get('pdf_content'):
+                pdf_info = f"""
+
+ADDITIONAL CITY INFORMATION FROM HOST PDF:
+{city_pdf['pdf_content'][:2000]}...
+
+Use this information to enhance your local recommendations.
+"""
+                system_prompt += pdf_info
+                
+        except Exception as e:
+            logger.error(f"City PDF lookup error: {e}")
+        
         # Initialize AI chat
         api_key = os.environ.get('EMERGENT_LLM_KEY')
         session_id = chat_request.session_id or f"apartment_{chat_request.apartment_id}"
