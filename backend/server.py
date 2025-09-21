@@ -1212,6 +1212,45 @@ async def get_admin_user(current_user: User = Depends(get_current_user)) -> User
         )
     return current_user
 
+def extract_city_from_address(address: str) -> str:
+    """Extract city name from address string"""
+    if not address:
+        return ""
+    
+    # Split address by comma and process each part
+    address_parts = [part.strip() for part in address.split(',')]
+    
+    # Common patterns for city extraction
+    for i, part in enumerate(address_parts):            
+        # Skip street addresses (contain numbers followed by letters)
+        if any(c.isdigit() for c in part[:10]):  # Check first 10 chars for numbers
+            continue
+            
+        # Skip postal codes (short sequences with numbers)
+        if len(part) <= 8 and any(c.isdigit() for c in part) and len([c for c in part if c.isdigit()]) >= 2:
+            continue
+            
+        # Skip country names (usually last part and longer)
+        if i == len(address_parts) - 1 and len(address_parts) > 2:
+            continue
+            
+        # Look for city-like patterns (no numbers, reasonable length)
+        if len(part) >= 3 and not any(c.isdigit() for c in part):
+            return part
+    
+    # Fallback: if no city found, use second-to-last part (common pattern)
+    if len(address_parts) >= 2:
+        potential_city = address_parts[-2].strip()
+        # Make sure it's not a postal code or street
+        if not any(c.isdigit() for c in potential_city):
+            return potential_city
+    
+    # Final fallback: manually handle known patterns
+    if len(address_parts) == 3:
+        return address_parts[1].strip()
+    
+    return ""
+
 def create_ai_system_prompt(apartment_data: dict, user_branding: dict) -> str:
     """Create a personalized AI system prompt based on apartment data and branding"""
     brand_name = user_branding.get('brand_name', 'My Host IQ')
