@@ -5628,6 +5628,92 @@ const HostDashboard = () => {
                     </div>
                   </div>
 
+                  {/* City Information PDFs */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                      <FileText className="h-5 w-5 mr-2" />
+                      City Information PDFs
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Upload PDF guides about your city to help AI provide better local recommendations
+                    </p>
+
+                    {/* Existing City PDFs */}
+                    {formData.city_pdfs.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-gray-700">Uploaded PDFs:</h4>
+                        {formData.city_pdfs.map((pdf, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                            <div>
+                              <div className="font-medium text-blue-800">{pdf.city_name}</div>
+                              <div className="text-sm text-blue-600 break-all">{pdf.pdf_url}</div>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => removeCityPdf(pdf.id, index)}
+                              className="ml-2 text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Add New PDF Button */}
+                    {!showAddPdfForm && (
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowAddPdfForm(true)}
+                        className="w-full border-dashed border-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add City PDF Guide
+                      </Button>
+                    )}
+
+                    {/* Add PDF Form */}
+                    {showAddPdfForm && (
+                      <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">City Name</label>
+                            <Input
+                              placeholder="e.g., Sarajevo, Paris, Rome"
+                              value={newCityPdf.city_name}
+                              onChange={(e) => setNewCityPdf(prev => ({...prev, city_name: e.target.value}))}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">PDF URL</label>
+                            <Input
+                              placeholder="https://example.com/sarajevo-guide.pdf"
+                              value={newCityPdf.pdf_url}
+                              onChange={(e) => setNewCityPdf(prev => ({...prev, pdf_url: e.target.value}))}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button onClick={addCityPdf} size="sm">
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add PDF
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setShowAddPdfForm(false);
+                              setNewCityPdf({ city_name: '', pdf_url: '' });
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Apartment Items & Locations */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800 flex items-center">
