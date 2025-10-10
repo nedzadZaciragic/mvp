@@ -4460,12 +4460,6 @@ const HostDashboard = () => {
   const [editingApartment, setEditingApartment] = useState(null);
   const [showQRCode, setShowQRCode] = useState(null);
   const [activeTab, setActiveTab] = useState("apartments");
-  const [cityPdfs, setCityPdfs] = useState([]);
-  const [showPdfForm, setShowPdfForm] = useState(false);
-  const [newPdfData, setNewPdfData] = useState({
-    city_name: '',
-    pdf_url: ''
-  });
   const [whitelabelData, setWhitelabelData] = useState({
     brand_name: user?.brand_name || "MyHostIQ",
     brand_logo_url: user?.brand_logo_url || "",
