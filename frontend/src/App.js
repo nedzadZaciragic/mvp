@@ -4485,6 +4485,7 @@ const HostDashboard = () => {
       hidden_gems: [],
       transport: ""
     },
+    city_pdfs: [], // City PDF information
     // Check-in/Check-out information
     check_in_time: "",
     check_out_time: "",
