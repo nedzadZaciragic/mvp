@@ -4696,6 +4696,90 @@ const HostDashboard = () => {
     }));
   };
 
+  const resetFormData = () => {
+    setFormData({
+      name: "",
+      address: "",
+      coordinates: null,
+      description: "",
+      rules: [],
+      contact: { phone: "", email: "", whatsapp: "" },
+      recommendations: {
+        restaurants: [],
+        hidden_gems: [],
+        transport: ""
+      },
+      city_pdfs: [], // City PDF information
+      // Check-in/Check-out information
+      check_in_time: "",
+      check_out_time: "",
+      check_in_instructions: "",
+      apartment_locations: {
+        keys: "",
+        towels: "",
+        kitchen_utensils: "",
+        cleaning_supplies: "",
+        first_aid: "",
+        other_items: ""
+      },
+      wifi_network: "",
+      wifi_password: "",
+      wifi_instructions: ""
+    });
+    setNewRule("");
+    setNewRestaurant({ name: "", type: "", location: "", tip: "", coordinates: null });
+    setNewGem({ name: "", location: "", tip: "", coordinates: null });
+    setNewCityPdf({ city_name: '', pdf_url: '' });
+    setShowAddPdfForm(false);
+  };
+
+  // City PDF Management Functions
+  const addCityPdf = async () => {
+    if (!newCityPdf.city_name.trim() || !newCityPdf.pdf_url.trim()) {
+      alert("Please fill in both city name and PDF URL");
+      return;
+    }
+
+    try {
+      // Create city PDF record
+      const response = await axios.post(`${API}/city-pdfs`, newCityPdf);
+      
+      // Add to form data
+      setFormData(prev => ({
+        ...prev,
+        city_pdfs: [...prev.city_pdfs, {
+          ...newCityPdf,
+          id: response.data.id
+        }]
+      }));
+
+      setNewCityPdf({ city_name: '', pdf_url: '' });
+      setShowAddPdfForm(false);
+      alert("City PDF added successfully!");
+    } catch (error) {
+      console.error("Error adding city PDF:", error);
+      alert("Error adding city PDF");
+    }
+  };
+
+  const removeCityPdf = async (pdfId, index) => {
+    try {
+      if (pdfId) {
+        await axios.delete(`${API}/city-pdfs/${pdfId}`);
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        city_pdfs: prev.city_pdfs.filter((_, i) => i !== index)
+      }));
+      
+      alert("City PDF removed successfully!");
+    } catch (error) {
+      console.error("Error removing city PDF:", error);
+      alert("Error removing city PDF");
+    }
+  };
+
   const generateGuestLink = (apartmentId) => {
     return `${window.location.origin}/guest/${apartmentId}`;
   };
