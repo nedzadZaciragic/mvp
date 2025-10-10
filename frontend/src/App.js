@@ -4455,6 +4455,7 @@ const EmailCredentialsManager = () => {
 // Enhanced Host Dashboard with edit capabilities and AI tone selection
 const HostDashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [apartments, setApartments] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingApartment, setEditingApartment] = useState(null);
