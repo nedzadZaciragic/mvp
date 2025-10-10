@@ -4523,6 +4523,31 @@ const HostDashboard = () => {
       });
     }
   }, [user]);
+  // Handle mobile back button to prevent leaving dashboard accidentally
+  useEffect(() => {
+    const handlePopState = (event) => {
+      // Prevent default back navigation
+      event.preventDefault();
+      
+      // Stay in dashboard or show confirmation
+      if (window.confirm("Are you sure you want to leave the dashboard?")) {
+        navigate('/login');
+      } else {
+        // Push current state back to history
+        window.history.pushState(null, '', window.location.pathname);
+      }
+    };
+
+    // Push initial state for back button handling
+    window.history.pushState(null, '', window.location.pathname);
+    
+    // Listen for back button
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [navigate]);
 
   const fetchApartments = async () => {
     try {
