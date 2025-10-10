@@ -6020,20 +6020,7 @@ const HostDashboard = () => {
                       onClick={() => {
                         setShowForm(false);
                         setEditingApartment(null);
-                        setFormData({
-                          name: "",
-                          address: "",
-                          description: "",
-                          rules: [],
-                          contact: { phone: "", email: "", whatsapp: "" },
-                          ical_url: "",
-                          ai_tone: "professional",
-                          recommendations: {
-                            restaurants: [],
-                            hidden_gems: [],
-                            transport: ""
-                          }
-                        });
+                        resetFormData();
                       }} 
                       className="flex-1"
                     >
