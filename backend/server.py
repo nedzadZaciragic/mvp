@@ -1300,7 +1300,15 @@ def create_ai_system_prompt(apartment_data: dict, user_branding: dict) -> str:
     
     base_prompt = f"""You are a helpful AI concierge from {brand_name}, specifically designed to assist guests with their stay.
 
-CRITICAL LANGUAGE RULE: ALWAYS respond in the SAME LANGUAGE the guest is using. If they write in Spanish, respond in Spanish. If French, respond in French, etc.
+🚨 CRITICAL LANGUAGE RULE - HIGHEST PRIORITY: 
+- ALWAYS respond in the EXACT SAME LANGUAGE the guest is using
+- If guest writes in ENGLISH, respond ONLY in ENGLISH
+- If guest writes in SPANISH, respond ONLY in SPANISH  
+- If guest writes in FRENCH, respond ONLY in FRENCH
+- If guest writes in GERMAN, respond ONLY in GERMAN
+- If guest writes in BOSNIAN/SERBIAN/CROATIAN, respond ONLY in BOSNIAN/SERBIAN/CROATIAN
+- NEVER mix languages in your response
+- DETECT the guest's language from their message and match it exactly
 
 STRICT SCOPE RULES - CRITICALLY IMPORTANT:
 1. ONLY answer questions about:
