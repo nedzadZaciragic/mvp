@@ -1213,43 +1213,72 @@ async def get_admin_user(current_user: User = Depends(get_current_user)) -> User
     return current_user
 
 def extract_city_from_address(address: str) -> str:
-    """Extract city name from address string"""
+    """Extract city name from address string - improved logic"""
     if not address:
         return ""
     
     # Split address by comma and process each part
     address_parts = [part.strip() for part in address.split(',')]
     
-    # Common patterns for city extraction
-    for i, part in enumerate(address_parts):            
-        # Skip street addresses (contain numbers followed by letters)
-        if any(c.isdigit() for c in part[:10]):  # Check first 10 chars for numbers
-            continue
-            
-        # Skip postal codes (short sequences with numbers)
-        if len(part) <= 8 and any(c.isdigit() for c in part) and len([c for c in part if c.isdigit()]) >= 2:
-            continue
-            
-        # Skip country names (usually last part and longer)
-        if i == len(address_parts) - 1 and len(address_parts) > 2:
-            continue
-            
-        # Look for city-like patterns (no numbers, reasonable length)
-        if len(part) >= 3 and not any(c.isdigit() for c in part):
+    # Known country names to exclude
+    country_names = [
+        'bosnia and herzegovina', 'croatia', 'serbia', 'montenegro', 'slovenia',
+        'germany', 'france', 'spain', 'italy', 'austria', 'switzerland',
+        'usa', 'united states', 'canada', 'uk', 'united kingdom', 'england'
+    ]
+    
+    # Known city patterns (for better recognition)
+    city_indicators = [
+        'sarajevo', 'zagreb', 'belgrade', 'dubrovnik', 'split', 'mostar',
+        'paris', 'london', 'berlin', 'rome', 'madrid', 'barcelona', 'vienna'
+    ]
+    
+    # First pass: look for known cities
+    for part in address_parts:
+        part_lower = part.lower().strip()
+        if part_lower in city_indicators:
             return part
     
-    # Fallback: if no city found, use second-to-last part (common pattern)
+    # Second pass: exclude obvious non-city parts
+    for i, part in enumerate(address_parts):
+        part_lower = part.lower().strip()
+        
+        # Skip if it's a known country
+        if part_lower in country_names:
+            continue
+            
+        # Skip if starts with number (likely street address)
+        if part and part[0].isdigit():
+            continue
+            
+        # Skip if it's likely a postal code (short with numbers)
+        if len(part) <= 6 and any(c.isdigit() for c in part):
+            continue
+            
+        # Skip if it's the last part and looks like country (common pattern)
+        if i == len(address_parts) - 1 and len(address_parts) >= 3:
+            continue
+            
+        # Take first valid city-like part
+        if len(part) >= 3 and not any(c.isdigit() for c in part[:3]):
+            return part
+    
+    # Fallback strategies
     if len(address_parts) >= 2:
+        # Try second-to-last part (common city position)
         potential_city = address_parts[-2].strip()
-        # Make sure it's not a postal code or street
-        if not any(c.isdigit() for c in potential_city):
+        if (not any(c.isdigit() for c in potential_city) and 
+            potential_city.lower() not in country_names and 
+            len(potential_city) >= 3):
             return potential_city
     
-    # Final fallback: manually handle known patterns
+    # Last resort: take middle part if 3 parts
     if len(address_parts) == 3:
-        return address_parts[1].strip()
+        middle_part = address_parts[1].strip()
+        if not any(c.isdigit() for c in middle_part[:3]) and len(middle_part) >= 3:
+            return middle_part
     
-    return ""
+    return "this area"
 
 def create_ai_system_prompt(apartment_data: dict, user_branding: dict) -> str:
     """Create a personalized AI system prompt based on apartment data and branding"""
