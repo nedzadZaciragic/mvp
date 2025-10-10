@@ -4895,22 +4895,14 @@ const HostDashboard = () => {
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="apartments" className="flex items-center space-x-2">
               <Building2 className="h-4 w-4" />
               <span>Properties</span>
             </TabsTrigger>
-            <TabsTrigger value="city-pdfs" className="flex items-center space-x-2">
-              <FileText className="h-4 w-4" />
-              <span>City Info</span>
-            </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
               <span>Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger value="ai-insights" className="flex items-center space-x-2">
-              <Sparkles className="h-4 w-4" />
-              <span>AI Insights</span>
             </TabsTrigger>
             <TabsTrigger value="whitelabel" className="flex items-center space-x-2">
               <Palette className="h-4 w-4" />
