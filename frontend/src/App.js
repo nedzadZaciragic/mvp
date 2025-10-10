@@ -4561,31 +4561,7 @@ const HostDashboard = () => {
         await axios.post(`${API}/apartments`, formData);
       }
       
-      setFormData({
-        name: "",
-        address: "",
-        coordinates: null, // Apartment coordinates for distance calculation
-        description: "",
-        rules: [],
-        contact: { phone: "", email: "", whatsapp: "" },
-        ical_url: "",
-        ai_tone: "professional",
-        recommendations: {
-          restaurants: [],
-          hidden_gems: [],
-          transport: ""
-        },
-        // Check-in/Check-out information
-        check_in_time: "",
-        check_out_time: "",
-        check_in_instructions: "",
-        // Apartment items locations
-        apartment_locations: {},
-        // WiFi information
-        wifi_network: "",
-        wifi_password: "",
-        wifi_instructions: ""
-      });
+      resetFormData();
       setShowForm(false);
       setEditingApartment(null);
       fetchApartments();
