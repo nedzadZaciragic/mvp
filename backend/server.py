@@ -1555,6 +1555,123 @@ async def register_user(request: Request, user_data: UserCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Guest Booking Routes
+@api_router.post("/guest-bookings")
+async def create_guest_booking(
+    booking_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create guest booking (usually from iCal parsing)"""
+    try:
+        guest_booking = GuestBooking(
+            apartment_id=booking_data.get('apartment_id'),
+            first_name=booking_data.get('first_name'),
+            last_name=booking_data.get('last_name'),
+            email=booking_data.get('email', ''),
+            check_in_date=datetime.fromisoformat(booking_data.get('check_in_date')).date(),
+            check_out_date=datetime.fromisoformat(booking_data.get('check_out_date')).date(),
+            booking_source=booking_data.get('booking_source', 'ical')
+        )
+        
+        booking_dict = prepare_for_mongo(guest_booking.dict())
+        await db.guest_bookings.insert_one(booking_dict)
+        
+        return {
+            "success": True,
+            "message": "Guest booking created successfully",
+            "booking_id": guest_booking.id
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/guest-login", response_model=GuestLoginResponse)
+async def guest_login(login_request: GuestLoginRequest):
+    """Guest login using first name, last name, and apartment ID"""
+    try:
+        # Find guest booking
+        guest_booking = await db.guest_bookings.find_one({
+            "first_name": {"$regex": f"^{login_request.first_name}$", "$options": "i"},
+            "last_name": {"$regex": f"^{login_request.last_name}$", "$options": "i"}, 
+            "apartment_id": login_request.apartment_id
+        })
+        
+        if not guest_booking:
+            return GuestLoginResponse(
+                success=False,
+                message="No booking found with these details. Please check your name spelling."
+            )
+        
+        # Parse dates from mongo
+        guest_booking = parse_from_mongo(guest_booking)
+        
+        # Check access permission based on dates
+        today = datetime.now().date()
+        check_in = guest_booking['check_in_date']
+        check_out = guest_booking['check_out_date']
+        
+        # Access logic: Allow BEFORE and DURING stay, DENY after checkout
+        if today > check_out:
+            return GuestLoginResponse(
+                success=False,
+                message=f"Your stay ended on {check_out.strftime('%B %d, %Y')}. Chat access has expired."
+            )
+        
+        # Generate guest token
+        guest_token_data = {
+            "guest_id": guest_booking['id'],
+            "apartment_id": guest_booking['apartment_id'],
+            "first_name": guest_booking['first_name'],
+            "last_name": guest_booking['last_name'],
+            "check_in": check_in.isoformat(),
+            "check_out": check_out.isoformat(),
+            "exp": datetime.now(timezone.utc) + timedelta(days=(check_out - today).days + 1)
+        }
+        
+        guest_token = jwt.encode(guest_token_data, JWT_SECRET, algorithm="HS256")
+        
+        # Determine access message
+        if today < check_in:
+            access_message = f"Welcome! Your stay starts on {check_in.strftime('%B %d, %Y')}. You can start chatting now to prepare for your visit."
+        else:
+            access_message = f"Welcome to your stay! Enjoy your time until {check_out.strftime('%B %d, %Y')}."
+        
+        return GuestLoginResponse(
+            success=True,
+            message=access_message,
+            guest_token=guest_token,
+            guest_data={
+                "first_name": guest_booking['first_name'],
+                "last_name": guest_booking['last_name'],
+                "check_in": check_in.isoformat(),
+                "check_out": check_out.isoformat(),
+                "apartment_id": guest_booking['apartment_id']
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Guest login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Login failed. Please try again.")
+
+@api_router.get("/guest-bookings/{apartment_id}")
+async def get_apartment_bookings(
+    apartment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all guest bookings for apartment"""
+    try:
+        bookings = await db.guest_bookings.find({"apartment_id": apartment_id}).to_list(length=None)
+        
+        parsed_bookings = []
+        for booking in bookings:
+            parsed_booking = parse_from_mongo(booking)
+            parsed_bookings.append(parsed_booking)
+            
+        return parsed_bookings
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # City PDF Info Routes
 @api_router.post("/city-pdfs")
 async def create_city_pdf(
