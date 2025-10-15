@@ -2595,6 +2595,34 @@ Use this information to enhance your local recommendations.
         except Exception as e:
             logger.error(f"City PDF lookup error: {e}")
         
+        
+        # Get conversation history for context (last 10 messages)
+        recent_messages = await db.chat_messages.find(
+            {"session_id": session_id},
+            {"content": 1, "type": 1, "timestamp": 1, "_id": 0}
+        ).sort("timestamp", -1).limit(10).to_list(length=None)
+        
+        # Reverse to get chronological order
+        recent_messages.reverse()
+        
+        # Build conversation context with explicit context tracking instructions
+        conversation_context = ""
+        if recent_messages:
+            conversation_context = "\n\n🧠 CONVERSATION CONTEXT TRACKING - CRITICAL:\n"
+            conversation_context += "The following is the recent conversation history. You MUST understand follow-up questions in context of previous messages:\n\n"
+            
+            for i, msg in enumerate(recent_messages):
+                role = "Guest" if msg.get('type') == 'user' else "AI Assistant"
+                conversation_context += f"Message {i+1} - {role}: {msg.get('content', '')}\n"
+            
+            conversation_context += f"\nMessage {len(recent_messages)+1} - Guest: {chat_request.message}\n"
+            conversation_context += "\n🎯 CONTEXT ANALYSIS:\n"
+            conversation_context += "- If this message is a short question like 'How?', 'When?', 'Where?', refer to the PREVIOUS guest messages to understand what they're asking about\n"
+            conversation_context += "- Example: If previous message was 'When is check-in?' and current is 'How?', understand they want check-in INSTRUCTIONS\n"
+            conversation_context += "- Always maintain conversation flow and context awareness\n\n"
+            
+            # Add conversation context to system prompt
+            system_prompt += conversation_context
         # Initialize AI chat
         api_key = os.environ.get('EMERGENT_LLM_KEY')
         session_id = chat_request.session_id or f"apartment_{chat_request.apartment_id}"
