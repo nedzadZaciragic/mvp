@@ -1719,6 +1719,110 @@ const LandingHome = () => {
 
 // Continue with remaining components...
 
+// Guest Login Component
+const GuestLogin = ({ apartmentId, onLoginSuccess }) => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("Please enter both your first name and last name");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await axios.post(`${API}/guest-login`, {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        apartment_id: apartmentId
+      });
+
+      if (response.data.success) {
+        // Store guest token
+        localStorage.setItem('guestToken', response.data.guest_token);
+        localStorage.setItem('guestData', JSON.stringify(response.data.guest_data));
+        
+        // Call success callback
+        onLoginSuccess(response.data);
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error("Guest login error:", error);
+      setError(error.response?.data?.detail || "Login failed. Please check your details and try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-gray-900">Welcome Guest!</CardTitle>
+          <CardDescription>Please enter your booking details to access your personal AI assistant</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                {error}
+              </div>
+            )}
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                First Name
+              </label>
+              <Input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Enter your first name"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Last Name
+              </label>
+              <Input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Enter your last name"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? "Accessing..." : "Access AI Assistant"}
+            </Button>
+          </form>
+          
+          <div className="mt-4 text-xs text-gray-500 text-center">
+            <p>Can't access? Contact your host for assistance.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 // Enhanced Guest Chat Component with AI tone selection and fallback logic
 const GuestChat = ({ apartmentId }) => {
   const [messages, setMessages] = useState([]);
