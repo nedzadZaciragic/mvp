@@ -1615,67 +1615,29 @@ const LandingHome = () => {
 
       {/* Social proof and testimonials section would go here */}
       
-      {/* Pricing Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple, Honest Pricing</h2>
-          <p className="text-xl text-gray-600 mb-12">One price, everything included. Cancel anytime.</p>
-          
-          <Card className="max-w-lg mx-auto shadow-2xl border-2 border-blue-200 relative overflow-hidden transform hover:scale-105 transition-all">
-            <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center py-3 text-sm font-semibold">
-              🚀 MOST POPULAR - LIMITED TIME
-            </div>
-            <CardHeader className="pt-16 pb-6">
-              <CardTitle className="text-3xl font-bold">MyHostIQ Pro</CardTitle>
-              <CardDescription className="text-lg">Everything you need for superior guest experience</CardDescription>
-              <div className="text-center my-6">
-                <span className="text-6xl font-bold text-blue-600">€15</span>
-                <span className="text-gray-600 text-lg">/apartment/month</span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 text-left">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span><strong>Unlimited</strong> AI conversations</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span><strong>Custom QR codes</strong> & professional PDFs</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span><strong>Advanced analytics</strong> & guest insights</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span><strong>White-label branding</strong> (your colors & logo)</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span><strong>Airbnb & Booking.com</strong> calendar sync</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span><strong>Multi-language</strong> support (40+ languages)</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                  <span><strong>Priority support</strong> & onboarding</span>
-                </div>
-              </div>
-              
-              <div className="pt-6">
-                <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-xl py-4 transform hover:scale-105 transition-all shadow-lg"
-                  onClick={handleStartTrial}
-                >
-                  Start 30-Day Free Trial
-                </Button>
-                <p className="text-sm text-gray-500 mt-3">✅ No credit card required • ✅ Cancel anytime • ✅ Full access during trial</p>
-              </div>
-            </CardContent>
-          </Card>
+      {/* Simple CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-700">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Guest Experience?</h2>
+          <p className="text-xl text-blue-100 mb-8">Join thousands of hosts providing exceptional AI-powered guest support</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              variant="secondary"
+              onClick={handleStartTrial}
+              className="text-lg px-8 py-3"
+            >
+              Start Free Trial
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="text-lg px-8 py-3 text-white border-white hover:bg-white hover:text-blue-600"
+              onClick={() => setShowDemo(true)}
+            >
+              See Live Demo
+            </Button>
+          </div>
         </div>
       </section>
 
