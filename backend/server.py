@@ -1901,7 +1901,7 @@ async def forgot_password(request: Request, forgot_request: PasswordResetRequest
             
             message = Mail(
                 from_email=from_email,
-                to_emails=request.email,
+                to_emails=forgot_request.email,
                 subject=email_subject,
                 html_content=email_content
             )
