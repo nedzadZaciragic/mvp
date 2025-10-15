@@ -4526,28 +4526,36 @@ const HostDashboard = () => {
   // Handle mobile back button to prevent leaving dashboard accidentally
   useEffect(() => {
     const handlePopState = (event) => {
-      // Prevent default back navigation
-      event.preventDefault();
+      // Prevent leaving dashboard unexpectedly
+      const currentPath = window.location.pathname;
       
-      // Stay in dashboard or show confirmation
-      if (window.confirm("Are you sure you want to leave the dashboard?")) {
-        navigate('/login');
-      } else {
-        // Push current state back to history
-        window.history.pushState(null, '', window.location.pathname);
+      // If user is authenticated and in dashboard, prevent back navigation
+      if (user && (currentPath.includes('/dashboard') || currentPath.includes('/host'))) {
+        // Push current state back to maintain dashboard access
+        window.history.pushState(null, '', currentPath);
+        
+        // Optionally show confirmation only if user really wants to leave
+        const shouldLeave = window.confirm("Are you sure you want to leave the dashboard?");
+        if (shouldLeave) {
+          logout(); // Use proper logout function
+          navigate('/login');
+        }
       }
     };
 
-    // Push initial state for back button handling
-    window.history.pushState(null, '', window.location.pathname);
-    
-    // Listen for back button
-    window.addEventListener('popstate', handlePopState);
+    // Only activate if user is logged in
+    if (user) {
+      // Push initial state for back button handling
+      window.history.pushState(null, '', window.location.pathname);
+      
+      // Listen for back button
+      window.addEventListener('popstate', handlePopState);
+    }
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [navigate]);
+  }, [user, navigate, logout]);
 
   const fetchApartments = async () => {
     try {
