@@ -6384,4 +6384,9 @@ const GuestChatWrapper = () => {
   return <GuestChat apartmentId={apartmentId} />;
 };
 
+const GuestLoginChatWrapper = () => {
+  const apartmentId = window.location.pathname.split('/guest-login/')[1];
+  return <GuestChat apartmentId={apartmentId} />;
+};
+
 export default App;
