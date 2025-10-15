@@ -2695,6 +2695,138 @@ async def get_public_apartment(apartment_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Chat Routes
+@api_router.post("/guest-chat")
+@limiter.limit("30/minute")  
+async def guest_chat_with_ai(request: Request, chat_request: ChatRequest, authorization: str = Header(None)):
+    """Guest chat with AI using guest token"""
+    try:
+        # Validate guest token
+        if not authorization or not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid guest token")
+        
+        guest_token = authorization.split("Bearer ")[1]
+        guest = await get_current_guest(guest_token)
+        
+        if not guest:
+            raise HTTPException(status_code=401, detail="Invalid or expired guest access")
+        
+        # Verify apartment access
+        if guest['apartment_id'] != chat_request.apartment_id:
+            raise HTTPException(status_code=403, detail="Access denied to this apartment")
+        
+        # Get apartment data
+        apartment = await db.apartments.find_one({"id": chat_request.apartment_id})
+        if not apartment:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        
+        # Get user's branding
+        user = await db.users.find_one({"id": apartment['user_id']})
+        branding = {
+            "brand_name": user.get('brand_name', 'My Host IQ'),
+            "ai_assistant_name": user.get('ai_assistant_name', 'AI Assistant'),
+        }
+        
+        # Create personalized system prompt for guest
+        system_prompt = create_ai_system_prompt(apartment, branding)
+        
+        # Add guest context
+        guest_context = f"""
+
+👤 GUEST INFORMATION:
+- Guest Name: {guest['first_name']} {guest['last_name']}
+- Stay Period: {guest['check_in']} to {guest['check_out']}
+- Current Date: {datetime.now().date().isoformat()}
+
+🎯 PERSONALIZED SERVICE:
+- Address the guest by their first name: {guest['first_name']}
+- Acknowledge their booking period when relevant
+- Provide stay-specific assistance
+"""
+        system_prompt += guest_context
+        
+        # Continue with regular chat logic...
+        # (Rest of chat implementation identical to regular chat)
+        
+        # Initialize session_id for conversation history
+        session_id = f"guest_{guest['guest_id']}_{chat_request.apartment_id}"
+        
+        # Get conversation history for context (last 10 messages)
+        recent_messages = await db.chat_messages.find(
+            {"session_id": session_id},
+            {"content": 1, "type": 1, "timestamp": 1, "_id": 0}
+        ).sort("timestamp", -1).limit(10).to_list(length=None)
+        
+        # Reverse to get chronological order
+        recent_messages.reverse()
+        
+        # Build conversation context with explicit context tracking instructions
+        conversation_context = ""
+        if recent_messages:
+            conversation_context = "\n\n🧠 CONVERSATION CONTEXT TRACKING - CRITICAL:\n"
+            conversation_context += "The following is the recent conversation history. You MUST understand follow-up questions in context of previous messages:\n\n"
+            
+            for i, msg in enumerate(recent_messages):
+                role = "Guest" if msg.get('type') == 'user' else "AI Assistant"
+                conversation_context += f"Message {i+1} - {role}: {msg.get('content', '')}\n"
+            
+            conversation_context += f"\nMessage {len(recent_messages)+1} - Guest: {chat_request.message}\n"
+            conversation_context += "\n🎯 CONTEXT ANALYSIS:\n"
+            conversation_context += "- If this message is a short question like 'How?', 'When?', 'Where?', refer to the PREVIOUS guest messages to understand what they're asking about\n"
+            conversation_context += "- Example: If previous message was 'When is check-in?' and current is 'How?', understand they want check-in INSTRUCTIONS\n"
+            conversation_context += "- Always maintain conversation flow and context awareness\n\n"
+            
+            # Add conversation context to system prompt
+            system_prompt += conversation_context
+            
+        # Initialize AI chat
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=session_id,
+            system_prompt=system_prompt
+        )
+        
+        # Send message and get response
+        user_message = UserMessage(text=chat_request.message)
+        response = await chat.send_message(user_message)
+        
+        # Save user message to database
+        user_chat_message = ChatMessage(
+            apartment_id=chat_request.apartment_id,
+            message=chat_request.message,
+            response="",
+            session_id=session_id,
+            content=chat_request.message,
+            type="user",
+            guest_ip=request.client.host if request.client else ""
+        )
+        
+        user_chat_dict = prepare_for_mongo(user_chat_message.dict())
+        await db.chat_messages.insert_one(user_chat_dict)
+        
+        # Save assistant response to database
+        assistant_chat_message = ChatMessage(
+            apartment_id=chat_request.apartment_id,
+            message="",
+            response=response,
+            session_id=session_id,
+            content=response,
+            type="assistant",
+            guest_ip=request.client.host if request.client else ""
+        )
+        
+        assistant_chat_dict = prepare_for_mongo(assistant_chat_message.dict())
+        await db.chat_messages.insert_one(assistant_chat_dict)
+        
+        return {"response": response}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Guest chat error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Chat service temporarily unavailable")
+
 @api_router.post("/chat")
 @limiter.limit("30/minute")  # Limit chat requests to prevent spam
 async def chat_with_ai(request: Request, chat_request: ChatRequest):
