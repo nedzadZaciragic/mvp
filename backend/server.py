@@ -1818,7 +1818,7 @@ async def forgot_password(request: Request, forgot_request: PasswordResetRequest
     """Send password reset email"""
     try:
         # Find user
-        user = await db.users.find_one({"email": request.email})
+        user = await db.users.find_one({"email": forgot_request.email})
         if not user:
             # Don't reveal if email exists for security
             return {"message": "If the email exists, a password reset link has been sent"}
