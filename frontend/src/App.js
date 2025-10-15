@@ -1973,34 +1973,69 @@ const GuestChat = ({ apartmentId }) => {
   };
 
   const sendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || loading) return;
 
     const userMessage = { type: 'user', content: inputMessage, timestamp: new Date().toISOString() };
     setMessages(prev => [...prev, userMessage]);
+    const messageToSend = inputMessage;
     setInputMessage("");
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/chat`, {
-        apartment_id: apartmentId,
-        message: inputMessage,
-        session_id: sessionId
-      });
+      let response;
+      
+      if (isLoggedIn && guestData) {
+        // Use guest chat endpoint with token
+        const guestToken = localStorage.getItem('guestToken');
+        response = await axios.post(`${API}/guest-chat`, {
+          apartment_id: apartmentId,
+          message: messageToSend,
+          session_id: `guest_${guestData.first_name}_${guestData.last_name}_${apartmentId}`
+        }, {
+          headers: {
+            'Authorization': `Bearer ${guestToken}`
+          }
+        });
+      } else {
+        // Use regular public chat endpoint
+        response = await axios.post(`${API}/chat`, {
+          apartment_id: apartmentId,
+          message: messageToSend,
+          session_id: `public_${apartmentId}`
+        });
+      }
 
       const aiMessage = { 
         type: 'ai', 
         content: response.data.response, 
         timestamp: new Date().toISOString() 
       };
+      
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error("Error sending message:", error);
-      const errorMessage = { 
-        type: 'ai', 
-        content: "I'm having trouble connecting right now. For urgent matters, please contact your host directly using the contact information provided in your booking confirmation. I'll be back online shortly!", 
-        timestamp: new Date().toISOString() 
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      console.error("Chat error:", error);
+      
+      // Handle token expiration for guests
+      if (error.response?.status === 401 && isLoggedIn) {
+        localStorage.removeItem('guestToken');
+        localStorage.removeItem('guestData');
+        setIsLoggedIn(false);
+        setGuestData(null);
+        
+        const errorMessage = { 
+          type: 'ai', 
+          content: "Your session has expired. Please refresh the page and log in again to continue chatting.", 
+          timestamp: new Date().toISOString() 
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } else {
+        const errorMessage = { 
+          type: 'ai', 
+          content: "I'm having trouble connecting right now. For urgent matters, please contact your host directly using the contact information provided with your booking.", 
+          timestamp: new Date().toISOString() 
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
       setLoading(false);
     }
