@@ -314,6 +314,8 @@ class ChatMessage(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     session_id: str = ""
     guest_ip: str = ""
+    content: str = ""  # For conversation history
+    type: str = ""     # 'user' or 'assistant' for conversation history
 
 class ChatRequest(BaseModel):
     apartment_id: str
