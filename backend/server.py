@@ -1227,6 +1227,35 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+async def get_current_guest(token: str):
+    """Get current authenticated guest"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        guest_id = payload.get("guest_id")
+        apartment_id = payload.get("apartment_id")
+        
+        if not guest_id or not apartment_id:
+            return None
+            
+        # Check if token is still valid (not expired by checkout date)
+        check_out_str = payload.get("check_out")
+        if check_out_str:
+            check_out = datetime.fromisoformat(check_out_str).date()
+            if datetime.now().date() > check_out:
+                return None  # Token expired
+        
+        return {
+            "guest_id": guest_id,
+            "apartment_id": apartment_id,
+            "first_name": payload.get("first_name"),
+            "last_name": payload.get("last_name"),
+            "check_in": payload.get("check_in"),
+            "check_out": payload.get("check_out")
+        }
+        
+    except JWTError:
+        return None
+
 async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
     """Get current user and verify admin privileges"""
     if not current_user.is_admin:
