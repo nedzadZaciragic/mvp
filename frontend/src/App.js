@@ -5511,6 +5511,203 @@ const HostDashboard = () => {
             </Card>
           </TabsContent>
 
+          {/* Billing Tab */}
+          <TabsContent value="billing">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <CreditCard className="h-5 w-5 mr-2" />
+                    Subscription & Billing
+                  </CardTitle>
+                  <CardDescription>Manage your MyHostIQ subscription and billing information</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  
+                  {/* Current Plan Status */}
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6 mb-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-green-800">Free Trial Active</h3>
+                        <p className="text-green-600">7 days remaining • Expires December 1, 2024</p>
+                        <div className="flex items-center mt-2">
+                          <div className="w-32 bg-green-200 rounded-full h-2 mr-3">
+                            <div className="bg-green-600 h-2 rounded-full" style={{width: '60%'}}></div>
+                          </div>
+                          <span className="text-sm text-green-700">4 of 7 days used</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-green-800">$0</div>
+                        <div className="text-sm text-green-600">Current month</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Usage Stats */}
+                  <div className="grid md:grid-cols-3 gap-4 mb-6">
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-blue-600">{apartments.length}</div>
+                        <div className="text-sm text-blue-600">Properties</div>
+                        <div className="text-xs text-gray-500 mt-1">of 1 allowed</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-purple-50 border-purple-200">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-purple-600">43</div>
+                        <div className="text-sm text-purple-600">AI Chats</div>
+                        <div className="text-xs text-gray-500 mt-1">of 100 allowed</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-orange-50 border-orange-200">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-orange-600">2.4K</div>
+                        <div className="text-sm text-orange-600">Guest Views</div>
+                        <div className="text-xs text-gray-500 mt-1">this month</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Subscription Plans */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Choose Your Plan</h3>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      
+                      {/* Free Trial */}
+                      <Card className="border-2 border-green-500 bg-green-50">
+                        <CardHeader className="text-center">
+                          <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium mb-2 inline-block">
+                            Current Plan
+                          </div>
+                          <CardTitle className="text-xl">Free Trial</CardTitle>
+                          <div className="text-3xl font-bold text-green-600">$0</div>
+                          <CardDescription>7 days free</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2 text-sm">
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              1 property
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              100 AI chats/month
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              Basic analytics
+                            </li>
+                          </ul>
+                          <Button className="w-full mt-4" variant="outline" disabled>
+                            Current Plan
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      {/* Pro Plan */}
+                      <Card className="border-2 border-blue-500 relative">
+                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                          <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">Most Popular</span>
+                        </div>
+                        <CardHeader className="text-center pt-6">
+                          <CardTitle className="text-xl">Pro</CardTitle>
+                          <div className="text-3xl font-bold text-blue-600">$29</div>
+                          <CardDescription>per month</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2 text-sm">
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              5 properties
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              Unlimited AI chats
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              Advanced analytics
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              Custom branding
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              Priority support
+                            </li>
+                          </ul>
+                          <Button 
+                            className="w-full mt-4"
+                            onClick={() => setShowPaymentModal(true)}
+                          >
+                            Upgrade to Pro
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      {/* Enterprise Plan */}
+                      <Card>
+                        <CardHeader className="text-center">
+                          <CardTitle className="text-xl">Enterprise</CardTitle>
+                          <div className="text-3xl font-bold text-purple-600">$99</div>
+                          <CardDescription>per month</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2 text-sm">
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              Unlimited properties
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              Unlimited AI chats
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              Advanced reports
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              White-label solution
+                            </li>
+                            <li className="flex items-center">
+                              <Check className="h-4 w-4 text-green-500 mr-2" />
+                              API access
+                            </li>
+                          </ul>
+                          <Button 
+                            className="w-full mt-4" 
+                            variant="outline"
+                            onClick={() => setShowPaymentModal(true)}
+                          >
+                            Contact Sales
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+
+                  {/* Billing History */}
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4">Billing History</h3>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="text-center text-gray-500 py-8">
+                          <CreditCard className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                          <p>No billing history yet</p>
+                          <p className="text-sm">Your billing history will appear here after your first payment</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           {/* Enhanced Settings Tab */}
           <TabsContent value="settings">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
