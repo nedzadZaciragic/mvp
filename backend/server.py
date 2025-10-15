@@ -2415,9 +2415,9 @@ async def admin_login(request: Request, credentials: dict):
         username = credentials.get("username")
         password = credentials.get("password")
         
-        # Hardcoded admin credentials - change these in production
-        ADMIN_USERNAME = "myhomeiq_admin"
-        ADMIN_PASSWORD = "Admin123!MyHomeIQ"
+        # Admin credentials from environment variables
+        ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+        ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'defaultAdminPass123!')
         
         if username != ADMIN_USERNAME or password != ADMIN_PASSWORD:
             raise HTTPException(status_code=401, detail="Invalid admin credentials")
