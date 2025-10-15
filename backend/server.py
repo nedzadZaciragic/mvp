@@ -1910,7 +1910,7 @@ async def forgot_password(request: Request, forgot_request: PasswordResetRequest
             response = sg.send(message)
             
             if response.status_code == 202:
-                logger.info(f"Password reset email successfully sent to {request.email}")
+                logger.info(f"Password reset email successfully sent to {forgot_request.email}")
             else:
                 logger.error(f"SendGrid returned status code: {response.status_code}")
             
