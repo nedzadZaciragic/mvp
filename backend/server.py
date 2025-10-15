@@ -203,6 +203,28 @@ class CityPDFCreate(BaseModel):
     city_name: str
     pdf_url: str
 
+class GuestBooking(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    apartment_id: str
+    first_name: str
+    last_name: str
+    email: str = ""
+    check_in_date: date
+    check_out_date: date
+    booking_source: str = "ical"  # ical, manual, etc.
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class GuestLoginRequest(BaseModel):
+    first_name: str
+    last_name: str
+    apartment_id: str
+
+class GuestLoginResponse(BaseModel):
+    success: bool
+    message: str
+    guest_token: str = ""
+    guest_data: dict = {}
+
 class EmailCredentialsResponse(BaseModel):
     id: str
     email: str
