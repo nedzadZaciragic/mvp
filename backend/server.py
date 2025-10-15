@@ -1253,7 +1253,7 @@ async def get_current_guest(token: str):
             "check_out": payload.get("check_out")
         }
         
-    except JWTError:
+    except jwt.InvalidTokenError:
         return None
 
 async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
