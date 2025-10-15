@@ -5109,7 +5109,7 @@ const HostDashboard = () => {
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="apartments" className="flex items-center space-x-2">
               <Building2 className="h-4 w-4" />
               <span>Properties</span>
@@ -5117,6 +5117,10 @@ const HostDashboard = () => {
             <TabsTrigger value="analytics" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
               <span>Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="flex items-center space-x-2">
+              <CreditCard className="h-4 w-4" />
+              <span>Billing</span>
             </TabsTrigger>
             <TabsTrigger value="whitelabel" className="flex items-center space-x-2">
               <Palette className="h-4 w-4" />
