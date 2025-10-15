@@ -2079,10 +2079,29 @@ const GuestChat = ({ apartmentId }) => {
             ) : null}
             <Bot className={`h-6 w-6 ${branding.brand_logo_url ? 'hidden' : 'block'}`} />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-semibold">{branding.brand_name || 'MyHostIQ'}</h1>
-            <p className="text-blue-100 text-sm">Your personal concierge for this stay</p>
+            <p className="text-sm opacity-90">
+              {guestData ? `Welcome ${guestData.first_name}!` : 'Your personal concierge for this stay'}
+            </p>
           </div>
+          {guestData && (
+            <button
+              onClick={() => {
+                localStorage.removeItem('guestToken');
+                localStorage.removeItem('guestData');
+                setIsLoggedIn(false);
+                setGuestData(null);
+                setMessages([]);
+              }}
+              className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
+              title="Logout"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
