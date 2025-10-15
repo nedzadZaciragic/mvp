@@ -2629,7 +2629,6 @@ Use this information to enhance your local recommendations.
             system_prompt += conversation_context
         # Initialize AI chat
         api_key = os.environ.get('EMERGENT_LLM_KEY')
-        session_id = chat_request.session_id or f"apartment_{chat_request.apartment_id}"
         
         chat = LlmChat(
             api_key=api_key,
