@@ -37,6 +37,13 @@ class EmailSendGridTester:
         }
         
         # SendGrid configuration from environment
+        # First try to load from backend .env file
+        try:
+            from dotenv import load_dotenv
+            load_dotenv('/app/backend/.env')
+        except:
+            pass
+        
         self.sendgrid_api_key = os.environ.get('SENDGRID_API_KEY', '')
         
         print(f"🔧 Email Testing Configuration:")
