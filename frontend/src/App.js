@@ -1856,7 +1856,24 @@ const GuestChat = ({ apartmentId }) => {
   }, [messages]);
 
   useEffect(() => {
-    fetchApartmentInfo();
+    // Check if guest is already logged in
+    const guestToken = localStorage.getItem('guestToken');
+    const storedGuestData = localStorage.getItem('guestData');
+    
+    if (guestToken && storedGuestData) {
+      try {
+        const parsedGuestData = JSON.parse(storedGuestData);
+        setGuestData(parsedGuestData);
+        setIsLoggedIn(true);
+        fetchApartmentInfo();
+      } catch (error) {
+        // Invalid stored data, clear it
+        localStorage.removeItem('guestToken');
+        localStorage.removeItem('guestData');
+      }
+    } else {
+      fetchApartmentInfo();
+    }
     
     // Lock page scroll when chat is active (mobile)
     if (window.innerWidth <= 768) {
@@ -1868,6 +1885,19 @@ const GuestChat = ({ apartmentId }) => {
       document.body.classList.remove('chat-active');
     };
   }, [apartmentId]);
+
+  const handleGuestLoginSuccess = (loginResponse) => {
+    setGuestData(loginResponse.guest_data);
+    setIsLoggedIn(true);
+    fetchApartmentInfo();
+    
+    // Add personalized welcome message
+    setMessages([{
+      type: 'ai',
+      content: loginResponse.message,
+      timestamp: new Date().toISOString()
+    }]);
+  };
 
   // Pull-to-refresh handlers
   const handleTouchStart = (e) => {
