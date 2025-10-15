@@ -2639,16 +2639,31 @@ Use this information to enhance your local recommendations.
         user_message = UserMessage(text=chat_request.message)
         response = await chat.send_message(user_message)
         
-        # Save chat to database
-        chat_message = ChatMessage(
+        # Save user message to database
+        user_chat_message = ChatMessage(
             apartment_id=chat_request.apartment_id,
             message=chat_request.message,
-            response=response,
-            session_id=session_id
+            response="",
+            session_id=session_id,
+            content=chat_request.message,
+            type="user"
         )
         
-        chat_dict = prepare_for_mongo(chat_message.dict())
-        await db.chat_messages.insert_one(chat_dict)
+        user_chat_dict = prepare_for_mongo(user_chat_message.dict())
+        await db.chat_messages.insert_one(user_chat_dict)
+        
+        # Save assistant response to database
+        assistant_chat_message = ChatMessage(
+            apartment_id=chat_request.apartment_id,
+            message="",
+            response=response,
+            session_id=session_id,
+            content=response,
+            type="assistant"
+        )
+        
+        assistant_chat_dict = prepare_for_mongo(assistant_chat_message.dict())
+        await db.chat_messages.insert_one(assistant_chat_dict)
         
         # Update apartment analytics
         await db.apartments.update_one(
