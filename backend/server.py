@@ -1636,8 +1636,17 @@ async def guest_login(login_request: GuestLoginRequest):
         
         # Check access permission based on dates
         today = datetime.now().date()
-        check_in = guest_booking['check_in_date']
-        check_out = guest_booking['check_out_date']
+        
+        # Handle date parsing - dates might be stored as strings
+        if isinstance(guest_booking['check_in_date'], str):
+            check_in = datetime.fromisoformat(guest_booking['check_in_date']).date()
+        else:
+            check_in = guest_booking['check_in_date']
+            
+        if isinstance(guest_booking['check_out_date'], str):
+            check_out = datetime.fromisoformat(guest_booking['check_out_date']).date()
+        else:
+            check_out = guest_booking['check_out_date']
         
         # Access logic: Allow BEFORE and DURING stay, DENY after checkout
         if today > check_out:
