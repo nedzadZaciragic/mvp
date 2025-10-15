@@ -2597,6 +2597,8 @@ Use this information to enhance your local recommendations.
         except Exception as e:
             logger.error(f"City PDF lookup error: {e}")
         
+        # Initialize session_id for conversation history
+        session_id = chat_request.session_id or f"apartment_{chat_request.apartment_id}"
         
         # Get conversation history for context (last 10 messages)
         recent_messages = await db.chat_messages.find(
