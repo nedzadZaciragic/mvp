@@ -1425,7 +1425,7 @@ const LandingHome = () => {
   const navigate = useNavigate();
 
   const handleStartTrial = () => {
-    setShowPayment(true);
+    navigate('/register');
   };
 
   const handlePaymentSuccess = () => {
