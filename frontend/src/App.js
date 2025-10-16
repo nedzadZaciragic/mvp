@@ -1007,7 +1007,9 @@ const Register = () => {
       await register(formData.email, formData.full_name, formData.password, formData.phone);
       navigate('/dashboard');
     } catch (error) {
-      setError(error.response?.data?.detail || "Registration failed");
+      console.error("Registration error:", error);
+      const errorMessage = error.response?.data?.detail || error.message || "Registration failed. Please try again.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
