@@ -8,7 +8,7 @@ import asyncio
 import httpx
 
 class iCalDeepTester:
-    def __init__(self, base_url="https://guestiq-helper.preview.emergentagent.com"):
+    def __init__(self, base_url="https://guestbot-app.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0

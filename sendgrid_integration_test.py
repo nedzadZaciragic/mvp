@@ -48,7 +48,7 @@ def test_sendgrid_integration():
         "sendgrid.test2@example.com"
     ]
     
-    base_url = "https://guestiq-helper.preview.emergentagent.com"
+    base_url = "https://guestbot-app.preview.emergentagent.com"
     
     for email in test_emails:
         print(f"\n   Testing with email: {email}")

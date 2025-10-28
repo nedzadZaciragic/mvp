@@ -58,7 +58,7 @@ def test_forgot_password_endpoint():
     
     try:
         # Test the endpoint
-        url = "https://guestiq-helper.preview.emergentagent.com/api/auth/forgot-password"
+        url = "https://guestbot-app.preview.emergentagent.com/api/auth/forgot-password"
         data = {"email": "test.sendgrid@example.com"}
         
         response = requests.post(url, json=data, timeout=30)
