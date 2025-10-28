@@ -2842,8 +2842,8 @@ async def guest_chat_with_ai(request: Request, chat_request: ChatRequest, author
         chat = LlmChat(
             api_key=api_key,
             session_id=session_id,
-            system_prompt=system_prompt
-        )
+            system_message=system_prompt
+        ).with_model("openai", "gpt-4o-mini")
         
         # Send message and get response
         user_message = UserMessage(text=chat_request.message)
