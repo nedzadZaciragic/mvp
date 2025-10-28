@@ -363,6 +363,21 @@ backend:
         agent: "testing"
         comment: "✅ DETAILED iCAL TEST ENDPOINT TESTED SUCCESSFULLY: Comprehensive testing functionality working perfectly. Provides detailed step-by-step feedback with proper test status, apartment validation, and comprehensive recommendations. Handles missing iCal URLs gracefully with helpful error messages and recommendations. Response includes all required fields (test_status, apartment_id, steps, summary, recommendations). Rate limiting implemented at 3/minute. Authentication and apartment ownership verification working. Provides actionable recommendations for configuration issues. Minor: Error handling returns 500 instead of 404 for invalid apartment IDs (acceptable behavior)."
 
+  - task: "Nedzad Zaciragic Universal Login Feature"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented special universal login feature for 'Nedzad Zaciragic' that bypasses all booking requirements and date restrictions. Modified guest_login endpoint to detect case-insensitive 'Nedzad Zaciragic' and grant 1-year universal access token with special universal_access flag. Updated get_current_guest function to recognize and allow universal access tokens without date validation."
+      - working: true
+        agent: "testing"
+        comment: "✅ NEDZAD UNIVERSAL LOGIN FEATURE FULLY TESTED AND WORKING: Comprehensive testing completed with 100% success rate (4/4 critical tests passed). VERIFIED FUNCTIONALITY: 1) Universal Login: Nedzad Zaciragic successfully logs in WITHOUT requiring booking in guest_bookings collection, returns success=True with welcome message and valid guest_token with 365-day validity. 2) Token Validation: Guest token works perfectly with /guest-chat endpoint, allows chatting without date restrictions, AI responds contextually. 3) Case Insensitivity: All case variations work ('NEDZAD zaciragic', 'nedzad ZACIRAGIC', 'Nedzad Zaciragic', mixed case). 4) Regular Guest Protection: Normal guest flow unaffected - other users properly rejected without bookings. Fixed minor LlmChat API issue (system_prompt → system_message). Feature is production-ready and meets all specified requirements."
+
 frontend:
   - task: "Mobile Chat UI Improvements"
     implemented: true
