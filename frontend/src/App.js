@@ -4779,6 +4779,7 @@ const HostDashboard = () => {
         hidden_gems: [],
         transport: ""
       },
+      city_pdfs: apartment.city_pdfs || [], // Fix: Add city_pdfs field
       // Check-in/Check-out information
       check_in_time: apartment.check_in_time || "",
       check_out_time: apartment.check_out_time || "",
