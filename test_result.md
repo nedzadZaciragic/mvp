@@ -573,7 +573,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Frontend testing completed"
+    - "Nedzad Universal Login Feature testing completed"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
