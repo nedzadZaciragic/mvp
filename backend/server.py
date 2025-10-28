@@ -1236,6 +1236,18 @@ async def get_current_guest(token: str):
         
         if not guest_id or not apartment_id:
             return None
+        
+        # Check for universal access flag (Nedzad Zaciragic bypass)
+        if payload.get("universal_access") == True:
+            return {
+                "guest_id": guest_id,
+                "apartment_id": apartment_id,
+                "first_name": payload.get("first_name"),
+                "last_name": payload.get("last_name"),
+                "check_in": payload.get("check_in"),
+                "check_out": payload.get("check_out"),
+                "universal_access": True
+            }
             
         # Check if token is still valid (not expired by checkout date)
         check_out_str = payload.get("check_out")
