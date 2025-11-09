@@ -1028,6 +1028,36 @@ async def sync_apartment_calendar(apartment_id: str):
         for booking in bookings:
             if not booking.get('checkin_date'):
                 continue
+            
+            # Extract first and last name from guest_name
+            guest_name = booking.get('guest_name', 'Guest User')
+            name_parts = guest_name.strip().split(' ', 1)
+            first_name = name_parts[0] if len(name_parts) > 0 else 'Guest'
+            last_name = name_parts[1] if len(name_parts) > 1 else 'User'
+                
+            # Check if guest booking already exists
+            existing_guest_booking = await db.guest_bookings.find_one({
+                "apartment_id": apartment_id,
+                "first_name": {"$regex": f"^{first_name}$", "$options": "i"},
+                "last_name": {"$regex": f"^{last_name}$", "$options": "i"},
+                "check_in_date": booking['checkin_date'].isoformat()
+            })
+            
+            # Create guest booking record if it doesn't exist (for guest login)
+            if not existing_guest_booking:
+                guest_booking = GuestBooking(
+                    apartment_id=apartment_id,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=booking.get('guest_email', ''),
+                    check_in_date=booking['checkin_date'],
+                    check_out_date=booking.get('checkout_date', booking['checkin_date'] + timedelta(days=1)),
+                    booking_source='ical'
+                )
+                
+                guest_booking_dict = prepare_for_mongo(guest_booking.dict())
+                await db.guest_bookings.insert_one(guest_booking_dict)
+                logger.info(f"✅ Created guest booking for {first_name} {last_name}")
                 
             # Check if we already sent notification for this booking
             existing_notification = await db.booking_notifications.find_one({
