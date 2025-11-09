@@ -3844,10 +3844,65 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+    # Shutdown scheduler if it exists
+    if scheduler.running:
+        scheduler.shutdown()
+        logger.info("Scheduler shut down successfully")
+
+# Initialize APScheduler for automatic iCal syncing
+scheduler = AsyncIOScheduler()
+
+async def sync_all_apartments_calendars():
+    """Background job to sync all apartments with iCal URLs"""
+    try:
+        logger.info("🔄 Starting automatic iCal sync for all apartments...")
+        
+        # Get all apartments that have iCal URLs configured
+        apartments_with_ical = await db.apartments.find(
+            {"ical_url": {"$exists": True, "$ne": ""}}
+        ).to_list(1000)
+        
+        logger.info(f"📊 Found {len(apartments_with_ical)} apartments with iCal URLs")
+        
+        # Sync each apartment
+        synced_count = 0
+        error_count = 0
+        
+        for apartment in apartments_with_ical:
+            try:
+                await sync_apartment_calendar(apartment['id'])
+                synced_count += 1
+                logger.info(f"✅ Synced apartment: {apartment.get('name', 'Unknown')} (ID: {apartment['id']})")
+            except Exception as e:
+                error_count += 1
+                logger.error(f"❌ Error syncing apartment {apartment['id']}: {str(e)}")
+        
+        logger.info(f"🎯 Sync completed: {synced_count} successful, {error_count} errors")
+        
+    except Exception as e:
+        logger.error(f"❌ Error in automatic calendar sync: {str(e)}")
 
 # Background tasks for calendar monitoring
 @app.on_event("startup")
 async def startup_event():
     """Start background calendar monitoring"""
-    logger.info("MyHostIQ API server started successfully")
+    logger.info("🚀 MyHostIQ API server started successfully")
+    
+    # Start the scheduler
+    scheduler.start()
+    logger.info("📅 APScheduler started")
+    
+    # Add job to sync calendars every 15 minutes
+    scheduler.add_job(
+        sync_all_apartments_calendars,
+        trigger=IntervalTrigger(minutes=15),
+        id='sync_ical_calendars',
+        name='Sync iCal calendars for all apartments',
+        replace_existing=True
+    )
+    logger.info("✅ Automatic iCal sync scheduled (every 15 minutes)")
+    
+    # Run initial sync on startup
+    logger.info("🔄 Running initial iCal sync on startup...")
+    await sync_all_apartments_calendars()
     # You can add periodic calendar sync tasks here if needed
