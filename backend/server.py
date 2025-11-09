@@ -1070,10 +1070,10 @@ async def sync_apartment_calendar(apartment_id: str):
             if existing_notification:
                 continue
                 
-            # Create guest URL
-            guest_url = f"https://app.myhostiq.com/chat/{apartment_id}"
+            # Create guest URL - use the actual frontend URL
+            guest_url = f"https://guestbot-app.preview.emergentagent.com/guest/{apartment_id}"
             if user.get('custom_domain'):
-                guest_url = f"https://{user['custom_domain']}/chat/{apartment_id}"
+                guest_url = f"https://{user['custom_domain']}/guest/{apartment_id}"
             
             # Create notification message
             guest_name = booking.get('guest_name', 'Guest')
