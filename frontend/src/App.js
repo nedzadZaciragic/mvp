@@ -2576,21 +2576,6 @@ const AIInsightsDashboard = ({ apartments }) => {
     }
   };
 
-  const runIcalTest = async (apartmentId) => {
-    if (!apartmentId) return;
-    
-    setLoading(true);
-    try {
-      const response = await axios.post(`${API}/ical/detailed-test/${apartmentId}`);
-      setIcalTestResults(response.data);
-    } catch (error) {
-      console.error('Error running iCal test:', error);
-      setIcalTestResults({ test_status: 'failed', error: error.response?.data?.detail || 'Test failed' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleApartmentChange = (apartmentId) => {
     setSelectedApartment(apartmentId);
     setInsights(null);
