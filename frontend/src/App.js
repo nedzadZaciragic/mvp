@@ -2084,7 +2084,9 @@ const GuestChat = ({ apartmentId }) => {
                   ? 'bg-blue-500 text-white rounded-br-md' 
                   : 'bg-gray-100 text-gray-900 rounded-bl-md'
               }`}>
-                <div className="text-sm leading-relaxed whitespace-pre-line break-words">{message.content}</div>
+                <div className="text-sm leading-relaxed whitespace-pre-line break-words">
+                  {renderTextWithLinks(message.content)}
+                </div>
                 <p className={`text-xs mt-2 ${message.type === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
                   {new Date(message.timestamp).toLocaleTimeString()}
                 </p>
