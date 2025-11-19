@@ -1617,32 +1617,6 @@ const LandingHome = () => {
 
       {/* Social proof and testimonials section would go here */}
       
-      {/* Simple CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-700">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Guest Experience?</h2>
-          <p className="text-xl text-blue-100 mb-8">Join thousands of hosts providing exceptional AI-powered guest support</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              variant="secondary"
-              onClick={handleStartTrial}
-              className="text-lg px-8 py-3"
-            >
-              Start Free Trial
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="text-lg px-8 py-3 text-white border-white hover:bg-white hover:text-blue-600"
-              onClick={() => setShowDemo(true)}
-            >
-              See Live Demo
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
