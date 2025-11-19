@@ -12,7 +12,7 @@ def test_property_import():
     """Test property import with real Airbnb URL"""
     
     # Configuration
-    base_url = "https://guestbot-app.preview.emergentagent.com"
+    base_url = "https://hostiq-chat.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Test user credentials

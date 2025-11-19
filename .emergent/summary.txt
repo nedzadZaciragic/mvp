@@ -1,80 +1,65 @@
 <analysis>
-The trajectory details the AI engineer's work on the My Host IQ SaaS platform, following an initial successful build by a previous AI engineer. The focus has been on extensive iterative development and bug fixing across frontend (React) and backend (FastAPI, MongoDB). Key tasks included enhancing the AI chatbot's intelligence, user experience, and managing property information. The AI engineer successfully implemented nuanced UI/UX changes, refined AI system prompts for context and scope, integrated Booking.com scraping, developed a PDF upload feature for city information, and introduced a robust guest login system with time-based access. Challenges involved debugging intricate frontend-backend communication, refining AI logic, and addressing user feedback on mobile display, language detection, and content relevance. The engineer also addressed security concerns regarding hardcoded keys and streamlined the payment simulation workflow. The work is largely complete, with a few critical issues remaining concerning apartment editing and a specific guest login requirement.
+The trajectory documents an extensive and iterative development process for the My Host IQ SaaS platform, marked by a significant architectural pivot. The initial phase focused on bug fixing, including a frontend error in the apartment edit form and implementing a special-case guest login. A major feature, automatic iCal synchronization for creating guest bookings and sending welcome emails, was successfully developed using APScheduler. However, this feature was rendered unviable upon discovering that Booking.com's iCal feed does not provide essential guest data (name, email), a critical third-party limitation.
+
+This discovery prompted a major user-requested refactor. The AI engineer was tasked with removing all iCal, guest booking, and guest login functionality, transforming the chatbot into a public-access system via a unique, unlisted link per apartment. This involved a massive cleanup of both the backend () and frontend (), removing thousands of lines of code. This complex refactoring introduced several transient bugs (syntax errors, runtime errors, leftover code), which were systematically debugged and resolved. The final phase involved adding a rate-limiting mechanism (100 queries/day/apartment), a new tutorial section in the host dashboard, and two final user-requested enhancements: adding Google Maps links to AI recommendations and cleaning up the landing page UI.
+
+The user's primary language is English, but they frequently use Bosnian/Croatian/Serbian colloquialisms (e.g., jebogat, hajde, bre). The next agent should primarily respond in English but be aware of and not confused by this informal language.
 </analysis>
 
 <product_requirements>
-My Host IQ is a SaaS platform enabling Hosts to offer an AI assistant to guests, managing property details, rules, and recommendations. Admins also have roles. The platform requires user authentication, whitelabeling, analytics, iCal integration, payment simulation, UI/UX, QR codes, strict AI behavior, apartment editing, and security.
+My Host IQ is a SaaS platform for property hosts to provide an AI assistant to their guests.
 
-Recent explicit requests from the user, addressed by the AI engineer:
--   **Chatbot Data Access**: Ensure the AI bot receives all host-provided apartment details (check-in/out, WiFi, item locations) for guest conversations.
--   **Chatbot UI/UX**: Improve mobile display (message box positioning, auto-scroll), add sample questions, and correctly display the host-defined AI assistant name, brand name, and logo in the chat header and message avatars.
--   **Booking.com Integration**: Implement property scraping from Booking.com URLs, similar to existing Airbnb functionality.
--   **Remove Walking Distance**: Eliminate the previously implemented walking distance calculation and display from the host dashboard and AI responses.
--   **AI Chatbot Logic Refinement**: Enhance AI context understanding for follow-up questions, enforce answering scope (apartment/city-specific), provide localized fallback messages, use neutral phrasing (your stay instead of apartment name), and improve local recommendations using web search when host data is missing.
--   **City Information PDFs**: Allow hosts to upload PDF documents with city-specific information, making this content available to the AI. This feature was initially added to the host dashboard and then moved to the apartment edit form.
--   **Host Dashboard Cleanup**: Remove AI Insights and City Info tabs from the host dashboard.
--   **Mobile Back Button Fix**: Prevent the mobile back button from logging out hosts from the dashboard.
--   **Guest Login System**: Implement a system where guests can log in to the chatbot using their first name and last name, with access restricted to their booking dates (initially accessible before check-in and during the stay, but blocked after check-out).
--   **Payment Simulation Flow**: Relocate the payment simulation from the public landing page to a Billing tab within the host dashboard, accessible after login/registration, featuring a Start Free Trial option.
--   **Security**: Ensure no API keys or sensitive credentials are hardcoded, managing them via environment variables.
+**Initial State:** The platform allowed hosts to manage properties, which would feed data to an AI chatbot. It included features like user authentication (for hosts), whitelabeling, iCal calendar synchronization to automatically create guest bookings from Airbnb/Booking.com, and a secure guest login system where guests authenticated with their name and booking dates to access the chat.
 
+**Pivoted & Current State:** The core product has been significantly simplified due to limitations with iCal data. The requirement for guest login and all related functionality (iCal sync, guest bookings, automatic emails) has been **completely removed**.
+
+The current product provides each apartment with a unique, unlisted URL to a public chatbot. Anyone with the link can access the chatbot without any login or verification. Access is rate-limited to 100 messages per apartment per day. Hosts are now expected to manually share this link with guests via their booking platform's messaging system. A new tutorial section has been added to the host dashboard to guide them through this manual process for Airbnb and Booking.com. The AI has been enhanced to provide Google Maps links for its location-based recommendations.
 </product_requirements>
 
 <key_technical_concepts>
--   **Full-stack**: React.js (Shadcn/UI, Tailwind CSS) for frontend, FastAPI (Python) for backend.
--   **Database**: MongoDB.
--   **LLM Integration**: Emergent LLM (via system prompt engineering) for AI assistant.
--   **Geolocation**: OpenStreetMap Nominatim for address autocomplete.
--   **Data Parsing**:  for web scraping (Airbnb, Booking.com),  for PDF text extraction.
--   **Authentication**: JWT-based for user/admin, custom token-based for guests.
--   **API Management**: SendGrid for emails, OSRM API (initially for walking distance, then removed).
+- **Full-stack:** React.js (with Shadcn/UI, Tailwind CSS) frontend and a FastAPI (Python) backend.
+- **Database:** MongoDB, using UUIDs for document IDs.
+- **AI/LLM:** System prompt engineering to provide context and behavioral guidelines to an Emergent LLM. The prompt was updated to include instructions for generating Google Maps links.
+- **Authentication:** JWT-based for hosts/admins. All guest authentication has been removed.
+- **Rate Limiting:** A new per-apartment, per-day rate limit (100 queries/day) was implemented on the chatbot endpoint.
+- **Code Refactoring:** Major removal of features (iCal, Guest Login, APScheduler) from both frontend and backend codebases.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a standard full-stack setup: React frontend, FastAPI backend, MongoDB database.
+The application is a standard monorepo with a React frontend and a FastAPI backend.
 
 
+- ****
+    - **Importance**: This is the core API file. It defines all endpoints, interacts with the MongoDB database, and contains the logic for the AI assistant, including the crucial  function.
+    - **Summary of Changes**: This file underwent a massive refactoring.
+        - **REMOVED**: All endpoints, Pydantic models, and functions related to iCal synchronization (), guest login (), guest bookings (), and JWT handling for guests (). The  for background tasks was also completely removed. Over 600 lines of code were deleted.
+        - **MODIFIED**: The  endpoint was rewritten to be public, removing authentication and adding a per-apartment daily rate limit. The  function was updated to instruct the AI to generate  links for all location recommendations.
 
--   ****:
-    -   **Importance**: The core FastAPI application, managing API endpoints, database interactions, and AI logic.
-    -   **Changes Made**:
-        -   Expanded  and  Pydantic models to include .
-        -   Updated  extensively for AI context, scope, language detection, neutral phrasing, and integration of web search and PDF content.
-        -   Modified  to return comprehensive apartment and branding data for the chatbot.
-        -   Added  function for Booking.com, integrating it into .
-        -   Implemented  and new endpoints for PDF upload and management.
-        -   Refined  for better city recognition.
-        -   Introduced  model and ,  endpoints with JWT token validation and date-based access control.
-        -   Fixed hardcoded admin credentials (later reverted to hardcoded as per user request).
-        -   Added  model for guest authentication.
-        -   Added  and  helper functions for date/time handling.
--   ****:
-    -   **Importance**: The main React component handling routing, UI, state management, and user interactions.
-    -   **Changes Made**:
-        -   **Guest Chat UI**: Updated  component to display host-defined , , and  in the header and message avatars. Implemented auto-scroll and improved mobile message box positioning (increased  to ).
-        -   **Walking Distance Removal**: Removed  component,  function, and related state/usage.
-        -   **Host Dashboard**: Added  field to the Branding tab, removed from Brand Identity. Removed AI Insights and City Info tabs and reverted grid layout to .
-        -   **PDF Management**: Moved PDF upload UI and logic to the apartment edit form (adding  to  and implementing , ,  functions).
-        -   **Mobile Navigation**: Added  with  for mobile back button management in .
-        -   **Guest Login Frontend**: Implemented  component, integrated it into  with conditional rendering, added a  button, and created a new  route.
-        -   **Payment Flow**: Removed payment simulation from the landing page, replaced with a Start Free Trial button, and added a Billing tab with payment/subscription management to the .
-        -   **Error Handling**: Improved frontend error message display for registration and login.
-        -   **Apartment Edit**: Ensured  field is managed correctly in .
+- ****
+    - **Importance**: This is the main frontend file, a large single-file React application containing all components, routing, and state management logic for the entire user interface, including the landing page, host dashboard, and guest chat.
+    - **Summary of Changes**: This file was also significantly refactored to align with the simplified backend.
+        - **REMOVED**: The  component, logic for storing and sending guest JWT tokens, and all UI elements in the host dashboard related to iCal URLs and guest booking management were removed.
+        - **ADDED**: A new Tutorial tab was added to the host dashboard. This new  section contains static instructional text and images guiding hosts on how to manually add the chatbot link to their Airbnb and Booking.com automated messages.
+        - **MODIFIED**: The  component was simplified to remove all login/authentication checks. A duplicate Call-to-Action section on the landing page was removed to clean up the UI. The main routing was simplified, directing  to the public chat component without a login gate.
 </code_architecture>
 
 <pending_tasks>
--   **Nedzad Zaciragic Universal Login**: Implement logic to allow Nedzad Zaciragic to log in everywhere, regardless of specific booking details. (This was the last explicit request before the trajectory ended).
--   **Apartment Edit Runtime Error**: Investigate and fix the persistent runtime error reported by the user when trying to edit an apartment.
+- There are no pending tasks. All user-requested changes, including the major refactor and subsequent bug fixes and feature additions, were completed.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was working on resolving critical bugs reported by the user.
+The most recent work completed was addressing two final user requests after the major system simplification was done and debugged.
 
-1.  **Registration failed**: The engineer confirmed the backend API for registration works correctly, with the error often being due to attempting to register an email that already exists. Frontend error handling was improved to communicate this better.
-2.  **Apartment edit throws error / Cannot go to chatbot**: The engineer identified that the Start Free Trial button on the landing page was incorrectly triggering the payment modal instead of the authentication modal. This was fixed in  to correctly show the authentication modal. The engineer also verified that the Guest Chat functionality itself was working perfectly when accessed directly. The specific runtime error on apartment edit, however, remained elusive and was not fully diagnosed or fixed.
-3.  **Nedzad Zaciragic login should pass everywhere**: This was the user's latest explicit request. The AI engineer has just acknowledged this and is planning to implement this specific login bypass/logic for Nedzad Zaciragic. The immediate step taken was to acknowledge the request and prepare to implement it, which would involve modifying existing guest login validation logic. The apartment edit issue was still pending investigation.
+1.  **Duplicate Content Removal on Landing Page:** The user pointed out a redundant Call to Action (CTA) section at the bottom of the landing page. This was fixed by editing  and removing the first of the two duplicate sections (lines 1621-1644).
+
+2.  **Google Maps Links in AI Recommendations:** The user requested that when the AI suggests a location (e.g., a restaurant), it should also provide a clickable Google Maps link. This was implemented by modifying the AI's instructions in the backend.
+    - **File Edited**: 
+    - **Function Modified**: 
+    - **Change**: The prompt was updated to explicitly instruct the AI to format recommendations with a Google Maps link, like so: .
+
+The AI engineer used a backend testing agent to confirm that the AI now correctly generates these links in its responses. A final screenshot confirmed the landing page UI fix. The application is currently in a stable, working state reflecting these latest changes.
 </current_work>
 
 <optional_next_step>
-Implement the logic to allow Nedzad Zaciragic to log in everywhere.
+Wait for the user to review the latest changes (landing page fix and Google Maps links) and provide feedback or new requirements. Do not proceed with any new work without explicit user direction.
 </optional_next_step>
