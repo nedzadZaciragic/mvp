@@ -2513,7 +2513,7 @@ const AnalyticsDashboard = () => {
                       <>
                         <li>• Share your AI assistant link with guests</li>
                         <li>• Add property details for better AI responses</li>
-                        <li>• Enable iCal integration for automated notifications</li>
+                        <li>• Customize your chatbot branding and AI assistant name</li>
                       </>
                     ) : (
                       <>
