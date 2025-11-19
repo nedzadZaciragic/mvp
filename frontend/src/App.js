@@ -3289,7 +3289,6 @@ const AdminDashboard = ({ adminToken }) => {
       rules: apartment.rules || [],
       amenities: apartment.amenities || [],
       contact: apartment.emergency_contact || apartment.contact || { phone: '', email: '', whatsapp: '' },
-      ical_url: apartment.ical_url || '',
       // Check-in/Check-out information
       check_in_time: apartment.check_in_time || '',
       check_out_time: apartment.check_out_time || '', 
