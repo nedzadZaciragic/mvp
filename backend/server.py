@@ -2468,28 +2468,29 @@ async def get_public_apartment(apartment_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Chat Routes
+# Chat Routes - Simplified Public Access
 @api_router.post("/guest-chat")
 @limiter.limit("30/minute")  
-async def guest_chat_with_ai(request: Request, chat_request: ChatRequest, authorization: str = Header(None)):
-    """Guest chat with AI using guest token"""
+async def guest_chat_with_ai(request: Request, chat_request: ChatRequest):
+    """Public guest chat with AI - No authentication required, rate limited per apartment"""
     try:
-        # Validate guest token
-        if not authorization or not authorization.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="Missing or invalid guest token")
+        apartment_id = chat_request.apartment_id
         
-        guest_token = authorization.split("Bearer ")[1]
-        guest = await get_current_guest(guest_token)
+        # Check daily rate limit (100 queries per day per apartment)
+        today = datetime.now().date().isoformat()
+        rate_limit_key = f"chat_limit:{apartment_id}:{today}"
         
-        if not guest:
-            raise HTTPException(status_code=401, detail="Invalid or expired guest access")
+        # Get current count from database
+        rate_limit_doc = await db.rate_limits.find_one({"key": rate_limit_key})
         
-        # Verify apartment access
-        if guest['apartment_id'] != chat_request.apartment_id:
-            raise HTTPException(status_code=403, detail="Access denied to this apartment")
+        if rate_limit_doc and rate_limit_doc.get('count', 0) >= 100:
+            raise HTTPException(
+                status_code=429, 
+                detail="Daily limit reached. Please try again tomorrow."
+            )
         
         # Get apartment data
-        apartment = await db.apartments.find_one({"id": chat_request.apartment_id})
+        apartment = await db.apartments.find_one({"id": apartment_id})
         if not apartment:
             raise HTTPException(status_code=404, detail="Apartment not found")
         
@@ -2503,26 +2504,8 @@ async def guest_chat_with_ai(request: Request, chat_request: ChatRequest, author
         # Create personalized system prompt for guest
         system_prompt = create_ai_system_prompt(apartment, branding)
         
-        # Add guest context
-        guest_context = f"""
-
-👤 GUEST INFORMATION:
-- Guest Name: {guest['first_name']} {guest['last_name']}
-- Stay Period: {guest['check_in']} to {guest['check_out']}
-- Current Date: {datetime.now().date().isoformat()}
-
-🎯 PERSONALIZED SERVICE:
-- Address the guest by their first name: {guest['first_name']}
-- Acknowledge their booking period when relevant
-- Provide stay-specific assistance
-"""
-        system_prompt += guest_context
-        
-        # Continue with regular chat logic...
-        # (Rest of chat implementation identical to regular chat)
-        
         # Initialize session_id for conversation history
-        session_id = f"guest_{guest['guest_id']}_{chat_request.apartment_id}"
+        session_id = chat_request.session_id or f"guest_{apartment_id}_{datetime.now().timestamp()}"
         
         # Get conversation history for context (last 10 messages)
         recent_messages = await db.chat_messages.find(
@@ -2533,23 +2516,19 @@ async def guest_chat_with_ai(request: Request, chat_request: ChatRequest, author
         # Reverse to get chronological order
         recent_messages.reverse()
         
-        # Build conversation context with explicit context tracking instructions
+        # Build conversation context
         conversation_context = ""
         if recent_messages:
-            conversation_context = "\n\n🧠 CONVERSATION CONTEXT TRACKING - CRITICAL:\n"
-            conversation_context += "The following is the recent conversation history. You MUST understand follow-up questions in context of previous messages:\n\n"
+            conversation_context = "\n\n🧠 CONVERSATION CONTEXT TRACKING:\n"
+            conversation_context += "Recent conversation history:\n\n"
             
             for i, msg in enumerate(recent_messages):
                 role = "Guest" if msg.get('type') == 'user' else "AI Assistant"
-                conversation_context += f"Message {i+1} - {role}: {msg.get('content', '')}\n"
+                conversation_context += f"{role}: {msg.get('content', '')}\n"
             
-            conversation_context += f"\nMessage {len(recent_messages)+1} - Guest: {chat_request.message}\n"
-            conversation_context += "\n🎯 CONTEXT ANALYSIS:\n"
-            conversation_context += "- If this message is a short question like 'How?', 'When?', 'Where?', refer to the PREVIOUS guest messages to understand what they're asking about\n"
-            conversation_context += "- Example: If previous message was 'When is check-in?' and current is 'How?', understand they want check-in INSTRUCTIONS\n"
-            conversation_context += "- Always maintain conversation flow and context awareness\n\n"
+            conversation_context += f"\nCurrent Guest Question: {chat_request.message}\n"
+            conversation_context += "\nAlways maintain conversation flow and context awareness.\n\n"
             
-            # Add conversation context to system prompt
             system_prompt += conversation_context
             
         # Initialize AI chat
@@ -2567,7 +2546,7 @@ async def guest_chat_with_ai(request: Request, chat_request: ChatRequest, author
         
         # Save user message to database
         user_chat_message = ChatMessage(
-            apartment_id=chat_request.apartment_id,
+            apartment_id=apartment_id,
             message=chat_request.message,
             response="",
             session_id=session_id,
@@ -2581,7 +2560,7 @@ async def guest_chat_with_ai(request: Request, chat_request: ChatRequest, author
         
         # Save assistant response to database
         assistant_chat_message = ChatMessage(
-            apartment_id=chat_request.apartment_id,
+            apartment_id=apartment_id,
             message="",
             response=response,
             session_id=session_id,
@@ -2593,7 +2572,29 @@ async def guest_chat_with_ai(request: Request, chat_request: ChatRequest, author
         assistant_chat_dict = prepare_for_mongo(assistant_chat_message.dict())
         await db.chat_messages.insert_one(assistant_chat_dict)
         
-        return {"response": response}
+        # Increment rate limit counter
+        if rate_limit_doc:
+            await db.rate_limits.update_one(
+                {"key": rate_limit_key},
+                {"$inc": {"count": 1}}
+            )
+        else:
+            await db.rate_limits.insert_one({
+                "key": rate_limit_key,
+                "count": 1,
+                "apartment_id": apartment_id,
+                "date": today
+            })
+        
+        # Get remaining queries for this apartment today
+        updated_limit = await db.rate_limits.find_one({"key": rate_limit_key})
+        remaining = 100 - updated_limit.get('count', 0)
+        
+        return {
+            "response": response,
+            "session_id": session_id,
+            "queries_remaining": remaining
+        }
         
     except HTTPException:
         raise
