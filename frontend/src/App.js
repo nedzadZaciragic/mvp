@@ -5224,6 +5224,202 @@ const HostDashboard = () => {
             </div>
           </TabsContent>
 
+          {/* Tutorial/Setup Guide Tab */}
+          <TabsContent value="tutorial">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <BookOpen className="h-6 w-6 text-blue-600" />
+                    <span>Connect Your Chatbot to Airbnb & Booking.com</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Add your AI assistant link to your booking platform's automated messages so guests receive it automatically when they book.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  
+                  {/* Airbnb Setup Instructions */}
+                  <div className="border-l-4 border-red-500 pl-6 py-2">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                      <svg className="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="#FF5A5F">
+                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm0 22c-5.5 0-10-4.5-10-10S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/>
+                        <path d="M12 6c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm0 10c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z"/>
+                      </svg>
+                      Airbnb Setup
+                    </h3>
+                    
+                    <div className="bg-red-50 p-4 rounded-lg mb-4">
+                      <p className="text-sm text-gray-700 font-semibold mb-2">📋 Your Chatbot Link:</p>
+                      <div className="bg-white p-3 rounded border border-red-200 font-mono text-sm break-all">
+                        {apartments.length > 0 
+                          ? `${window.location.origin}/guest/${apartments[0].id}` 
+                          : 'Create a property first to get your link'}
+                      </div>
+                    </div>
+                    
+                    <ol className="space-y-4 mt-4">
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold mr-3">1</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Log in to Airbnb</p>
+                          <p className="text-sm text-gray-600">Go to <a href="https://www.airbnb.com/hosting" target="_blank" rel="noopener noreferrer" className="text-red-600 underline">airbnb.com/hosting</a></p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold mr-3">2</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Go to Messages & Automation</p>
+                          <p className="text-sm text-gray-600">Select your listing → Click "Messages" → "Automated Messages"</p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold mr-3">3</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Edit "Before Check-in" Message</p>
+                          <p className="text-sm text-gray-600">Click on the pre-arrival message template</p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold mr-3">4</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Add Your Chatbot Link</p>
+                          <p className="text-sm text-gray-600 mb-2">Copy and paste this message at the end:</p>
+                          <div className="bg-gray-100 p-3 rounded text-sm">
+                            <p className="font-mono">
+                              🤖 <strong>Your Personal AI Assistant is Ready!</strong><br/>
+                              Get instant answers about check-in, WiFi, local recommendations, and more:<br/>
+                              {apartments.length > 0 
+                                ? `${window.location.origin}/guest/${apartments[0].id}` 
+                                : '[Your chatbot link]'}
+                            </p>
+                          </div>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold mr-3">5</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Save Changes</p>
+                          <p className="text-sm text-gray-600">Click "Save" to activate your automated message</p>
+                        </div>
+                      </li>
+                    </ol>
+                    
+                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-gray-700">
+                        <strong>💡 Pro Tip:</strong> Set the message to send 48 hours before check-in so guests have time to ask questions!
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Booking.com Setup Instructions */}
+                  <div className="border-l-4 border-blue-600 pl-6 py-2">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                      <svg className="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="#003580">
+                        <rect width="24" height="24" rx="3" fill="#003580"/>
+                        <text x="12" y="17" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">B</text>
+                      </svg>
+                      Booking.com Setup
+                    </h3>
+                    
+                    <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                      <p className="text-sm text-gray-700 font-semibold mb-2">📋 Your Chatbot Link:</p>
+                      <div className="bg-white p-3 rounded border border-blue-200 font-mono text-sm break-all">
+                        {apartments.length > 0 
+                          ? `${window.location.origin}/guest/${apartments[0].id}` 
+                          : 'Create a property first to get your link'}
+                      </div>
+                    </div>
+                    
+                    <ol className="space-y-4 mt-4">
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-3">1</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Log in to Extranet</p>
+                          <p className="text-sm text-gray-600">Go to <a href="https://admin.booking.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">admin.booking.com</a></p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-3">2</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Navigate to Guest Communications</p>
+                          <p className="text-sm text-gray-600">Click "Property" → "Guest Messages" → "Pre-arrival Messages"</p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-3">3</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Create or Edit Message Template</p>
+                          <p className="text-sm text-gray-600">Click "Create new message" or edit existing pre-arrival template</p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-3">4</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Add Your Chatbot Link</p>
+                          <p className="text-sm text-gray-600 mb-2">Include this in your message:</p>
+                          <div className="bg-gray-100 p-3 rounded text-sm">
+                            <p className="font-mono">
+                              🤖 <strong>Your AI Assistant is Available 24/7!</strong><br/>
+                              Before your arrival, feel free to ask about check-in procedures, WiFi, parking, local tips, and more:<br/>
+                              {apartments.length > 0 
+                                ? `${window.location.origin}/guest/${apartments[0].id}` 
+                                : '[Your chatbot link]'}
+                            </p>
+                          </div>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-3">5</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Set Trigger & Timing</p>
+                          <p className="text-sm text-gray-600">Set to send automatically 2-3 days before check-in</p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-3">6</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">Activate the Message</p>
+                          <p className="text-sm text-gray-600">Save and activate your automated message</p>
+                        </div>
+                      </li>
+                    </ol>
+                    
+                    <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-gray-700">
+                        <strong>✅ Success Tip:</strong> Test the link yourself first by clicking it to make sure the chatbot loads correctly!
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* QR Code Instructions */}
+                  <div className="border-l-4 border-purple-500 pl-6 py-2">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                      <QrCode className="h-8 w-8 mr-3 text-purple-600" />
+                      QR Code for In-Property Access
+                    </h3>
+                    
+                    <p className="text-gray-700 mb-4">
+                      Place a QR code in your property so guests can easily access the chatbot during their stay.
+                    </p>
+                    
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <p className="text-sm font-semibold mb-2">How to use:</p>
+                      <ol className="text-sm text-gray-700 space-y-2 list-decimal list-inside">
+                        <li>Go to the "Properties" tab</li>
+                        <li>Click the <QrCode className="inline h-4 w-4" /> QR code button for your property</li>
+                        <li>Download or print the QR code</li>
+                        <li>Place it near the entrance, on the fridge, or in the welcome book</li>
+                      </ol>
+                    </div>
+                  </div>
+                  
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+
           {/* Analytics Tab */}
           <TabsContent value="analytics">
             <AnalyticsDashboard />
