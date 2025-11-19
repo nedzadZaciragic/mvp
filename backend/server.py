@@ -1279,7 +1279,7 @@ PROPERTY INFORMATION:
                     maps_link = f"https://www.google.com/maps/search/?api=1&query={search_query}"
                     
                     location_info = f" (📍 {location})" if location else ""
-                    base_prompt += f"- **{name}** ({rest_type}){location_info}\n"
+                    base_prompt += f"- {name} ({rest_type}){location_info}\n"
                     base_prompt += f"  🔗 Google Maps: {maps_link}\n"
                     base_prompt += f"  💡 Tip: {tip}\n"
         
