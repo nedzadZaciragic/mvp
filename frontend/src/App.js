@@ -3240,8 +3240,7 @@ const AdminDashboard = ({ adminToken }) => {
       restaurants: [],
       hidden_gems: []
     },
-    contact: { phone: '', email: '', whatsapp: '' },
-    ical_url: ''
+    contact: { phone: '', email: '', whatsapp: '' }
   });
 
   useEffect(() => {
