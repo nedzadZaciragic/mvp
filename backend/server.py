@@ -1342,13 +1342,11 @@ async def register_user(request: Request, user_data: UserCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Guest Booking Routes
-async def create_guest_booking(
     booking_data: dict,
     current_user: dict = Depends(get_current_user)
 ):
     """Create guest booking (usually from iCal parsing)"""
     try:
-        guest_booking = GuestBooking(
             apartment_id=booking_data.get('apartment_id'),
             first_name=booking_data.get('first_name'),
             last_name=booking_data.get('last_name'),
@@ -1358,13 +1356,10 @@ async def create_guest_booking(
             booking_source=booking_data.get('booking_source', 'ical')
         )
         
-        booking_dict = prepare_for_mongo(guest_booking.dict())
-        await db.guest_bookings.insert_one(booking_dict)
         
         return {
             "success": True,
             "message": "Guest booking created successfully",
-            "booking_id": guest_booking.id
         }
         
     except Exception as e:
@@ -1411,34 +1406,25 @@ async def guest_login(login_request: GuestLoginRequest):
             )
         
         # Regular guest booking flow
-        guest_booking = await db.guest_bookings.find_one({
             "first_name": {"$regex": f"^{login_request.first_name}$", "$options": "i"},
             "last_name": {"$regex": f"^{login_request.last_name}$", "$options": "i"}, 
             "apartment_id": login_request.apartment_id
         })
         
-        if not guest_booking:
             return GuestLoginResponse(
                 success=False,
                 message="No booking found with these details. Please check your name spelling."
             )
         
         # Parse dates from mongo
-        guest_booking = parse_from_mongo(guest_booking)
         
         # Check access permission based on dates
         today = datetime.now().date()
         
         # Handle date parsing - dates might be stored as strings
-        if isinstance(guest_booking['check_in_date'], str):
-            check_in = datetime.fromisoformat(guest_booking['check_in_date']).date()
         else:
-            check_in = guest_booking['check_in_date']
             
-        if isinstance(guest_booking['check_out_date'], str):
-            check_out = datetime.fromisoformat(guest_booking['check_out_date']).date()
         else:
-            check_out = guest_booking['check_out_date']
         
         # Access logic: Allow BEFORE and DURING stay, DENY after checkout
         if today > check_out:
@@ -1449,10 +1435,6 @@ async def guest_login(login_request: GuestLoginRequest):
         
         # Generate guest token
         guest_token_data = {
-            "guest_id": guest_booking['id'],
-            "apartment_id": guest_booking['apartment_id'],
-            "first_name": guest_booking['first_name'],
-            "last_name": guest_booking['last_name'],
             "check_in": check_in.isoformat(),
             "check_out": check_out.isoformat(),
             "exp": datetime.now(timezone.utc) + timedelta(days=(check_out - today).days + 1)
@@ -1471,11 +1453,8 @@ async def guest_login(login_request: GuestLoginRequest):
             message=access_message,
             guest_token=guest_token,
             guest_data={
-                "first_name": guest_booking['first_name'],
-                "last_name": guest_booking['last_name'],
                 "check_in": check_in.isoformat(),
                 "check_out": check_out.isoformat(),
-                "apartment_id": guest_booking['apartment_id']
             }
         )
         
@@ -1489,7 +1468,6 @@ async def get_apartment_bookings(
 ):
     """Get all guest bookings for apartment"""
     try:
-        bookings = await db.guest_bookings.find({"apartment_id": apartment_id}).to_list(length=None)
         
         parsed_bookings = []
         for booking in bookings:
@@ -2402,9 +2380,7 @@ async def create_apartment(apartment_data: ApartmentCreate, current_user: User =
         await db.apartments.insert_one(apartment_dict)
         
         # If iCal URL is provided, start monitoring for bookings
-        if apartment_data.ical_url:
             # Background task to sync calendar
-            asyncio.create_task(sync_apartment_calendar(apartment.id))
             
         return apartment
     except Exception as e:
@@ -2434,8 +2410,6 @@ async def update_apartment(
         )
         
         # If iCal URL changed, start monitoring
-        if apartment_data.ical_url and apartment_data.ical_url != existing_apartment.get('ical_url'):
-            asyncio.create_task(sync_apartment_calendar(apartment_id))
         
         # Return updated apartment
         updated_apartment = await db.apartments.find_one({"id": apartment_id})
@@ -3263,280 +3237,6 @@ async def root():
     return {"message": "My Host IQ API - AI-powered apartment concierge with authentication"}
 
 # Enhanced iCal Test Scenario Route
-@api_router.post("/ical/detailed-test/{apartment_id}")
-@limiter.limit("3/minute")  # Limit intensive testing
-async def detailed_ical_test(request: Request, apartment_id: str, current_user: User = Depends(get_current_user)):
-    """Comprehensive iCal integration test with detailed feedback"""
-    try:
-        # Verify apartment belongs to user
-        apartment = await db.apartments.find_one({
-            "id": apartment_id, 
-            "user_id": current_user.id
-        })
-        if not apartment:
-            raise HTTPException(status_code=404, detail="Apartment not found")
-            
-        ical_url = apartment.get('ical_url')
-        if not ical_url:
-            return {
-                "test_status": "failed",
-                "error": "No iCal URL configured for this apartment",
-                "steps": [
-                    {"step": "Check iCal URL", "status": "failed", "message": "iCal URL not found in apartment configuration"}
-                ],
-                "recommendations": [
-                    "Add an iCal URL in your apartment settings",
-                    "Ensure the URL is accessible and contains valid calendar data"
-                ]
-            }
-        
-        test_results = {
-            "test_status": "in_progress",
-            "apartment_id": apartment_id,
-            "apartment_name": apartment.get('name', 'Unknown'),
-            "ical_url": ical_url,
-            "started_at": datetime.now(timezone.utc).isoformat(),
-            "steps": [],
-            "summary": {},
-            "recommendations": []
-        }
-        
-        # Step 1: Validate iCal URL format
-        try:
-            from urllib.parse import urlparse
-            parsed_url = urlparse(ical_url)
-            if not all([parsed_url.scheme, parsed_url.netloc]):
-                test_results["steps"].append({
-                    "step": "URL Validation", 
-                    "status": "failed", 
-                    "message": "Invalid URL format"
-                })
-                test_results["test_status"] = "failed"
-                return test_results
-            
-            test_results["steps"].append({
-                "step": "URL Validation", 
-                "status": "passed", 
-                "message": f"Valid URL format: {parsed_url.scheme}://{parsed_url.netloc}"
-            })
-        except Exception as e:
-            test_results["steps"].append({
-                "step": "URL Validation", 
-                "status": "failed", 
-                "message": f"URL parsing error: {str(e)}"
-            })
-            test_results["test_status"] = "failed"
-            return test_results
-        
-        # Step 2: Test HTTP connectivity
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(ical_url)
-                
-                if response.status_code == 200:
-                    test_results["steps"].append({
-                        "step": "HTTP Connectivity", 
-                        "status": "passed", 
-                        "message": f"Successfully connected (Status: {response.status_code})"
-                    })
-                    
-                    # Step 3: Validate iCal content
-                    content = response.text
-                    content_length = len(content)
-                    
-                    if content.startswith('BEGIN:VCALENDAR') and 'END:VCALENDAR' in content:
-                        test_results["steps"].append({
-                            "step": "iCal Format Validation", 
-                            "status": "passed", 
-                            "message": f"Valid iCal format detected ({content_length} characters)"
-                        })
-                        
-                        # Count events
-                        event_count = content.count('BEGIN:VEVENT')
-                        test_results["steps"].append({
-                            "step": "Event Detection", 
-                            "status": "passed", 
-                            "message": f"Found {event_count} events in calendar"
-                        })
-                        
-                    else:
-                        test_results["steps"].append({
-                            "step": "iCal Format Validation", 
-                            "status": "failed", 
-                            "message": "Invalid iCal format - missing VCALENDAR structure"
-                        })
-                        test_results["test_status"] = "failed"
-                        return test_results
-                        
-                else:
-                    test_results["steps"].append({
-                        "step": "HTTP Connectivity", 
-                        "status": "failed", 
-                        "message": f"HTTP error: {response.status_code}"
-                    })
-                    test_results["test_status"] = "failed"
-                    return test_results
-                    
-        except httpx.RequestError as e:
-            test_results["steps"].append({
-                "step": "HTTP Connectivity", 
-                "status": "failed", 
-                "message": f"Connection error: {str(e)}"
-            })
-            test_results["test_status"] = "failed"
-            return test_results
-        
-        # Step 4: Test actual calendar parsing
-        try:
-            # Use existing parse function
-            parsed_events = await parse_ical_calendar(ical_url)
-            
-            if parsed_events:
-                test_results["steps"].append({
-                    "step": "Calendar Parsing", 
-                    "status": "passed", 
-                    "message": f"Successfully parsed {len(parsed_events)} events"
-                })
-                
-                # Show sample events
-                sample_events = parsed_events[:3] if len(parsed_events) > 3 else parsed_events
-                test_results["sample_events"] = [
-                    {
-                        "summary": event.get('summary', 'No title'),
-                        "start": event.get('start_date'),
-                        "end": event.get('end_date')
-                    } for event in sample_events
-                ]
-                
-            else:
-                test_results["steps"].append({
-                    "step": "Calendar Parsing", 
-                    "status": "warning", 
-                    "message": "Calendar parsed but no events found"
-                })
-                
-        except Exception as e:
-            test_results["steps"].append({
-                "step": "Calendar Parsing", 
-                "status": "failed", 
-                "message": f"Parsing error: {str(e)}"
-            })
-            test_results["test_status"] = "failed"
-            return test_results
-        
-        # Step 5: Test email notification system
-        try:
-            # Check if email credentials are configured
-            email_creds = await db.email_credentials.find_one({"user_id": current_user.id})
-            
-            if email_creds:
-                test_results["steps"].append({
-                    "step": "Email Configuration", 
-                    "status": "passed", 
-                    "message": "Email credentials configured for notifications"
-                })
-            else:
-                test_results["steps"].append({
-                    "step": "Email Configuration", 
-                    "status": "warning", 
-                    "message": "No email credentials configured - notifications will not be sent"
-                })
-                test_results["recommendations"].append("Configure email credentials to enable automatic guest notifications")
-        
-        except Exception as e:
-            test_results["steps"].append({
-                "step": "Email Configuration", 
-                "status": "failed", 
-                "message": f"Email check failed: {str(e)}"
-            })
-        
-        # Step 6: Final sync test
-        try:
-            await sync_apartment_calendar(apartment_id)
-            test_results["steps"].append({
-                "step": "Full Sync Test", 
-                "status": "passed", 
-                "message": "Calendar sync completed successfully"
-            })
-            
-            # Check if any notifications were created
-            recent_notifications = await db.booking_notifications.find(
-                {"apartment_id": apartment_id}
-            ).sort("created_at", -1).limit(5).to_list(5)
-            
-            test_results["recent_notifications"] = len(recent_notifications)
-            
-        except Exception as e:
-            test_results["steps"].append({
-                "step": "Full Sync Test", 
-                "status": "failed", 
-                "message": f"Sync failed: {str(e)}"
-            })
-        
-        # Compile summary
-        passed_steps = len([s for s in test_results["steps"] if s["status"] == "passed"])
-        total_steps = len(test_results["steps"])
-        
-        if passed_steps == total_steps:
-            test_results["test_status"] = "passed"
-        elif passed_steps > total_steps // 2:
-            test_results["test_status"] = "warning"
-        else:
-            test_results["test_status"] = "failed"
-        
-        test_results["summary"] = {
-            "passed_steps": passed_steps,
-            "total_steps": total_steps,
-            "success_rate": f"{(passed_steps/total_steps)*100:.1f}%",
-            "overall_status": test_results["test_status"]
-        }
-        
-        # Add recommendations based on results
-        if not test_results["recommendations"]:
-            if test_results["test_status"] == "passed":
-                test_results["recommendations"] = [
-                    "iCal integration is working perfectly",
-                    "Consider setting up automated sync schedules",
-                    "Monitor notification delivery to guests"
-                ]
-            else:
-                test_results["recommendations"] = [
-                    "Review failed steps and fix configuration issues",
-                    "Contact support if problems persist",
-                    "Ensure your calendar platform allows public access"
-                ]
-        
-        test_results["completed_at"] = datetime.now(timezone.utc).isoformat()
-        
-        return test_results
-        
-    except Exception as e:
-        logger.error(f"Error in detailed iCal test: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Test failed: {str(e)}")
-
-# iCal and Notification Routes
-@api_router.post("/ical/test-sync/{apartment_id}")
-async def test_ical_sync(apartment_id: str, current_user: User = Depends(get_current_user)):
-    """Test iCal sync for an apartment"""
-    try:
-        # Verify apartment belongs to user
-        apartment = await db.apartments.find_one({
-            "id": apartment_id, 
-            "user_id": current_user.id
-        })
-        if not apartment:
-            raise HTTPException(status_code=404, detail="Apartment not found")
-            
-        if not apartment.get('ical_url'):
-            raise HTTPException(status_code=400, detail="No iCal URL configured for this apartment")
-        
-        # Test sync
-        await sync_apartment_calendar(apartment_id)
-        
-        return {"message": "iCal sync test completed successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @api_router.get("/notifications/{apartment_id}")
 async def get_apartment_notifications(apartment_id: str, current_user: User = Depends(get_current_user)):
     """Get notification history for an apartment"""
