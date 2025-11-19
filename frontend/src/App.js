@@ -5783,8 +5783,8 @@ const HostDashboard = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">New Booking Notifications</p>
-                      <p className="text-sm text-gray-500">Automatic alerts from iCal integration</p>
+                      <p className="font-medium">Guest Activity Notifications</p>
+                      <p className="text-sm text-gray-500">Alerts when guests use the AI assistant</p>
                     </div>
                     <input type="checkbox" className="rounded" defaultChecked />
                   </div>
