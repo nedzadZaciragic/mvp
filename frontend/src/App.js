@@ -4676,7 +4676,6 @@ const HostDashboard = () => {
       description: apartment.description,
       rules: apartment.rules || [],
       contact: apartment.contact || { phone: "", email: "", whatsapp: "" },
-      ical_url: apartment.ical_url || "",
       ai_tone: apartment.ai_tone || "professional",
       recommendations: apartment.recommendations || {
         restaurants: [],
