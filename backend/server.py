@@ -3148,18 +3148,12 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
-    # Shutdown scheduler if it exists
-    if scheduler.running:
-        logger.info("Scheduler shut down successfully")
-
-# Initialize APScheduler for automatic iCal syncing
+    logger.info("Database connection closed")
 
 @app.on_event("startup")
 async def startup_event():
-    """Start background calendar monitoring"""
+    """Start MyHostIQ API server"""
     logger.info("🚀 MyHostIQ API server started successfully")
-    
-    # Start the scheduler
     logger.info("📅 APScheduler started")
     
     # Add job to sync calendars every 15 minutes
