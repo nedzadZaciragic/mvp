@@ -4916,7 +4916,7 @@ const HostDashboard = () => {
                   </p>
                   <ul className="text-xs text-gray-600 space-y-1 ml-4 list-disc">
                     <li><strong>Airbnb/Booking.com:</strong> Add your guest link to automatic booking confirmation messages</li>
-                    <li><strong>iCal Integration:</strong> Enable automatic WhatsApp & email notifications for new bookings</li>
+                    <li><strong>Tutorial Section:</strong> Check our step-by-step guide for adding links to platform messages</li>
                     <li><strong>QR Codes:</strong> Print and place prominently in your property</li>
                     <li><strong>Check-in Messages:</strong> Mention the AI assistant in your welcome instructions</li>
                   </ul>
