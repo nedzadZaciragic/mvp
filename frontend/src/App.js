@@ -3834,19 +3834,6 @@ const AdminDashboard = ({ adminToken }) => {
                   </div>
                 </div>
 
-                {/* Calendar Integration */}
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">Calendar Integration</h4>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">iCal URL</label>
-                    <Input
-                      value={formData.ical_url}
-                      onChange={(e) => setFormData(prev => ({...prev, ical_url: e.target.value}))}
-                      placeholder="Airbnb/Booking.com calendar URL"
-                    />
-                  </div>
-                </div>
-
                 <div className="flex justify-end space-x-3 pt-6 border-t">
                   <Button 
                     onClick={() => setEditingApartment(null)}
