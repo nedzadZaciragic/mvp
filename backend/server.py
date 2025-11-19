@@ -3154,6 +3154,3 @@ async def shutdown_db_client():
 async def startup_event():
     """Start MyHostIQ API server"""
     logger.info("🚀 MyHostIQ API server started successfully")
-    logger.info("📅 APScheduler started")
-    
-    # Add job to sync calendars every 15 minutes
