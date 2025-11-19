@@ -378,6 +378,21 @@ backend:
         agent: "testing"
         comment: "✅ NEDZAD UNIVERSAL LOGIN FEATURE FULLY TESTED AND WORKING: Comprehensive testing completed with 100% success rate (4/4 critical tests passed). VERIFIED FUNCTIONALITY: 1) Universal Login: Nedzad Zaciragic successfully logs in WITHOUT requiring booking in guest_bookings collection, returns success=True with welcome message and valid guest_token with 365-day validity. 2) Token Validation: Guest token works perfectly with /guest-chat endpoint, allows chatting without date restrictions, AI responds contextually. 3) Case Insensitivity: All case variations work ('NEDZAD zaciragic', 'nedzad ZACIRAGIC', 'Nedzad Zaciragic', mixed case). 4) Regular Guest Protection: Normal guest flow unaffected - other users properly rejected without bookings. Fixed minor LlmChat API issue (system_prompt → system_message). Feature is production-ready and meets all specified requirements."
 
+  - task: "Google Maps Links in AI Responses"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Enhanced AI system prompt to include mandatory Google Maps links for all location recommendations. Updated create_ai_system_prompt function to enforce Google Maps link generation using format: https://www.google.com/maps/search/?api=1&query=Place+Name+Address+City. AI now generates clickable Google Maps links for restaurants, attractions, bars, coffee shops, and hidden gems."
+      - working: true
+        agent: "testing"
+        comment: "✅ GOOGLE MAPS LINKS FEATURE COMPREHENSIVELY TESTED AND WORKING PERFECTLY: Conducted extensive testing with apartment ID 00a4b62a-9410-478f-a536-08628dc54df1 using 5 different location-based questions. SUCCESS RATE: 100% (5/5 test scenarios passed). DETAILED RESULTS: 1) Restaurant recommendations: 1 Google Maps link with valid format. 2) Coffee recommendations: 3 Google Maps links (Cafe Bar Riv, Café de Alma, Avlija Café). 3) Attractions: 1 Google Maps link (muzej gadljiva). 4) Bars: 5 Google Maps links (Bar Pivnica, Café Bar, Sky Lounge, Jazz Club, Wine & Cheese). 5) Hidden gems: 1 Google Maps link. TOTAL: 11 Google Maps links found across all tests. LINK FORMAT VERIFICATION: All links follow exact required format https://www.google.com/maps/search/?api=1&query=... with proper URL encoding. CONSISTENCY: AI consistently generates Google Maps links for ALL location-related questions with average of 2.2 links per response. PRODUCTION READY: Feature meets all requirements from review request and is working excellently."
+
 frontend:
   - task: "Mobile Chat UI Improvements"
     implemented: true
