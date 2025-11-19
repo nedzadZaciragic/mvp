@@ -37,8 +37,6 @@ from bs4 import BeautifulSoup
 import json
 import PyPDF2
 from io import BytesIO
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -205,28 +203,6 @@ class CityPDFCreate(BaseModel):
     city_name: str
     pdf_url: str
 
-class GuestBooking(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    apartment_id: str
-    first_name: str
-    last_name: str
-    email: str = ""
-    check_in_date: date
-    check_out_date: date
-    booking_source: str = "ical"  # ical, manual, etc.
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class GuestLoginRequest(BaseModel):
-    first_name: str
-    last_name: str
-    apartment_id: str
-
-class GuestLoginResponse(BaseModel):
-    success: bool
-    message: str
-    guest_token: str = ""
-    guest_data: dict = {}
-
 class EmailCredentialsResponse(BaseModel):
     id: str
     email: str
@@ -253,7 +229,6 @@ class Apartment(BaseModel):
     description: str
     rules: List[str] = []
     contact: Dict[str, str] = {}
-    ical_url: str = ""  
     ai_tone: str = "professional"
     recommendations: Dict[str, Any] = {}
     # Check-in/Check-out information
@@ -271,7 +246,6 @@ class Apartment(BaseModel):
     total_chats: int = 0
     total_sessions: int = 0
     last_chat: Optional[datetime] = None
-    last_ical_sync: Optional[datetime] = None
 
 class ApartmentCreate(BaseModel):
     name: str
@@ -279,7 +253,6 @@ class ApartmentCreate(BaseModel):
     description: str
     rules: List[str] = []
     contact: Dict[str, str] = {}
-    ical_url: str = ""
     ai_tone: str = "professional"
     recommendations: Dict[str, Any] = {}
     # Check-in/Check-out information
@@ -299,7 +272,6 @@ class ApartmentUpdate(BaseModel):
     description: str
     rules: List[str] = []
     contact: Dict[str, str] = {}
-    ical_url: str = ""
     ai_tone: str = "professional"
     recommendations: Dict[str, Any] = {}
     # Check-in/Check-out information
@@ -781,92 +753,6 @@ class PropertyImportRequest(BaseModel):
     url: str
 
 # iCal and notification helper functions
-async def parse_ical_calendar(ical_url: str):
-    """Parse iCal calendar and extract booking information"""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(ical_url)
-            ical_content = response.text
-            
-        bookings = []
-        current_booking = {}
-        
-        for line in ical_content.split('\n'):
-            line = line.strip()
-            
-            if line.startswith('BEGIN:VEVENT'):
-                current_booking = {}
-            elif line.startswith('END:VEVENT'):
-                if current_booking:
-                    bookings.append(current_booking)
-            elif line.startswith('DTSTART'):
-                try:
-                    date_str = line.split(':')[1].strip()
-                    if 'T' in date_str:
-                        current_booking['checkin_date'] = datetime.strptime(date_str[:15], '%Y%m%dT%H%M%S')
-                    else:
-                        current_booking['checkin_date'] = datetime.strptime(date_str, '%Y%m%d')
-                except:
-                    pass
-            elif line.startswith('DTEND'):
-                try:
-                    date_str = line.split(':')[1].strip()
-                    if 'T' in date_str:
-                        current_booking['checkout_date'] = datetime.strptime(date_str[:15], '%Y%m%dT%H%M%S')
-                    else:
-                        current_booking['checkout_date'] = datetime.strptime(date_str, '%Y%m%d')
-                except:
-                    pass
-            elif line.startswith('SUMMARY'):
-                summary = line.split(':', 1)[1].strip()
-                current_booking['summary'] = summary
-                
-                # Extract guest name and booking source
-                if 'airbnb' in summary.lower():
-                    current_booking['booking_source'] = 'airbnb'
-                elif 'booking.com' in summary.lower():
-                    current_booking['booking_source'] = 'booking.com'
-                    
-                # Try to extract guest name from various patterns
-                name_patterns = [
-                    r'Reserved for (.+?) \(',
-                    r'Reserved for (.+?)$',
-                    r'(.+?) \(',
-                    r'Guest: (.+?) \(',
-                ]
-                
-                for pattern in name_patterns:
-                    match = re.search(pattern, summary)
-                    if match:
-                        current_booking['guest_name'] = match.group(1).strip()
-                        break
-                        
-            elif line.startswith('DESCRIPTION'):
-                description = line.split(':', 1)[1].strip()
-                current_booking['description'] = description
-                
-                # Extract email and phone from description
-                email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', description)
-                if email_match:
-                    current_booking['guest_email'] = email_match.group()
-                    
-                phone_patterns = [
-                    r'\+\d{1,3}\s?\d{3}\s?\d{3}\s?\d{4}',
-                    r'\d{3}[-.\s]?\d{3}[-.\s]?\d{4}',
-                    r'\(\d{3}\)\s?\d{3}[-.\s]?\d{4}'
-                ]
-                
-                for pattern in phone_patterns:
-                    phone_match = re.search(pattern, description)
-                    if phone_match:
-                        current_booking['guest_phone'] = phone_match.group()
-                        break
-                        
-        return bookings
-    except Exception as e:
-        logger.error(f"Error parsing iCal: {str(e)}")
-        return []
-
 async def send_whatsapp_message(phone: str, message: str, apartment_name: str):
     """Send WhatsApp message via WhatsApp Business API or third-party service"""
     try:
@@ -998,138 +884,6 @@ Save this link for instant help during your stay!
     
     return email_subject, email_content, whatsapp_message
 
-async def sync_apartment_calendar(apartment_id: str):
-    """Sync apartment calendar and send notifications for new bookings"""
-    try:
-        # Get apartment data
-        apartment = await db.apartments.find_one({"id": apartment_id})
-        if not apartment or not apartment.get('ical_url'):
-            return
-        
-        # Parse iCal calendar
-        bookings = await parse_ical_calendar(apartment['ical_url'])
-        
-        # Get user branding and email credentials
-        user = await db.users.find_one({"id": apartment['user_id']})
-        branding = {
-            "brand_name": user.get('brand_name', 'MyHostIQ'),
-            "brand_logo_url": user.get('brand_logo_url', ''),
-            "brand_primary_color": user.get('brand_primary_color', '#2563eb'),
-            "brand_secondary_color": user.get('brand_secondary_color', '#1d4ed8')
-        }
-        
-        # Get host's email credentials
-        host_email_creds = await db.email_credentials.find_one({
-            "user_id": apartment['user_id'],
-            "is_verified": True
-        })
-        
-        # Process each booking
-        for booking in bookings:
-            if not booking.get('checkin_date'):
-                continue
-            
-            # Extract first and last name from guest_name
-            guest_name = booking.get('guest_name', 'Guest User')
-            name_parts = guest_name.strip().split(' ', 1)
-            first_name = name_parts[0] if len(name_parts) > 0 else 'Guest'
-            last_name = name_parts[1] if len(name_parts) > 1 else 'User'
-                
-            # Check if guest booking already exists
-            existing_guest_booking = await db.guest_bookings.find_one({
-                "apartment_id": apartment_id,
-                "first_name": {"$regex": f"^{first_name}$", "$options": "i"},
-                "last_name": {"$regex": f"^{last_name}$", "$options": "i"},
-                "check_in_date": booking['checkin_date'].isoformat()
-            })
-            
-            # Create guest booking record if it doesn't exist (for guest login)
-            if not existing_guest_booking:
-                guest_booking = GuestBooking(
-                    apartment_id=apartment_id,
-                    first_name=first_name,
-                    last_name=last_name,
-                    email=booking.get('guest_email', ''),
-                    check_in_date=booking['checkin_date'],
-                    check_out_date=booking.get('checkout_date', booking['checkin_date'] + timedelta(days=1)),
-                    booking_source='ical'
-                )
-                
-                guest_booking_dict = prepare_for_mongo(guest_booking.dict())
-                await db.guest_bookings.insert_one(guest_booking_dict)
-                logger.info(f"✅ Created guest booking for {first_name} {last_name}")
-                
-            # Check if we already sent notification for this booking
-            existing_notification = await db.booking_notifications.find_one({
-                "apartment_id": apartment_id,
-                "checkin_date": booking['checkin_date'].isoformat(),
-                "guest_email": booking.get('guest_email', ''),
-                "notification_sent": True
-            })
-            
-            if existing_notification:
-                continue
-                
-            # Create guest URL - use the actual frontend URL
-            guest_url = f"https://guestbot-app.preview.emergentagent.com/guest/{apartment_id}"
-            if user.get('custom_domain'):
-                guest_url = f"https://{user['custom_domain']}/guest/{apartment_id}"
-            
-            # Create notification message
-            guest_name = booking.get('guest_name', 'Guest')
-            email_subject, email_content, whatsapp_message = await create_guest_notification_message(
-                apartment, branding, guest_name, booking['checkin_date'], guest_url
-            )
-            
-            # Send notifications
-            notification_sent = False
-            
-            # Send email if available and host has configured email
-            if booking.get('guest_email') and host_email_creds:
-                email_sent = await send_email_notification(
-                    booking['guest_email'], 
-                    email_subject, 
-                    email_content, 
-                    apartment['name'],
-                    host_email_creds
-                )
-                if email_sent:
-                    notification_sent = True
-            
-            # Send WhatsApp if available
-            if booking.get('guest_phone'):
-                whatsapp_sent = await send_whatsapp_message(
-                    booking['guest_phone'], 
-                    whatsapp_message, 
-                    apartment['name']
-                )
-                if whatsapp_sent:
-                    notification_sent = True
-            
-            # Save notification record
-            notification = BookingNotification(
-                apartment_id=apartment_id,
-                guest_email=booking.get('guest_email', ''),
-                guest_phone=booking.get('guest_phone', ''),
-                guest_name=guest_name,
-                checkin_date=booking['checkin_date'],
-                checkout_date=booking.get('checkout_date'),
-                booking_source=booking.get('booking_source', ''),
-                notification_sent=notification_sent
-            )
-            
-            notification_dict = prepare_for_mongo(notification.dict())
-            await db.booking_notifications.insert_one(notification_dict)
-        
-        # Update last sync time
-        await db.apartments.update_one(
-            {"id": apartment_id},
-            {"$set": {"last_ical_sync": datetime.now(timezone.utc).isoformat()}}
-        )
-        
-    except Exception as e:
-        logger.error(f"Error syncing calendar for apartment {apartment_id}: {str(e)}")
-
 def encrypt_password(password: str) -> str:
     """Encrypt password for secure storage"""
     return cipher_suite.encrypt(password.encode()).decode()
@@ -1258,47 +1012,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
-
-async def get_current_guest(token: str):
-    """Get current authenticated guest"""
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        guest_id = payload.get("guest_id")
-        apartment_id = payload.get("apartment_id")
-        
-        if not guest_id or not apartment_id:
-            return None
-        
-        # Check for universal access flag (Nedzad Zaciragic bypass)
-        if payload.get("universal_access") == True:
-            return {
-                "guest_id": guest_id,
-                "apartment_id": apartment_id,
-                "first_name": payload.get("first_name"),
-                "last_name": payload.get("last_name"),
-                "check_in": payload.get("check_in"),
-                "check_out": payload.get("check_out"),
-                "universal_access": True
-            }
-            
-        # Check if token is still valid (not expired by checkout date)
-        check_out_str = payload.get("check_out")
-        if check_out_str:
-            check_out = datetime.fromisoformat(check_out_str).date()
-            if datetime.now().date() > check_out:
-                return None  # Token expired
-        
-        return {
-            "guest_id": guest_id,
-            "apartment_id": apartment_id,
-            "first_name": payload.get("first_name"),
-            "last_name": payload.get("last_name"),
-            "check_in": payload.get("check_in"),
-            "check_out": payload.get("check_out")
-        }
-        
-    except jwt.InvalidTokenError:
-        return None
 
 async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
     """Get current user and verify admin privileges"""
@@ -1629,7 +1342,6 @@ async def register_user(request: Request, user_data: UserCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Guest Booking Routes
-@api_router.post("/guest-bookings")
 async def create_guest_booking(
     booking_data: dict,
     current_user: dict = Depends(get_current_user)
@@ -1658,7 +1370,6 @@ async def create_guest_booking(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.post("/guest-login", response_model=GuestLoginResponse)
 async def guest_login(login_request: GuestLoginRequest):
     """Guest login using first name, last name, and apartment ID"""
     try:
@@ -1772,7 +1483,6 @@ async def guest_login(login_request: GuestLoginRequest):
         logger.error(f"Guest login error: {str(e)}")
         raise HTTPException(status_code=500, detail="Login failed. Please try again.")
 
-@api_router.get("/guest-bookings/{apartment_id}")
 async def get_apartment_bookings(
     apartment_id: str,
     current_user: dict = Depends(get_current_user)
@@ -3876,63 +3586,16 @@ async def shutdown_db_client():
     client.close()
     # Shutdown scheduler if it exists
     if scheduler.running:
-        scheduler.shutdown()
         logger.info("Scheduler shut down successfully")
 
 # Initialize APScheduler for automatic iCal syncing
-scheduler = AsyncIOScheduler()
 
-async def sync_all_apartments_calendars():
-    """Background job to sync all apartments with iCal URLs"""
-    try:
-        logger.info("🔄 Starting automatic iCal sync for all apartments...")
-        
-        # Get all apartments that have iCal URLs configured
-        apartments_with_ical = await db.apartments.find(
-            {"ical_url": {"$exists": True, "$ne": ""}}
-        ).to_list(1000)
-        
-        logger.info(f"📊 Found {len(apartments_with_ical)} apartments with iCal URLs")
-        
-        # Sync each apartment
-        synced_count = 0
-        error_count = 0
-        
-        for apartment in apartments_with_ical:
-            try:
-                await sync_apartment_calendar(apartment['id'])
-                synced_count += 1
-                logger.info(f"✅ Synced apartment: {apartment.get('name', 'Unknown')} (ID: {apartment['id']})")
-            except Exception as e:
-                error_count += 1
-                logger.error(f"❌ Error syncing apartment {apartment['id']}: {str(e)}")
-        
-        logger.info(f"🎯 Sync completed: {synced_count} successful, {error_count} errors")
-        
-    except Exception as e:
-        logger.error(f"❌ Error in automatic calendar sync: {str(e)}")
-
-# Background tasks for calendar monitoring
 @app.on_event("startup")
 async def startup_event():
     """Start background calendar monitoring"""
     logger.info("🚀 MyHostIQ API server started successfully")
     
     # Start the scheduler
-    scheduler.start()
     logger.info("📅 APScheduler started")
     
     # Add job to sync calendars every 15 minutes
-    scheduler.add_job(
-        sync_all_apartments_calendars,
-        trigger=IntervalTrigger(minutes=15),
-        id='sync_ical_calendars',
-        name='Sync iCal calendars for all apartments',
-        replace_existing=True
-    )
-    logger.info("✅ Automatic iCal sync scheduled (every 15 minutes)")
-    
-    # Run initial sync on startup
-    logger.info("🔄 Running initial iCal sync on startup...")
-    await sync_all_apartments_calendars()
-    # You can add periodic calendar sync tasks here if needed
