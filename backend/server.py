@@ -1314,11 +1314,13 @@ FINAL INSTRUCTIONS:
 - In fallback messages, refer to the city name "{apartment_city}" not postal codes
 - Be helpful, friendly, and professional as a representative of {brand_name}
 - If no specific information is available about {apartment_city}, provide general local recommendations but ONLY for {apartment_city}
+- DO NOT use markdown formatting (no **bold**, no *italic*, no #headers) - use plain text only
+- Use emojis for visual emphasis instead of markdown
 
 📍 GOOGLE MAPS LINKS - MANDATORY:
 When recommending ANY place (restaurant, attraction, hidden gem, etc.):
 1. ALWAYS include a clickable Google Maps link
-2. Format: "🗺️ [View on Google Maps](https://www.google.com/maps/search/?api=1&query=Place+Name+Address+City)"
+2. Format the link as plain URL: https://www.google.com/maps/search/?api=1&query=Place+Name+Address+City
 3. Replace spaces with '+' in the URL
 4. Include the place name, address (if known), and city in the search query
 5. Example: For "Nedzad's House at Titova 58b, Sarajevo" → https://www.google.com/maps/search/?api=1&query=Nedzad's+House+Titova+58b+Sarajevo
