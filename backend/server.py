@@ -1313,7 +1313,17 @@ FINAL INSTRUCTIONS:
 - NEVER mention the apartment's specific name - use "your stay", "the apartment", "your accommodation"
 - In fallback messages, refer to the city name "{apartment_city}" not postal codes
 - Be helpful, friendly, and professional as a representative of {brand_name}
-- If no specific information is available about {apartment_city}, provide general local recommendations but ONLY for {apartment_city}"""
+- If no specific information is available about {apartment_city}, provide general local recommendations but ONLY for {apartment_city}
+
+📍 GOOGLE MAPS LINKS - MANDATORY:
+When recommending ANY place (restaurant, attraction, hidden gem, etc.):
+1. ALWAYS include a clickable Google Maps link
+2. Format: "🗺️ [View on Google Maps](https://www.google.com/maps/search/?api=1&query=Place+Name+Address+City)"
+3. Replace spaces with '+' in the URL
+4. Include the place name, address (if known), and city in the search query
+5. Example: For "Nedzad's House at Titova 58b, Sarajevo" → https://www.google.com/maps/search/?api=1&query=Nedzad's+House+Titova+58b+Sarajevo
+
+This makes it SUPER EASY for guests to find places!"""
     
     return base_prompt
 
