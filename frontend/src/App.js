@@ -27,6 +27,32 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Helper function to convert plain text URLs to clickable links
+const renderTextWithLinks = (text) => {
+  if (!text) return null;
+  
+  // URL regex pattern to detect http/https URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline break-all"
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+};
+
 // Updated brand colors - much lighter blue tones
 const BRAND_COLORS = {
   primary: "#93c5fd", // Much lighter blue
