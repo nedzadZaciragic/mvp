@@ -2657,17 +2657,6 @@ const AIInsightsDashboard = ({ apartments }) => {
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Analyze Questions
                 </Button>
-                <Button
-                  onClick={() => {
-                    setActiveView('ical');
-                    runIcalTest(selectedApartment);
-                  }}
-                  className="bg-green-500 hover:bg-green-600"
-                  disabled={loading}
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Test iCal Integration
-                </Button>
               </div>
             )}
           </div>
