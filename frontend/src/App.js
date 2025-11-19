@@ -27,13 +27,16 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Helper function to convert plain text URLs to clickable links
+// Helper function to process text: remove markdown and convert URLs to clickable links
 const renderTextWithLinks = (text) => {
   if (!text) return null;
   
+  // First, remove markdown bold formatting (**text** -> text)
+  let processedText = text.replace(/\*\*(.*?)\*\*/g, '$1');
+  
   // URL regex pattern to detect http/https URLs
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const parts = text.split(urlRegex);
+  const parts = processedText.split(urlRegex);
   
   return parts.map((part, index) => {
     if (part.match(urlRegex)) {
@@ -43,7 +46,12 @@ const renderTextWithLinks = (text) => {
           href={part}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 hover:text-blue-800 underline break-all"
+          onClick={(e) => {
+            // Prevent any potential blocking by ensuring it opens in a new window
+            e.preventDefault();
+            window.open(part, '_blank', 'noopener,noreferrer');
+          }}
+          className="text-blue-600 hover:text-blue-800 underline break-all cursor-pointer"
         >
           {part}
         </a>
