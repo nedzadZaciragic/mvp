@@ -4301,16 +4301,16 @@ const EmailCredentialsManager = () => {
                 <CheckCircle className="h-5 w-5 text-blue-600" />
               </div>
               <div className="flex-1">
-                <h4 className="font-medium text-blue-900 mb-2">Email Notifications Active</h4>
+                <h4 className="font-medium text-blue-900 mb-2">Email Configuration Active</h4>
                 <p className="text-sm text-blue-700 mb-3">
-                  When guests book your property through iCal integration, they'll receive beautiful welcome emails 
-                  directly from your email address with their personalized AI assistant link.
+                  Your email settings are configured and ready to use for password resets and 
+                  notifications directly from your email address.
                 </p>
                 <div className="text-xs text-blue-600 space-y-1">
                   <p>• Emails sent from: <strong>{emailCreds.email}</strong></p>
-                  <p>• Automatic trigger on new bookings</p>
+                  <p>• Used for account recovery</p>
                   <p>• Branded email templates with your logo and colors</p>
-                  <p>• Includes check-in instructions and local recommendations</p>
+                  <p>• Secure SMTP connection</p>
                 </div>
               </div>
             </div>
