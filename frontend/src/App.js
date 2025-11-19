@@ -1820,24 +1820,7 @@ const GuestChat = ({ apartmentId }) => {
   }, [messages]);
 
   useEffect(() => {
-    // Check if guest is already logged in
-    const guestToken = localStorage.getItem('guestToken');
-    const storedGuestData = localStorage.getItem('guestData');
-    
-    if (guestToken && storedGuestData) {
-      try {
-        const parsedGuestData = JSON.parse(storedGuestData);
-        setGuestData(parsedGuestData);
-        setIsLoggedIn(true);
-        fetchApartmentInfo();
-      } catch (error) {
-        // Invalid stored data, clear it
-        localStorage.removeItem('guestToken');
-        localStorage.removeItem('guestData');
-      }
-    } else {
-      fetchApartmentInfo();
-    }
+    fetchApartmentInfo();
     
     // Lock page scroll when chat is active (mobile)
     if (window.innerWidth <= 768) {
