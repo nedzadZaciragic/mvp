@@ -45,12 +45,7 @@ const renderTextWithLinks = (text) => {
           key={index}
           href={part}
           target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => {
-            // Prevent any potential blocking by ensuring it opens in a new window
-            e.preventDefault();
-            window.open(part, '_blank', 'noopener,noreferrer');
-          }}
+          rel="noopener noreferrer nofollow"
           className="text-blue-600 hover:text-blue-800 underline break-all cursor-pointer"
         >
           {part}
