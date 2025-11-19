@@ -4557,7 +4557,6 @@ const HostDashboard = () => {
   // City PDF Management States
   const [newCityPdf, setNewCityPdf] = useState({ city_name: '', pdf_url: '' });
   const [showAddPdfForm, setShowAddPdfForm] = useState(false);
-  const [showiCalHelper, setShowiCalHelper] = useState(false);
 
   useEffect(() => {
     fetchApartments();
