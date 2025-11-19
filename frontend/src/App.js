@@ -2012,20 +2012,6 @@ const GuestChat = ({ apartmentId }) => {
               Your personal concierge for this stay
             </p>
           </div>
-                localStorage.removeItem('guestToken');
-                localStorage.removeItem('guestData');
-                setIsLoggedIn(false);
-                setGuestData(null);
-                setMessages([]);
-              }}
-              className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
-              title="Logout"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          )}
         </div>
       </div>
 
