@@ -3168,12 +3168,6 @@ const AdminPage = () => {
                       <p className="text-gray-600">{apartment.total_chats || 0}</p>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">🔗 iCal:</span>
-                      <p className="text-gray-600">
-                        {apartment.ical_url ? '✅ Connected' : '❌ Not connected'}
-                      </p>
-                    </div>
-                    <div>
                       <span className="font-medium text-gray-700">📋 Rules:</span>
                       <p className="text-gray-600">{apartment.rules?.length || 0} rules</p>
                     </div>
