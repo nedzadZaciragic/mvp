@@ -38,8 +38,50 @@ const renderTextWithLinks = (text) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const parts = processedText.split(urlRegex);
   
+  const handleCopyLink = (url, e) => {
+    e.preventDefault();
+    navigator.clipboard.writeText(url).then(() => {
+      // Show a brief success message (optional - could add a toast notification)
+      const btn = e.target;
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      btn.style.color = '#10b981';
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.color = '';
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      // Fallback: try to open in new window
+      window.open(url, '_blank', 'noopener,noreferrer');
+    });
+  };
+  
   return parts.map((part, index) => {
     if (part.match(urlRegex)) {
+      // Special handling for Google Maps links - show copy button
+      if (part.includes('google.com/maps')) {
+        return (
+          <span key={index} className="inline-flex items-center gap-2">
+            <a
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="text-blue-600 hover:text-blue-800 underline break-all"
+            >
+              🗺️ View on Maps
+            </a>
+            <button
+              onClick={(e) => handleCopyLink(part, e)}
+              className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded cursor-pointer"
+              title="Copy link to clipboard"
+            >
+              📋 Copy Link
+            </button>
+          </span>
+        );
+      }
+      // Regular links
       return (
         <a
           key={index}
