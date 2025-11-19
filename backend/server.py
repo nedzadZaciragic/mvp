@@ -1261,25 +1261,48 @@ PROPERTY INFORMATION:
     if apartment_data.get('recommendations'):
         recommendations = apartment_data['recommendations']
         base_prompt += f"\nLOCAL RECOMMENDATIONS FOR {apartment_city.upper()}:\n"
+        base_prompt += "IMPORTANT: When mentioning these places, ALWAYS include a Google Maps link using this format:\n"
+        base_prompt += "🔗 [Place Name](https://www.google.com/maps/search/?api=1&query=Place+Name+Address+City)\n\n"
         
         if recommendations.get('restaurants'):
             restaurants = recommendations['restaurants']
             if restaurants:
                 base_prompt += "Restaurants:\n"
                 for rest in restaurants:
-                    location_info = f" (Location: {rest.get('location', 'Not specified')})" if rest.get('location') else ""
-                    base_prompt += f"- {rest.get('name', 'Unknown')} ({rest.get('type', 'Restaurant')}){location_info} - {rest.get('tip', 'No additional info')}\n"
+                    name = rest.get('name', 'Unknown')
+                    location = rest.get('location', '')
+                    rest_type = rest.get('type', 'Restaurant')
+                    tip = rest.get('tip', 'No additional info')
+                    
+                    # Create Google Maps search query
+                    search_query = f"{name} {location} {apartment_city}".replace(' ', '+')
+                    maps_link = f"https://www.google.com/maps/search/?api=1&query={search_query}"
+                    
+                    location_info = f" (📍 {location})" if location else ""
+                    base_prompt += f"- **{name}** ({rest_type}){location_info}\n"
+                    base_prompt += f"  🔗 Google Maps: {maps_link}\n"
+                    base_prompt += f"  💡 Tip: {tip}\n"
         
         if recommendations.get('hidden_gems'):
             gems = recommendations['hidden_gems']
             if gems:
-                base_prompt += "Hidden Gems & Attractions:\n"
+                base_prompt += "\nHidden Gems & Attractions:\n"
                 for gem in gems:
-                    location_info = f" (Location: {gem.get('location', 'Not specified')})" if gem.get('location') else ""
-                    base_prompt += f"- {gem.get('name', 'Unknown')}{location_info} - {gem.get('tip', 'No additional info')}\n"
+                    name = gem.get('name', 'Unknown')
+                    location = gem.get('location', '')
+                    tip = gem.get('tip', 'No additional info')
+                    
+                    # Create Google Maps search query
+                    search_query = f"{name} {location} {apartment_city}".replace(' ', '+')
+                    maps_link = f"https://www.google.com/maps/search/?api=1&query={search_query}"
+                    
+                    location_info = f" (📍 {location})" if location else ""
+                    base_prompt += f"- **{name}**{location_info}\n"
+                    base_prompt += f"  🔗 Google Maps: {maps_link}\n"
+                    base_prompt += f"  💡 Tip: {tip}\n"
         
         if recommendations.get('transport'):
-            base_prompt += f"Transportation: {recommendations['transport']}\n"
+            base_prompt += f"\n🚗 Transportation: {recommendations['transport']}\n"
     
     base_prompt += f"""
 FINAL INSTRUCTIONS:
