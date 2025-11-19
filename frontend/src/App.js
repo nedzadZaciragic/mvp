@@ -2543,7 +2543,6 @@ const AIInsightsDashboard = ({ apartments }) => {
   const [selectedApartment, setSelectedApartment] = useState(null);
   const [insights, setInsights] = useState(null);
   const [normalizedQuestions, setNormalizedQuestions] = useState(null);
-  const [icalTestResults, setIcalTestResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState('overview');
 
