@@ -1196,7 +1196,7 @@ const DemoChat = () => {
                   ? 'bg-blue-600 text-white rounded-br-sm' 
                   : 'bg-gray-100 text-gray-900 rounded-bl-sm'
               }`}>
-                <div className="whitespace-pre-line">{message.content}</div>
+                <div className="whitespace-pre-line">{renderTextWithLinks(message.content)}</div>
                 <div className={`text-xs mt-2 ${message.type === 'user' ? 'text-blue-200' : 'text-gray-500'}`}>
                   {new Date(message.timestamp).toLocaleTimeString()}
                 </div>
