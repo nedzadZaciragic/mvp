@@ -2005,11 +2005,7 @@ const GuestChat = ({ apartmentId }) => {
     }
   };
 
-  // Show login form if not logged in
-  if (!isLoggedIn) {
-    return <GuestLogin apartmentId={apartmentId} onLoginSuccess={handleGuestLoginSuccess} />;
-  }
-
+  // Show loading state
   if (!apartmentInfo || !branding) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
