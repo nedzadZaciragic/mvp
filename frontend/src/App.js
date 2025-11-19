@@ -1931,26 +1931,12 @@ const GuestChat = ({ apartmentId }) => {
     try {
       let response;
       
-      if (isLoggedIn && guestData) {
-        // Use guest chat endpoint with token
-        const guestToken = localStorage.getItem('guestToken');
-        response = await axios.post(`${API}/guest-chat`, {
-          apartment_id: apartmentId,
-          message: messageToSend,
-          session_id: `guest_${guestData.first_name}_${guestData.last_name}_${apartmentId}`
-        }, {
-          headers: {
-            'Authorization': `Bearer ${guestToken}`
-          }
-        });
-      } else {
-        // Use regular public chat endpoint
-        response = await axios.post(`${API}/chat`, {
-          apartment_id: apartmentId,
-          message: messageToSend,
-          session_id: `public_${apartmentId}`
-        });
-      }
+      // Use public guest chat endpoint (no authentication required)
+      response = await axios.post(`${API}/guest-chat`, {
+        apartment_id: apartmentId,
+        message: messageToSend,
+        session_id: sessionId
+      });
 
       const aiMessage = { 
         type: 'ai', 
