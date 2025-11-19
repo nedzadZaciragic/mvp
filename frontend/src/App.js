@@ -2009,12 +2009,9 @@ const GuestChat = ({ apartmentId }) => {
           <div className="flex-1">
             <h1 className="text-lg font-semibold">{branding.brand_name || 'MyHostIQ'}</h1>
             <p className="text-sm opacity-90">
-              {guestData ? `Welcome ${guestData.first_name}!` : 'Your personal concierge for this stay'}
+              Your personal concierge for this stay
             </p>
           </div>
-          {guestData && (
-            <button
-              onClick={() => {
                 localStorage.removeItem('guestToken');
                 localStorage.removeItem('guestData');
                 setIsLoggedIn(false);
