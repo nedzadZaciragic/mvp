@@ -2580,7 +2580,6 @@ const AIInsightsDashboard = ({ apartments }) => {
     setSelectedApartment(apartmentId);
     setInsights(null);
     setNormalizedQuestions(null);
-    setIcalTestResults(null);
   };
 
   return (
