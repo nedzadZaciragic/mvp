@@ -1801,8 +1801,6 @@ const GuestChat = ({ apartmentId }) => {
   const [startY, setStartY] = useState(0);
   const [currentY, setCurrentY] = useState(0);
   const [pullDistance, setPullDistance] = useState(0);
-  const [guestData, setGuestData] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const messagesContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
 
